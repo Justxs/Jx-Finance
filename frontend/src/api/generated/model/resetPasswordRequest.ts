@@ -8,14 +8,14 @@
 
 export interface ResetPasswordRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */
   email: string;
   /**
    * The token from the emailed link, sent back unchanged.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 1000
    */
   token: string;

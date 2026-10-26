@@ -6,8 +6,12 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
+  AddMemberRequest,
+  CreateHouseholdRequest,
+  CreateSettlementRequest,
+  CreateSharedExpenseRequest,
   HouseholdResponse,
   HouseholdSettlementResponse,
   PagedResponseOfAuditEventResponse,
@@ -15,19 +19,22 @@ import type {
   PagedResponseOfSharedExpenseResponse,
   SettleUpResponse,
   SharedExpenseResponse,
+  UpdateHouseholdRequest,
+  UpdateMemberRoleRequest,
+  UpdateSharedExpenseRequest,
 } from "../model";
 
 export const getCreateHouseholdMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateHouseholdRequest>>[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateHouseholdRequest>(
     "*/api/households",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateHouseholdRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -45,13 +52,13 @@ export const getHouseholdsMockHandler = (
   overrideResponse?:
     | HouseholdResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<HouseholdResponse[]> | HouseholdResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/households",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -68,12 +75,12 @@ export const getHouseholdsMockHandler = (
 export const getDeleteHouseholdMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/households/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -88,13 +95,13 @@ export const getHouseholdMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/households/:id",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -112,13 +119,13 @@ export const getUpdateHouseholdMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateHouseholdRequest>>[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateHouseholdRequest>(
     "*/api/households/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateHouseholdRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -136,13 +143,13 @@ export const getHouseholdAuditMockHandler = (
   overrideResponse?:
     | PagedResponseOfAuditEventResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<PagedResponseOfAuditEventResponse> | PagedResponseOfAuditEventResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/households/:id/audit",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -160,13 +167,13 @@ export const getAddMemberMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, AddMemberRequest>>[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, AddMemberRequest>(
     "*/api/households/:id/members",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, AddMemberRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -184,13 +191,13 @@ export const getRemoveMemberMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string; userId: string }>>[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; userId: string }>(
     "*/api/households/:id/members/:userId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; userId: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -208,13 +215,19 @@ export const getUpdateMemberRoleMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ id: string; userId: string }, UpdateMemberRoleRequest>
+        >[0],
       ) => Promise<HouseholdResponse> | HouseholdResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string; userId: string }, UpdateMemberRoleRequest>(
     "*/api/households/:id/members/:userId",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<
+        HttpResponseResolver<{ id: string; userId: string }, UpdateMemberRoleRequest>
+      >[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -232,13 +245,13 @@ export const getSettleUpMockHandler = (
   overrideResponse?:
     | SettleUpResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<SettleUpResponse> | SettleUpResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/households/:id/settle-up",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -256,13 +269,13 @@ export const getCreateSettlementMockHandler = (
   overrideResponse?:
     | HouseholdSettlementResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, CreateSettlementRequest>>[0],
       ) => Promise<HouseholdSettlementResponse> | HouseholdSettlementResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, CreateSettlementRequest>(
     "*/api/households/:id/settlements",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, CreateSettlementRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -280,15 +293,15 @@ export const getSettlementsMockHandler = (
   overrideResponse?:
     | PagedResponseOfHouseholdSettlementResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) =>
         | Promise<PagedResponseOfHouseholdSettlementResponse>
         | PagedResponseOfHouseholdSettlementResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/households/:id/settlements",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -305,12 +318,14 @@ export const getSettlementsMockHandler = (
 export const getDeleteSettlementMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string; settlementId: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; settlementId: string }>(
     "*/api/households/:id/settlements/:settlementId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; settlementId: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -325,13 +340,15 @@ export const getCreateSharedExpenseMockHandler = (
   overrideResponse?:
     | SharedExpenseResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, CreateSharedExpenseRequest>>[0],
       ) => Promise<SharedExpenseResponse> | SharedExpenseResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, CreateSharedExpenseRequest>(
     "*/api/households/:id/shared-expenses",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, CreateSharedExpenseRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -349,13 +366,13 @@ export const getSharedExpensesMockHandler = (
   overrideResponse?:
     | PagedResponseOfSharedExpenseResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<PagedResponseOfSharedExpenseResponse> | PagedResponseOfSharedExpenseResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/households/:id/shared-expenses",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -372,12 +389,14 @@ export const getSharedExpensesMockHandler = (
 export const getDeleteSharedExpenseMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string; expenseId: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; expenseId: string }>(
     "*/api/households/:id/shared-expenses/:expenseId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; expenseId: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -392,13 +411,19 @@ export const getUpdateSharedExpenseMockHandler = (
   overrideResponse?:
     | SharedExpenseResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ id: string; expenseId: string }, UpdateSharedExpenseRequest>
+        >[0],
       ) => Promise<SharedExpenseResponse> | SharedExpenseResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string; expenseId: string }, UpdateSharedExpenseRequest>(
     "*/api/households/:id/shared-expenses/:expenseId",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<
+        HttpResponseResolver<{ id: string; expenseId: string }, UpdateSharedExpenseRequest>
+      >[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

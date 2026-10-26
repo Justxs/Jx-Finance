@@ -6,18 +6,22 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { AttachmentResponse } from "../model";
+import type { HttpResponseResolver, RequestHandlerOptions } from "msw";
+import type {
+  AttachmentResponse,
+  SetAttachmentWarrantyRequest,
+  UploadAttachmentRequest,
+} from "../model";
 
 export const getDeleteAttachmentMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/attachments/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -31,12 +35,12 @@ export const getDeleteAttachmentMockHandler = (
 export const getDownloadAttachmentMockHandler = (
   overrideResponse?:
     | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/attachments/:id/content",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -56,13 +60,15 @@ export const getSetAttachmentWarrantyMockHandler = (
   overrideResponse?:
     | AttachmentResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, SetAttachmentWarrantyRequest>>[0],
       ) => Promise<AttachmentResponse> | AttachmentResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, SetAttachmentWarrantyRequest>(
     "*/api/attachments/:id/warranty",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, SetAttachmentWarrantyRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -80,13 +86,13 @@ export const getAttachmentsMockHandler = (
   overrideResponse?:
     | AttachmentResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ transactionId: string }>>[0],
       ) => Promise<AttachmentResponse[]> | AttachmentResponse[]),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ transactionId: string }>(
     "*/api/transactions/:transactionId/attachments",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ transactionId: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -104,13 +110,17 @@ export const getUploadAttachmentMockHandler = (
   overrideResponse?:
     | AttachmentResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ transactionId: string }, UploadAttachmentRequest>
+        >[0],
       ) => Promise<AttachmentResponse> | AttachmentResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ transactionId: string }, UploadAttachmentRequest>(
     "*/api/transactions/:transactionId/attachments",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ transactionId: string }, UploadAttachmentRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

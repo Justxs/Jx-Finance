@@ -9,7 +9,7 @@
 export interface CreateContactRequest {
   /**
    * The name, 1 to 100 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

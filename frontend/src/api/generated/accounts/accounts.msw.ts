@@ -6,26 +6,29 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   AccountResponse,
   ArchivedAccountResponse,
   CashFlowForecastResponse,
+  CreateAccountRequest,
   ReconciliationPreviewResponse,
   ReconciliationResponse,
+  RecordReconciliationRequest,
+  UpdateAccountRequest,
 } from "../model";
 
 export const getCreateAccountMockHandler = (
   overrideResponse?:
     | AccountResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateAccountRequest>>[0],
       ) => Promise<AccountResponse> | AccountResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateAccountRequest>(
     "*/api/accounts",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateAccountRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -43,13 +46,13 @@ export const getAccountsMockHandler = (
   overrideResponse?:
     | AccountResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<AccountResponse[]> | AccountResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/accounts",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -67,13 +70,13 @@ export const getArchivedAccountsMockHandler = (
   overrideResponse?:
     | ArchivedAccountResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ArchivedAccountResponse[]> | ArchivedAccountResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/accounts/archived",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -91,13 +94,13 @@ export const getCashFlowForecastMockHandler = (
   overrideResponse?:
     | CashFlowForecastResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CashFlowForecastResponse> | CashFlowForecastResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/accounts/forecast",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -114,12 +117,12 @@ export const getCashFlowForecastMockHandler = (
 export const getDeleteAccountMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/accounts/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -134,13 +137,13 @@ export const getAccountMockHandler = (
   overrideResponse?:
     | AccountResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<AccountResponse> | AccountResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/accounts/:id",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -158,13 +161,13 @@ export const getUpdateAccountMockHandler = (
   overrideResponse?:
     | AccountResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateAccountRequest>>[0],
       ) => Promise<AccountResponse> | AccountResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateAccountRequest>(
     "*/api/accounts/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateAccountRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -182,13 +185,13 @@ export const getReconciliationsMockHandler = (
   overrideResponse?:
     | ReconciliationResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<ReconciliationResponse[]> | ReconciliationResponse[]),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/accounts/:id/reconciliations",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -206,13 +209,15 @@ export const getRecordReconciliationMockHandler = (
   overrideResponse?:
     | ReconciliationResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, RecordReconciliationRequest>>[0],
       ) => Promise<ReconciliationResponse> | ReconciliationResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, RecordReconciliationRequest>(
     "*/api/accounts/:id/reconciliations",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, RecordReconciliationRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -230,13 +235,13 @@ export const getReconciliationPreviewMockHandler = (
   overrideResponse?:
     | ReconciliationPreviewResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<ReconciliationPreviewResponse> | ReconciliationPreviewResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/accounts/:id/reconciliations/preview",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -253,12 +258,14 @@ export const getReconciliationPreviewMockHandler = (
 export const getDeleteReconciliationMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string; reconciliationId: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; reconciliationId: string }>(
     "*/api/accounts/:id/reconciliations/:reconciliationId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; reconciliationId: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -273,13 +280,13 @@ export const getRestoreAccountMockHandler = (
   overrideResponse?:
     | AccountResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<AccountResponse> | AccountResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/accounts/:id/restore",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

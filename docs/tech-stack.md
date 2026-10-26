@@ -2,7 +2,7 @@
 
 | Layer | Implementation |
 | --- | --- |
-| Frontend | React 19, TypeScript 7, Vite+ 1 (Vite 8 on Rolldown, Vitest 5, Oxlint, Oxfmt); TanStack Router/Query/Table/Store/Hotkeys/Pacer, TanStack Form 2 alpha, TanStack DB (local-storage collections for per-browser preferences, saved ledger filters and transaction templates) |
+| Frontend | React 19 with the React Compiler run by Oxc (`oxc-transform-react`), TypeScript 7, Vite+ 1 (Vite 8 on Rolldown, Vitest 5, Oxlint, Oxfmt); TanStack Router/Query/Table/Store/Hotkeys/Pacer, TanStack Form 2 alpha, TanStack DB (local-storage collections for per-browser preferences, saved ledger filters and transaction templates) |
 | Package manager | pnpm 12, driven through `vp install`, `vp add` and `vp update`; `pnpm-lock.yaml`, frozen installs in CI and Docker; the `vite`, `vitest` and `@vitest/coverage-v8` versions follow `vite-plus` through the catalog and overrides in `frontend/pnpm-workspace.yaml` |
 | Styling | Tailwind 4, shadcn/ui (base-nova style) on Base UI, react-day-picker, Lucide icons, Recharts, MapLibre GL with the PMTiles protocol for the map of spending by place (loaded only when the map is opened), self-hosted typefaces for the per-browser typeface choice: Source Serif 4, Source Sans 3, Inter, Newsreader, IBM Plex Sans, IBM Plex Serif and Atkinson Hyperlegible Next (woff2 in `src/assets/fonts`, OFL) |
 | Localization | react-i18next, EN/LT JSON dictionaries and Intl formatters |
@@ -14,7 +14,7 @@
 | PDF | PDFsharp-MigraDoc (MIT). Fonts come from the host through `PdfFontResolver`: DejaVu Sans on Linux (the API image installs `fonts-dejavu-core`), Arial on Windows and macOS |
 | Receipt reading | Tesseract (`tesseract-ocr` with `lit` and `eng` data) run as a process; Magick.NET to prepare photos; PdfPig for the text of a PDF; Ghostscript (`ghostscript`, AGPL), which Magick.NET runs to render a scanned PDF and which is optional: without it a scan answers `receipt.pdfWithoutText`. All installed in the API image; see [Receipt reading](features/receipt-reading.md) and [deployment](architecture/deployment.md) |
 | Checks | xUnit v3 with FastEndpoints.Testing, real PostgreSQL integration tests (Testcontainers), NetArchTest, Oxc, TypeScript/Vite, Vitest unit and DOM tests, Storybook stories run in jsdom by Vitest with an axe-core scan (Storybook itself is for manual review, colour contrast included), Playwright end-to-end smoke tests, lefthook git hooks, `just` recipes |
-| MCP server | `FastEndpoints.Mcp` 1.0 beta on `ModelContextProtocol.AspNetCore` 2.2, served by the API at `/api/mcp` over streamable HTTP; see [Personal API tokens](features/personal-api-tokens.md#mcp-server-for-an-ai-client) |
+| MCP server | `FastEndpoints.Mcp` 1.0 beta on `ModelContextProtocol.AspNetCore` 2.3, served by the API at `/api/mcp` over streamable HTTP; see [Personal API tokens](features/personal-api-tokens.md#mcp-server-for-an-ai-client) |
 | Deployment | Docker Compose; Caddy serves the SPA and proxies /api; named volumes `db_data` (PostgreSQL), `auth_keys` (signing and Data Protection keys), `backups` (backup archives) and `attachments` (files attached to transactions), each mounted only where it is needed |
 
 Exact dependency versions are in the project/package manifests and lockfile. The backend uses one application project with Domain, Infrastructure, Endpoints and Common folders, plus a test project. The earlier separate Domain/Infrastructure-project design was not retained.

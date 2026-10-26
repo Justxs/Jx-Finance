@@ -9,13 +9,14 @@
 export interface RenamePlaceRequest {
   /**
    * Between 1 and 50 places as the place list shows them, each at most 120 characters.
-   * @minItems 0
-   * @maxItems 120
+   * @minItems 1
+   * @items.minLength 1
+   * @items.maxLength 120
    */
   places: string[];
   /**
    * The place the rows should read, trimmed, at most 120 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 120
    */
   name: string;

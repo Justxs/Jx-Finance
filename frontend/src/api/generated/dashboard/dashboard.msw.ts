@@ -6,26 +6,27 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   CategoryBreakdownResponse,
   DashboardLayoutResponse,
   DashboardSummaryResponse,
   GettingStartedStepResponse,
   MonthlyTrendResponse,
+  SaveDashboardLayoutRequest,
 } from "../model";
 
 export const getCategoryBreakdownMockHandler = (
   overrideResponse?:
     | CategoryBreakdownResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CategoryBreakdownResponse> | CategoryBreakdownResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/dashboard/category-breakdown",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -43,13 +44,13 @@ export const getMonthlyTrendMockHandler = (
   overrideResponse?:
     | MonthlyTrendResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<MonthlyTrendResponse> | MonthlyTrendResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/dashboard/monthly-trend",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -67,13 +68,13 @@ export const getDashboardSummaryMockHandler = (
   overrideResponse?:
     | DashboardSummaryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<DashboardSummaryResponse> | DashboardSummaryResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/dashboard/summary",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -91,13 +92,13 @@ export const getDashboardLayoutMockHandler = (
   overrideResponse?:
     | DashboardLayoutResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/users/me/dashboard-layout",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -115,13 +116,13 @@ export const getResetDashboardLayoutMockHandler = (
   overrideResponse?:
     | DashboardLayoutResponse
     | ((
-        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.delete(
     "*/api/users/me/dashboard-layout",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -139,13 +140,13 @@ export const getSaveDashboardLayoutMockHandler = (
   overrideResponse?:
     | DashboardLayoutResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, SaveDashboardLayoutRequest>>[0],
       ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, SaveDashboardLayoutRequest>(
     "*/api/users/me/dashboard-layout",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, SaveDashboardLayoutRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -163,13 +164,13 @@ export const getGettingStartedMockHandler = (
   overrideResponse?:
     | GettingStartedStepResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<GettingStartedStepResponse[]> | GettingStartedStepResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/users/me/getting-started",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

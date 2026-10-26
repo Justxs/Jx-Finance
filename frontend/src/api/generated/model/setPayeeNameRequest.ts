@@ -9,13 +9,13 @@
 export interface SetPayeeNameRequest {
   /**
    * A bank description or a payee key, at most 500 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 500
    */
   payee: string;
   /**
    * The display name, at most 100 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

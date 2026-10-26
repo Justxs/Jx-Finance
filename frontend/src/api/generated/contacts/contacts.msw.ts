@@ -6,25 +6,30 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   ContactEntryResponse,
   ContactResponse,
   ContactSplitResponse,
+  CreateContactPaymentRequest,
+  CreateContactRequest,
+  CreateContactSplitRequest,
   PagedResponseOfContactEntryResponse,
+  UpdateContactRequest,
+  UpdateContactSplitRequest,
 } from "../model";
 
 export const getCreateContactMockHandler = (
   overrideResponse?:
     | ContactResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateContactRequest>>[0],
       ) => Promise<ContactResponse> | ContactResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateContactRequest>(
     "*/api/contacts",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateContactRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -42,13 +47,13 @@ export const getContactsMockHandler = (
   overrideResponse?:
     | ContactResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ContactResponse[]> | ContactResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/contacts",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -65,12 +70,12 @@ export const getContactsMockHandler = (
 export const getDeleteContactPaymentMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/contacts/payments/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -85,13 +90,13 @@ export const getCreateContactSplitMockHandler = (
   overrideResponse?:
     | ContactSplitResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateContactSplitRequest>>[0],
       ) => Promise<ContactSplitResponse> | ContactSplitResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateContactSplitRequest>(
     "*/api/contacts/splits",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateContactSplitRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -108,12 +113,12 @@ export const getCreateContactSplitMockHandler = (
 export const getDeleteContactSplitMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/contacts/splits/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -128,13 +133,15 @@ export const getUpdateContactSplitMockHandler = (
   overrideResponse?:
     | ContactSplitResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateContactSplitRequest>>[0],
       ) => Promise<ContactSplitResponse> | ContactSplitResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateContactSplitRequest>(
     "*/api/contacts/splits/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, UpdateContactSplitRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -151,12 +158,12 @@ export const getUpdateContactSplitMockHandler = (
 export const getDeleteContactMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/contacts/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -171,13 +178,13 @@ export const getUpdateContactMockHandler = (
   overrideResponse?:
     | ContactResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateContactRequest>>[0],
       ) => Promise<ContactResponse> | ContactResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateContactRequest>(
     "*/api/contacts/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateContactRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -195,13 +202,13 @@ export const getContactEntriesMockHandler = (
   overrideResponse?:
     | PagedResponseOfContactEntryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<PagedResponseOfContactEntryResponse> | PagedResponseOfContactEntryResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/contacts/:id/entries",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -219,13 +226,15 @@ export const getCreateContactPaymentMockHandler = (
   overrideResponse?:
     | ContactEntryResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, CreateContactPaymentRequest>>[0],
       ) => Promise<ContactEntryResponse> | ContactEntryResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, CreateContactPaymentRequest>(
     "*/api/contacts/:id/payments",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, CreateContactPaymentRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

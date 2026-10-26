@@ -6,20 +6,20 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { CategoryResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type { CategoryResponse, CreateCategoryRequest, UpdateCategoryRequest } from "../model";
 
 export const getCreateCategoryMockHandler = (
   overrideResponse?:
     | CategoryResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateCategoryRequest>>[0],
       ) => Promise<CategoryResponse> | CategoryResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateCategoryRequest>(
     "*/api/categories",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateCategoryRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +37,13 @@ export const getCategoriesMockHandler = (
   overrideResponse?:
     | CategoryResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CategoryResponse[]> | CategoryResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/categories",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -60,12 +60,12 @@ export const getCategoriesMockHandler = (
 export const getDeleteCategoryMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/categories/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -80,13 +80,13 @@ export const getUpdateCategoryMockHandler = (
   overrideResponse?:
     | CategoryResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateCategoryRequest>>[0],
       ) => Promise<CategoryResponse> | CategoryResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateCategoryRequest>(
     "*/api/categories/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateCategoryRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

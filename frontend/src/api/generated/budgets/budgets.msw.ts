@@ -6,20 +6,25 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { BudgetResponse, BudgetSuggestionsResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type {
+  BudgetResponse,
+  BudgetSuggestionsResponse,
+  CreateBudgetRequest,
+  UpdateBudgetRequest,
+} from "../model";
 
 export const getCreateBudgetMockHandler = (
   overrideResponse?:
     | BudgetResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateBudgetRequest>>[0],
       ) => Promise<BudgetResponse> | BudgetResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateBudgetRequest>(
     "*/api/budgets",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateBudgetRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -36,14 +41,12 @@ export const getCreateBudgetMockHandler = (
 export const getBudgetsMockHandler = (
   overrideResponse?:
     | BudgetResponse[]
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<BudgetResponse[]> | BudgetResponse[]),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<BudgetResponse[]> | BudgetResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/budgets",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -61,13 +64,13 @@ export const getBudgetSuggestionsMockHandler = (
   overrideResponse?:
     | BudgetSuggestionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<BudgetSuggestionsResponse> | BudgetSuggestionsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/budgets/suggestions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -84,12 +87,12 @@ export const getBudgetSuggestionsMockHandler = (
 export const getDeleteBudgetMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/budgets/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -104,13 +107,13 @@ export const getUpdateBudgetMockHandler = (
   overrideResponse?:
     | BudgetResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateBudgetRequest>>[0],
       ) => Promise<BudgetResponse> | BudgetResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateBudgetRequest>(
     "*/api/budgets/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateBudgetRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

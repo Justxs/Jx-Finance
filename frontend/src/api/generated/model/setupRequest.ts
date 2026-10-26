@@ -8,7 +8,7 @@
 
 export interface SetupRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */
@@ -19,7 +19,7 @@ export interface SetupRequest {
    */
   password: string;
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   displayName: string;

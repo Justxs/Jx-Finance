@@ -19,7 +19,7 @@ public abstract class DebtInputValidator<TRequest> : Validator<TRequest>
             .WithMessage("Outstanding amount is required.")
             .IsNonNegativeMoney()
             .WithMessage("Outstanding amount must be a non-negative decimal with at most 2 decimal places.");
-        RuleFor(r => r.InterestRate).IsWithin(0, 100).When(r => r.InterestRate.HasValue);
+        RuleFor(r => r.InterestRate).IsWithin(0, 100);
         RuleFor(r => r.InterestRate)
             .Must(rate => rate is null || decimal.Round(rate.Value, 4) == rate.Value)
             .WithErrorCode(ErrorCodes.DebtRatePrecision)
@@ -28,7 +28,7 @@ public abstract class DebtInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.LoanAmount)
             .IsPositiveMoney()
             .WithMessage("Loan amount must be a positive decimal with at most 2 decimal places.");
-        RuleFor(r => r.TermMonths).IsWithin(1, Debt.MaxTermMonths).When(r => r.TermMonths.HasValue);
+        RuleFor(r => r.TermMonths).IsWithin(1, Debt.MaxTermMonths);
         RuleFor(r => r.AmortizationType).IsKnownEnum().When(r => r.AmortizationType.HasValue);
         RuleFor(r => r.MonthlyPayment)
             .IsPositiveMoney()

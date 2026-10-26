@@ -8,7 +8,7 @@
 
 export interface DismissSuggestedRuleRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   key: string;

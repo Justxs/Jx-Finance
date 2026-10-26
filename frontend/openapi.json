@@ -24018,7 +24018,7 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "description": "Email address of an existing, active user.",
@@ -24038,13 +24038,13 @@
         "properties": {
           "credentialJson": {
             "maxLength": 65536,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create()."
           },
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "A name for the list, at most 100 characters; the client sends the browser's label."
           }
@@ -25066,6 +25066,7 @@
             "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -25108,6 +25109,7 @@
             "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -25138,6 +25140,7 @@
             "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -25181,15 +25184,16 @@
             "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
             "description": "Between 1 and 200 transaction ids."
           },
           "tagIds": {
-            "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -25905,7 +25909,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "Display name, up to 100 characters."
           },
@@ -25967,7 +25971,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "type": {
@@ -26081,7 +26085,7 @@
         "properties": {
           "name": {
             "maxLength": 50,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "What the rule is called on the rules screen and in a run's result."
           },
@@ -26090,14 +26094,14 @@
           },
           "pattern": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The text the description is compared with. Per cent and underscore are literal characters, not wildcards."
           },
           "tagIds": {
-            "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -26149,7 +26153,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "Display name, unique within its scope."
           },
@@ -26227,7 +26231,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The name, 1 to 100 characters."
           }
@@ -26359,7 +26363,7 @@
         "properties": {
           "name": {
             "maxLength": 60,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "What the provider list calls the mapping, at most 60 characters."
           },
@@ -26421,7 +26425,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "type": {
@@ -26558,7 +26562,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "targetAmount": {
@@ -26626,7 +26630,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           }
         }
@@ -26743,7 +26747,7 @@
         "properties": {
           "name": {
             "maxLength": 60,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "A name for the list, at most 60 characters."
           },
@@ -26781,7 +26785,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "shape": {
@@ -26979,7 +26983,7 @@
         "properties": {
           "name": {
             "maxLength": 50,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "Display name, unique among your own tags whatever the casing."
           },
@@ -27039,8 +27043,7 @@
           "amount",
           "date",
           "description",
-          "lines",
-          "tagIds"
+          "lines"
         ],
         "type": "object",
         "properties": {
@@ -27093,6 +27096,7 @@
               "array"
             ],
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             }
@@ -27248,14 +27252,14 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
           },
           "displayName": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "role": {
@@ -28183,7 +28187,7 @@
           },
           "description": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           }
         }
@@ -28197,7 +28201,7 @@
         "properties": {
           "key": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "categoryId": {
@@ -28700,7 +28704,7 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
@@ -30104,7 +30108,7 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
@@ -30829,6 +30833,7 @@
         "type": "object",
         "properties": {
           "direction": {
+            "description": "up moves the rule earlier, down moves it later.",
             "$ref": "#/components/schemas/MoveDirection"
           }
         }
@@ -31485,7 +31490,7 @@
         "properties": {
           "credentialJson": {
             "maxLength": 65536,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get()."
           },
@@ -32795,7 +32800,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           }
         }
@@ -32808,17 +32813,18 @@
         "type": "object",
         "properties": {
           "places": {
-            "maxItems": 120,
-            "minItems": 0,
+            "minItems": 1,
             "type": "array",
             "items": {
+              "maxLength": 120,
+              "minLength": 1,
               "type": "string"
             },
             "description": "Between 1 and 50 places as the place list shows them, each at most 120 characters."
           },
           "name": {
             "maxLength": 120,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The place the rows should read, trimmed, at most 120 characters."
           }
@@ -33045,14 +33051,14 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
           },
           "token": {
             "maxLength": 1000,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The token from the emailed link, sent back unchanged."
           },
@@ -33078,7 +33084,7 @@
           },
           "currentPassword": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The current password of the signed-in administrator."
           },
@@ -33097,7 +33103,7 @@
         "properties": {
           "password": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The current password of the signed-in administrator."
           }
@@ -33158,6 +33164,7 @@
             "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             },
@@ -33277,7 +33284,6 @@
             "type": "string"
           },
           "token": {
-            "pattern": "^[0-9]{6,64}$",
             "type": [
               "null",
               "string"
@@ -33331,12 +33337,12 @@
         "properties": {
           "symbol": {
             "maxLength": 32,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "name": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "type": {
@@ -33346,7 +33352,6 @@
             "$ref": "#/components/schemas/Currency"
           },
           "isin": {
-            "pattern": "^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$",
             "type": [
               "null",
               "string"
@@ -33635,13 +33640,13 @@
         "properties": {
           "payee": {
             "maxLength": 500,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "A bank description or a payee key, at most 500 characters."
           },
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The display name, at most 100 characters."
           }
@@ -33814,7 +33819,7 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
@@ -33826,7 +33831,7 @@
           },
           "displayName": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           }
         }
@@ -34199,7 +34204,7 @@
           },
           "description": {
             "maxLength": 500,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The description as typed, at most 500 characters."
           }
@@ -34689,13 +34694,13 @@
           },
           "pattern": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The text the draft rule compares with."
           },
           "description": {
             "maxLength": 500,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The sample description typed into the form."
           },
@@ -35550,7 +35555,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "description": {
@@ -35612,7 +35617,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "type": {
@@ -35728,7 +35733,7 @@
         "properties": {
           "name": {
             "maxLength": 50,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "match": {
@@ -35736,13 +35741,13 @@
           },
           "pattern": {
             "maxLength": 200,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "tagIds": {
-            "minItems": 1,
             "type": "array",
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             }
@@ -35788,7 +35793,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "icon": {
@@ -35826,7 +35831,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The new name, 1 to 100 characters."
           }
@@ -35943,7 +35948,7 @@
         "properties": {
           "name": {
             "maxLength": 60,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "encoding": {
@@ -36018,7 +36023,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "type": {
@@ -36164,7 +36169,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "targetAmount": {
@@ -36235,7 +36240,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           }
         }
@@ -36457,7 +36462,7 @@
         "properties": {
           "displayName": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "currentPassword": {
@@ -36524,7 +36529,7 @@
         "properties": {
           "name": {
             "maxLength": 100,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "shape": {
@@ -36769,12 +36774,10 @@
           "fromAddress": {
             "maxLength": 320,
             "minLength": 0,
-            "pattern": "^[^@]+@[^@]+$",
             "type": [
               "null",
               "string"
-            ],
-            "format": "email"
+            ]
           },
           "fromName": {
             "maxLength": 100,
@@ -36796,7 +36799,7 @@
         "properties": {
           "name": {
             "maxLength": 50,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string"
           },
           "scope": {
@@ -36841,7 +36844,6 @@
       },
       "UpdateTransactionRequest": {
         "required": [
-          "tagIds",
           "accountId",
           "categoryId",
           "type",
@@ -36903,6 +36905,7 @@
               "array"
             ],
             "items": {
+              "minLength": 1,
               "type": "string",
               "format": "uuid"
             }
@@ -37225,14 +37228,14 @@
         "properties": {
           "email": {
             "maxLength": 256,
-            "minLength": 0,
+            "minLength": 1,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email"
           },
           "token": {
             "maxLength": 1000,
-            "minLength": 0,
+            "minLength": 1,
             "type": "string",
             "description": "The token from the emailed link, sent back unchanged."
           }

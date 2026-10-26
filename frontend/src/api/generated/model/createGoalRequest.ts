@@ -11,7 +11,7 @@ import type { Scope } from "./scope";
 
 export interface CreateGoalRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

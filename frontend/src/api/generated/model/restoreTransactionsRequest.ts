@@ -10,6 +10,7 @@ export interface RestoreTransactionsRequest {
   /**
    * Between 1 and 200 ids of deleted transactions.
    * @minItems 1
+   * @items.minLength 1
    */
   transactionIds: string[];
 }

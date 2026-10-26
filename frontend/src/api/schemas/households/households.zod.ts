@@ -11,11 +11,10 @@ import * as zod from "zod";
  * Creates a household and makes you its owner. A household is the unit that shared accounts, categories, and transactions belong to; adding members is what gives other people sight of that data.
  * @summary Create a household
  */
-export const createHouseholdBodyNameMin = 0;
 export const createHouseholdBodyNameMax = 100;
 
 export const CreateHouseholdBody = zod.object({
-  name: zod.string().min(createHouseholdBodyNameMin).max(createHouseholdBodyNameMax),
+  name: zod.string().min(1).max(createHouseholdBodyNameMax),
 });
 
 export const CreateHouseholdResponse = zod.object({
@@ -91,11 +90,10 @@ export const HouseholdResponse = zod.object({
  * Changes the household name. Only an owner may do this; a plain member gets 403 rather than 404, because membership already tells them the household exists.
  * @summary Rename a household
  */
-export const updateHouseholdBodyNameMin = 0;
 export const updateHouseholdBodyNameMax = 100;
 
 export const UpdateHouseholdBody = zod.object({
-  name: zod.string().min(updateHouseholdBodyNameMin).max(updateHouseholdBodyNameMax),
+  name: zod.string().min(1).max(updateHouseholdBodyNameMax),
 });
 
 export const UpdateHouseholdResponse = zod.object({
@@ -182,7 +180,6 @@ export const HouseholdAuditResponse = zod.object({
  * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
-export const addMemberBodyEmailMin = 0;
 export const addMemberBodyEmailMax = 256;
 
 export const addMemberBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
@@ -190,7 +187,7 @@ export const addMemberBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 export const AddMemberBody = zod.object({
   email: zod
     .email()
-    .min(addMemberBodyEmailMin)
+    .min(1)
     .max(addMemberBodyEmailMax)
     .regex(addMemberBodyEmailRegExp)
     .describe("Email address of an existing, active user."),

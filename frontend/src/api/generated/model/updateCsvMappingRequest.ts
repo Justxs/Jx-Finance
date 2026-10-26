@@ -13,7 +13,7 @@ import type { Currency } from "./currency";
 
 export interface UpdateCsvMappingRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 60
    */
   name: string;

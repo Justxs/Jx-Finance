@@ -9,7 +9,7 @@
 export interface PasskeySignInRequest {
   /**
    * JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get().
-   * @minLength 0
+   * @minLength 1
    * @maxLength 65536
    */
   credentialJson: string;

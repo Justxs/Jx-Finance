@@ -6,33 +6,41 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
+  BulkCategorizeTransactionsRequest,
   BulkCategorizeTransactionsResponse,
+  BulkDeleteTransactionsRequest,
   BulkDeleteTransactionsResponse,
+  BulkMoveTransactionsRequest,
   BulkMoveTransactionsResponse,
+  BulkTagTransactionsRequest,
   BulkTagTransactionsResponse,
   CategorySuggestionResponse,
+  CreateTransactionRequest,
   PagedResponseOfLedgerItemResponse,
   PagedResponseOfTransactionResponse,
   PlaceSuggestionResponse,
+  RenamePlaceRequest,
   RenamePlaceResponse,
+  SuggestCategoryRequest,
   TransactionResponse,
   TransactionsSummaryResponse,
   UncategorizedSuggestionResponse,
+  UpdateTransactionRequest,
 } from "../model";
 
 export const getCreateTransactionMockHandler = (
   overrideResponse?:
     | TransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateTransactionRequest>>[0],
       ) => Promise<TransactionResponse> | TransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateTransactionRequest>(
     "*/api/transactions",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateTransactionRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -50,13 +58,13 @@ export const getTransactionsMockHandler = (
   overrideResponse?:
     | PagedResponseOfTransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PagedResponseOfTransactionResponse> | PagedResponseOfTransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -74,13 +82,13 @@ export const getBulkMoveTransactionsMockHandler = (
   overrideResponse?:
     | BulkMoveTransactionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, BulkMoveTransactionsRequest>>[0],
       ) => Promise<BulkMoveTransactionsResponse> | BulkMoveTransactionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, BulkMoveTransactionsRequest>(
     "*/api/transactions/bulk-account",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, BulkMoveTransactionsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -98,13 +106,15 @@ export const getBulkCategorizeTransactionsMockHandler = (
   overrideResponse?:
     | BulkCategorizeTransactionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, BulkCategorizeTransactionsRequest>>[0],
       ) => Promise<BulkCategorizeTransactionsResponse> | BulkCategorizeTransactionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, BulkCategorizeTransactionsRequest>(
     "*/api/transactions/bulk-category",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, BulkCategorizeTransactionsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -122,13 +132,15 @@ export const getBulkDeleteTransactionsMockHandler = (
   overrideResponse?:
     | BulkDeleteTransactionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, BulkDeleteTransactionsRequest>>[0],
       ) => Promise<BulkDeleteTransactionsResponse> | BulkDeleteTransactionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, BulkDeleteTransactionsRequest>(
     "*/api/transactions/bulk-delete",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, BulkDeleteTransactionsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -146,13 +158,13 @@ export const getBulkTagTransactionsMockHandler = (
   overrideResponse?:
     | BulkTagTransactionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, BulkTagTransactionsRequest>>[0],
       ) => Promise<BulkTagTransactionsResponse> | BulkTagTransactionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, BulkTagTransactionsRequest>(
     "*/api/transactions/bulk-tags",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, BulkTagTransactionsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -167,14 +179,12 @@ export const getBulkTagTransactionsMockHandler = (
 };
 
 export const getExportTransactionsMockHandler = (
-  overrideResponse?:
-    | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  overrideResponse?: Blob | ((info: Parameters<HttpResponseResolver>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/export",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -191,14 +201,12 @@ export const getExportTransactionsMockHandler = (
 };
 
 export const getExportTransactionsPdfMockHandler = (
-  overrideResponse?:
-    | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  overrideResponse?: Blob | ((info: Parameters<HttpResponseResolver>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/export/pdf",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -218,13 +226,13 @@ export const getLedgerMockHandler = (
   overrideResponse?:
     | PagedResponseOfLedgerItemResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PagedResponseOfLedgerItemResponse> | PagedResponseOfLedgerItemResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/ledger",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -242,13 +250,13 @@ export const getPlacesMockHandler = (
   overrideResponse?:
     | PlaceSuggestionResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PlaceSuggestionResponse[]> | PlaceSuggestionResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/places",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -266,13 +274,13 @@ export const getRenamePlaceMockHandler = (
   overrideResponse?:
     | RenamePlaceResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, RenamePlaceRequest>>[0],
       ) => Promise<RenamePlaceResponse> | RenamePlaceResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, RenamePlaceRequest>(
     "*/api/transactions/places/rename",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, RenamePlaceRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -290,13 +298,13 @@ export const getSuggestCategoryMockHandler = (
   overrideResponse?:
     | CategorySuggestionResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, SuggestCategoryRequest>>[0],
       ) => Promise<CategorySuggestionResponse> | CategorySuggestionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, SuggestCategoryRequest>(
     "*/api/transactions/suggest-category",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, SuggestCategoryRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -314,13 +322,13 @@ export const getTransactionsSummaryMockHandler = (
   overrideResponse?:
     | TransactionsSummaryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<TransactionsSummaryResponse> | TransactionsSummaryResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/summary",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -338,13 +346,13 @@ export const getUncategorizedSuggestionsMockHandler = (
   overrideResponse?:
     | UncategorizedSuggestionResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<UncategorizedSuggestionResponse[]> | UncategorizedSuggestionResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transactions/uncategorized-suggestions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -361,12 +369,12 @@ export const getUncategorizedSuggestionsMockHandler = (
 export const getDeleteTransactionMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/transactions/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -381,13 +389,13 @@ export const getTransactionMockHandler = (
   overrideResponse?:
     | TransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<TransactionResponse> | TransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/transactions/:id",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -405,13 +413,13 @@ export const getUpdateTransactionMockHandler = (
   overrideResponse?:
     | TransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateTransactionRequest>>[0],
       ) => Promise<TransactionResponse> | TransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateTransactionRequest>(
     "*/api/transactions/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateTransactionRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -428,12 +436,12 @@ export const getUpdateTransactionMockHandler = (
 export const getKeepPossibleDuplicatesMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/transactions/:id/duplicates/keep",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -447,12 +455,12 @@ export const getKeepPossibleDuplicatesMockHandler = (
 export const getDismissUnusualAmountMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/transactions/:id/unusual/dismiss",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -466,12 +474,12 @@ export const getDismissUnusualAmountMockHandler = (
 export const getRestoreUnusualAmountMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/transactions/:id/unusual/dismiss",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }

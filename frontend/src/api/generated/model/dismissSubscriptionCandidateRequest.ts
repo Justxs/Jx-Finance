@@ -10,7 +10,7 @@ export interface DismissSubscriptionCandidateRequest {
   /** @minLength 1 */
   accountId: string;
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   description: string;

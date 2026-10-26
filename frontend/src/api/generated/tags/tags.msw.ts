@@ -6,20 +6,20 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { TagResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type { CreateTagRequest, TagResponse, UpdateTagRequest } from "../model";
 
 export const getCreateTagMockHandler = (
   overrideResponse?:
     | TagResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateTagRequest>>[0],
       ) => Promise<TagResponse> | TagResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateTagRequest>(
     "*/api/tags",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateTagRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -36,14 +36,12 @@ export const getCreateTagMockHandler = (
 export const getTagsMockHandler = (
   overrideResponse?:
     | TagResponse[]
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<TagResponse[]> | TagResponse[]),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<TagResponse[]> | TagResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/tags",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -60,12 +58,12 @@ export const getTagsMockHandler = (
 export const getDeleteTagMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/tags/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -79,12 +77,14 @@ export const getDeleteTagMockHandler = (
 export const getUpdateTagMockHandler = (
   overrideResponse?:
     | TagResponse
-    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<TagResponse> | TagResponse),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateTagRequest>>[0],
+      ) => Promise<TagResponse> | TagResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateTagRequest>(
     "*/api/tags/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateTagRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

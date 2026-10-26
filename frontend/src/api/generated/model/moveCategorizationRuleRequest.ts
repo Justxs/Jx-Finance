@@ -8,5 +8,6 @@
 import type { MoveDirection } from "./moveDirection";
 
 export interface MoveCategorizationRuleRequest {
+  /** up moves the rule earlier, down moves it later. */
   direction: MoveDirection;
 }

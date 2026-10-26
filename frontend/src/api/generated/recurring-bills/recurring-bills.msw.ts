@@ -6,26 +6,31 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   BillsCalendarResponse,
+  ConfirmRecurringBillRequest,
   ConfirmRecurringBillResponse,
+  CreateRecurringBillRequest,
+  DismissSubscriptionCandidateRequest,
   RecurringBillResponse,
   RecurringTotalsResponse,
+  SkipRecurringBillRequest,
   SubscriptionCandidateResponse,
+  UpdateRecurringBillRequest,
 } from "../model";
 
 export const getCreateRecurringBillMockHandler = (
   overrideResponse?:
     | RecurringBillResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateRecurringBillRequest>>[0],
       ) => Promise<RecurringBillResponse> | RecurringBillResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateRecurringBillRequest>(
     "*/api/recurring-bills",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateRecurringBillRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -43,13 +48,13 @@ export const getRecurringBillsMockHandler = (
   overrideResponse?:
     | RecurringBillResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<RecurringBillResponse[]> | RecurringBillResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/recurring-bills",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -67,13 +72,13 @@ export const getBillsCalendarMockHandler = (
   overrideResponse?:
     | BillsCalendarResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<BillsCalendarResponse> | BillsCalendarResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/recurring-bills/calendar",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -91,13 +96,13 @@ export const getSubscriptionCandidatesMockHandler = (
   overrideResponse?:
     | SubscriptionCandidateResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<SubscriptionCandidateResponse[]> | SubscriptionCandidateResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/recurring-bills/suggestions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -114,12 +119,16 @@ export const getSubscriptionCandidatesMockHandler = (
 export const getDismissSubscriptionCandidateMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, DismissSubscriptionCandidateRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, DismissSubscriptionCandidateRequest>(
     "*/api/recurring-bills/suggestions/dismiss",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, DismissSubscriptionCandidateRequest>>[0],
+    ) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -134,13 +143,13 @@ export const getRecurringTotalsMockHandler = (
   overrideResponse?:
     | RecurringTotalsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<RecurringTotalsResponse> | RecurringTotalsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/recurring-bills/totals",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -157,12 +166,12 @@ export const getRecurringTotalsMockHandler = (
 export const getDeleteRecurringBillMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/recurring-bills/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -177,13 +186,13 @@ export const getRecurringBillMockHandler = (
   overrideResponse?:
     | RecurringBillResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<RecurringBillResponse> | RecurringBillResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/recurring-bills/:id",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -201,13 +210,15 @@ export const getUpdateRecurringBillMockHandler = (
   overrideResponse?:
     | RecurringBillResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateRecurringBillRequest>>[0],
       ) => Promise<RecurringBillResponse> | RecurringBillResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateRecurringBillRequest>(
     "*/api/recurring-bills/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, UpdateRecurringBillRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -225,13 +236,15 @@ export const getConfirmRecurringBillMockHandler = (
   overrideResponse?:
     | ConfirmRecurringBillResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, ConfirmRecurringBillRequest>>[0],
       ) => Promise<ConfirmRecurringBillResponse> | ConfirmRecurringBillResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, ConfirmRecurringBillRequest>(
     "*/api/recurring-bills/:id/confirm",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, ConfirmRecurringBillRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -249,13 +262,13 @@ export const getSkipRecurringBillMockHandler = (
   overrideResponse?:
     | RecurringBillResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, SkipRecurringBillRequest>>[0],
       ) => Promise<RecurringBillResponse> | RecurringBillResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, SkipRecurringBillRequest>(
     "*/api/recurring-bills/:id/skip",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, SkipRecurringBillRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

@@ -6,28 +6,40 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
+  AddPasskeyRequest,
+  CreatePersonalApiTokenRequest,
   CreatedPersonalApiTokenResponse,
+  EnableTwoFactorRequest,
   EnableTwoFactorResponse,
+  ForgotPasswordRequest,
+  LoginRequest,
   LoginResponse,
   PasskeyOptionsResponse,
   PasskeyResponse,
+  PasskeySignInRequest,
   PersonalApiTokenResponse,
+  ReauthenticateRequest,
+  RenamePasskeyRequest,
+  ResetPasswordRequest,
   SessionResponse,
   TwoFactorSetupResponse,
   UserProfileResponse,
+  VerifyEmailRequest,
 } from "../model";
 
 export const getDisableTwoFactorMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ReauthenticateRequest>(
     "*/api/auth/2fa/disable",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -42,13 +54,13 @@ export const getEnableTwoFactorMockHandler = (
   overrideResponse?:
     | EnableTwoFactorResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, EnableTwoFactorRequest>>[0],
       ) => Promise<EnableTwoFactorResponse> | EnableTwoFactorResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, EnableTwoFactorRequest>(
     "*/api/auth/2fa/enable",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, EnableTwoFactorRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -66,13 +78,13 @@ export const getSetupTwoFactorMockHandler = (
   overrideResponse?:
     | TwoFactorSetupResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0],
       ) => Promise<TwoFactorSetupResponse> | TwoFactorSetupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ReauthenticateRequest>(
     "*/api/auth/2fa/setup",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -89,12 +101,14 @@ export const getSetupTwoFactorMockHandler = (
 export const getForgotPasswordMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, ForgotPasswordRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ForgotPasswordRequest>(
     "*/api/auth/forgot-password",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ForgotPasswordRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -109,13 +123,13 @@ export const getLoginMockHandler = (
   overrideResponse?:
     | LoginResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, LoginRequest>>[0],
       ) => Promise<LoginResponse> | LoginResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, LoginRequest>(
     "*/api/auth/login",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, LoginRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -130,14 +144,12 @@ export const getLoginMockHandler = (
 };
 
 export const getLogoutMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/auth/logout",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -152,13 +164,13 @@ export const getMeMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/auth/me",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -176,13 +188,13 @@ export const getAddPasskeyMockHandler = (
   overrideResponse?:
     | PasskeyResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, AddPasskeyRequest>>[0],
       ) => Promise<PasskeyResponse> | PasskeyResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, AddPasskeyRequest>(
     "*/api/auth/passkeys",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, AddPasskeyRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -200,13 +212,13 @@ export const getPasskeysMockHandler = (
   overrideResponse?:
     | PasskeyResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PasskeyResponse[]> | PasskeyResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/auth/passkeys",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -224,13 +236,13 @@ export const getBeginPasskeyRegistrationMockHandler = (
   overrideResponse?:
     | PasskeyOptionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0],
       ) => Promise<PasskeyOptionsResponse> | PasskeyOptionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ReauthenticateRequest>(
     "*/api/auth/passkeys/registration-options",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ReauthenticateRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -248,13 +260,13 @@ export const getPasskeySignInMockHandler = (
   overrideResponse?:
     | LoginResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, PasskeySignInRequest>>[0],
       ) => Promise<LoginResponse> | LoginResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, PasskeySignInRequest>(
     "*/api/auth/passkeys/sign-in",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, PasskeySignInRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -272,13 +284,13 @@ export const getBeginPasskeySignInMockHandler = (
   overrideResponse?:
     | PasskeyOptionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PasskeyOptionsResponse> | PasskeyOptionsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/auth/passkeys/sign-in-options",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -295,12 +307,12 @@ export const getBeginPasskeySignInMockHandler = (
 export const getRemovePasskeyMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/auth/passkeys/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -315,13 +327,13 @@ export const getRenamePasskeyMockHandler = (
   overrideResponse?:
     | PasskeyResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, RenamePasskeyRequest>>[0],
       ) => Promise<PasskeyResponse> | PasskeyResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, RenamePasskeyRequest>(
     "*/api/auth/passkeys/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, RenamePasskeyRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -336,14 +348,12 @@ export const getRenamePasskeyMockHandler = (
 };
 
 export const getRefreshMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/auth/refresh",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -357,12 +367,14 @@ export const getRefreshMockHandler = (
 export const getResetPasswordMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, ResetPasswordRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ResetPasswordRequest>(
     "*/api/auth/reset-password",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ResetPasswordRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -374,14 +386,12 @@ export const getResetPasswordMockHandler = (
 };
 
 export const getSendVerificationEmailMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/auth/send-verification-email",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -396,13 +406,13 @@ export const getSessionsMockHandler = (
   overrideResponse?:
     | SessionResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<SessionResponse[]> | SessionResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/auth/sessions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -417,14 +427,12 @@ export const getSessionsMockHandler = (
 };
 
 export const getRevokeOtherSessionsMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/auth/sessions/revoke-others",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -438,12 +446,12 @@ export const getRevokeOtherSessionsMockHandler = (
 export const getRevokeSessionMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/auth/sessions/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -458,13 +466,15 @@ export const getCreatePersonalApiTokenMockHandler = (
   overrideResponse?:
     | CreatedPersonalApiTokenResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreatePersonalApiTokenRequest>>[0],
       ) => Promise<CreatedPersonalApiTokenResponse> | CreatedPersonalApiTokenResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreatePersonalApiTokenRequest>(
     "*/api/auth/tokens",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, CreatePersonalApiTokenRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -482,13 +492,13 @@ export const getPersonalApiTokensMockHandler = (
   overrideResponse?:
     | PersonalApiTokenResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PersonalApiTokenResponse[]> | PersonalApiTokenResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/auth/tokens",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -505,12 +515,12 @@ export const getPersonalApiTokensMockHandler = (
 export const getRevokePersonalApiTokenMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/auth/tokens/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -524,12 +534,14 @@ export const getRevokePersonalApiTokenMockHandler = (
 export const getVerifyEmailMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, VerifyEmailRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, VerifyEmailRequest>(
     "*/api/auth/verify-email",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, VerifyEmailRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }

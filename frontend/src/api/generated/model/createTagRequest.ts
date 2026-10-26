@@ -10,7 +10,7 @@ import type { Scope } from "./scope";
 export interface CreateTagRequest {
   /**
    * Display name, unique among your own tags whatever the casing.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 50
    */
   name: string;

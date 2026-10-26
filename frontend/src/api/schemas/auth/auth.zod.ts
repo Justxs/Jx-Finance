@@ -50,17 +50,12 @@ export const SetupTwoFactorResponse = zod.object({
  * Queues an email with a single-use reset link when the address belongs to an active user of this installation, the mail server is configured and App:SiteUrl names the address the link points at. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
  * @summary Ask for a password reset link
  */
-export const forgotPasswordBodyEmailMin = 0;
 export const forgotPasswordBodyEmailMax = 256;
 
 export const forgotPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 
 export const ForgotPasswordBody = zod.object({
-  email: zod
-    .email()
-    .min(forgotPasswordBodyEmailMin)
-    .max(forgotPasswordBodyEmailMax)
-    .regex(forgotPasswordBodyEmailRegExp),
+  email: zod.email().min(1).max(forgotPasswordBodyEmailMax).regex(forgotPasswordBodyEmailRegExp),
 });
 
 export const ForgotPasswordResponse = zod.void();
@@ -69,13 +64,12 @@ export const ForgotPasswordResponse = zod.void();
  * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.
  * @summary Sign in
  */
-export const loginBodyEmailMin = 0;
 export const loginBodyEmailMax = 256;
 
 export const loginBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 
 export const LoginBody = zod.object({
-  email: zod.email().min(loginBodyEmailMin).max(loginBodyEmailMax).regex(loginBodyEmailRegExp),
+  email: zod.email().min(1).max(loginBodyEmailMax).regex(loginBodyEmailRegExp),
   password: zod.string().min(1),
   rememberMe: zod.boolean().describe("Keeps the session for 30 days instead of one day."),
   twoFactorCode: zod
@@ -220,21 +214,19 @@ export const MeResponse = zod.object({
  * Verifies the credential the browser created from the registration options and stores it under the given name. The state cookie of the registration is read and deleted; it must belong to the signed-in user and to this session and be less than five minutes old. User verification (a PIN or biometric) is required and no attestation is checked.
  * @summary Finish adding a passkey
  */
-export const addPasskeyBodyCredentialJsonMin = 0;
 export const addPasskeyBodyCredentialJsonMax = 65536;
 
-export const addPasskeyBodyNameMin = 0;
 export const addPasskeyBodyNameMax = 100;
 
 export const AddPasskeyBody = zod.object({
   credentialJson: zod
     .string()
-    .min(addPasskeyBodyCredentialJsonMin)
+    .min(1)
     .max(addPasskeyBodyCredentialJsonMax)
     .describe("JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create()."),
   name: zod
     .string()
-    .min(addPasskeyBodyNameMin)
+    .min(1)
     .max(addPasskeyBodyNameMax)
     .describe("A name for the list, at most 100 characters; the client sends the browser's label."),
 });
@@ -274,13 +266,12 @@ export const BeginPasskeyRegistrationResponse = zod.object({
  * Anonymous. Verifies the assertion the browser made from the sign-in options and signs the owner of the passkey in exactly as a password sign-in does: a session row and the jx_access and jx_refresh cookies. A user-verified passkey is a whole sign-in, so no email, password or authenticator code is asked. A failed assertion never counts toward the account lockout, and a temporarily locked-out account may still sign in this way; a completed sign-in resets the failed-attempt counter. Rate limited to 10 attempts per five minutes per client.
  * @summary Sign in with a passkey
  */
-export const passkeySignInBodyCredentialJsonMin = 0;
 export const passkeySignInBodyCredentialJsonMax = 65536;
 
 export const PasskeySignInBody = zod.object({
   credentialJson: zod
     .string()
-    .min(passkeySignInBodyCredentialJsonMin)
+    .min(1)
     .max(passkeySignInBodyCredentialJsonMax)
     .describe("JSON text of PublicKeyCredential.toJSON() from navigator.credentials.get()."),
   rememberMe: zod.boolean().describe("Keeps the session for 30 days instead of one day."),
@@ -368,11 +359,10 @@ export const RemovePasskeyResponse = zod.void();
  * Changes the name the list shows for one of your passkeys. Nothing else about the passkey changes.
  * @summary Rename a passkey
  */
-export const renamePasskeyBodyNameMin = 0;
 export const renamePasskeyBodyNameMax = 100;
 
 export const RenamePasskeyBody = zod.object({
-  name: zod.string().min(renamePasskeyBodyNameMin).max(renamePasskeyBodyNameMax),
+  name: zod.string().min(1).max(renamePasskeyBodyNameMax),
 });
 
 export const RenamePasskeyResponse = zod.object({
@@ -392,25 +382,19 @@ export const RefreshResponse = zod.void();
  * Consumes the token from the emailed link and stores the new password. The token is ASP.NET Identity's own password-reset token: it carries the user's security stamp, so the completed reset invalidates it and a second attempt with the same link answers 400 passwordReset.tokenInvalid. An unknown address, a deactivated user, an expired token and a tampered token all answer with that same code, so nothing is learned from the difference. A password the validators refuse answers password.tooWeak. A successful reset clears the failed-attempt counter and a temporary lockout, changes the security stamp and therefore ends every open session of that user; a deactivation stays in place. A rejected token does not count toward the lockout. Rate limited to 10 calls per five minutes per client.
  * @summary Set a new password from a reset link
  */
-export const resetPasswordBodyEmailMin = 0;
 export const resetPasswordBodyEmailMax = 256;
 
 export const resetPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
-export const resetPasswordBodyTokenMin = 0;
 export const resetPasswordBodyTokenMax = 1000;
 
 export const resetPasswordBodyNewPasswordMin = 8;
 export const resetPasswordBodyNewPasswordMax = 100;
 
 export const ResetPasswordBody = zod.object({
-  email: zod
-    .email()
-    .min(resetPasswordBodyEmailMin)
-    .max(resetPasswordBodyEmailMax)
-    .regex(resetPasswordBodyEmailRegExp),
+  email: zod.email().min(1).max(resetPasswordBodyEmailMax).regex(resetPasswordBodyEmailRegExp),
   token: zod
     .string()
-    .min(resetPasswordBodyTokenMin)
+    .min(1)
     .max(resetPasswordBodyTokenMax)
     .describe("The token from the emailed link, sent back unchanged."),
   newPassword: zod
@@ -458,7 +442,6 @@ export const RevokeSessionResponse = zod.void();
  * Confirms the account password and creates a token for scripts, spreadsheets and home automation. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. A read-and-write token can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries; it lives at most 90 days. No token reaches administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
  * @summary Create a personal API token
  */
-export const createPersonalApiTokenBodyNameMin = 0;
 export const createPersonalApiTokenBodyNameMax = 60;
 
 export const createPersonalApiTokenBodyExpiresInDaysMax = 365;
@@ -466,7 +449,7 @@ export const createPersonalApiTokenBodyExpiresInDaysMax = 365;
 export const CreatePersonalApiTokenBody = zod.object({
   name: zod
     .string()
-    .min(createPersonalApiTokenBodyNameMin)
+    .min(1)
     .max(createPersonalApiTokenBodyNameMax)
     .describe("A name for the list, at most 60 characters."),
   expiresInDays: zod
@@ -519,22 +502,16 @@ export const RevokePersonalApiTokenResponse = zod.void();
  * Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.
  * @summary Confirm an email address
  */
-export const verifyEmailBodyEmailMin = 0;
 export const verifyEmailBodyEmailMax = 256;
 
 export const verifyEmailBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
-export const verifyEmailBodyTokenMin = 0;
 export const verifyEmailBodyTokenMax = 1000;
 
 export const VerifyEmailBody = zod.object({
-  email: zod
-    .email()
-    .min(verifyEmailBodyEmailMin)
-    .max(verifyEmailBodyEmailMax)
-    .regex(verifyEmailBodyEmailRegExp),
+  email: zod.email().min(1).max(verifyEmailBodyEmailMax).regex(verifyEmailBodyEmailRegExp),
   token: zod
     .string()
-    .min(verifyEmailBodyTokenMin)
+    .min(1)
     .max(verifyEmailBodyTokenMax)
     .describe("The token from the emailed link, sent back unchanged."),
 });

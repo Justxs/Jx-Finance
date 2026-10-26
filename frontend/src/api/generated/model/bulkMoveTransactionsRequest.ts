@@ -10,6 +10,7 @@ export interface BulkMoveTransactionsRequest {
   /**
    * Between 1 and 200 transaction ids.
    * @minItems 1
+   * @items.minLength 1
    */
   transactionIds: string[];
   /**

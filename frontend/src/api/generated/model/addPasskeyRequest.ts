@@ -9,13 +9,13 @@
 export interface AddPasskeyRequest {
   /**
    * JSON text of PublicKeyCredential.toJSON() from navigator.credentials.create().
-   * @minLength 0
+   * @minLength 1
    * @maxLength 65536
    */
   credentialJson: string;
   /**
    * A name for the list, at most 100 characters; the client sends the browser's label.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

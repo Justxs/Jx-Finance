@@ -21,7 +21,8 @@ public sealed class UpdateSmtpSettingsValidator : Validator<UpdateSmtpSettingsRe
             .WithMessage("A user name and password are only sent over an encrypted connection. Choose STARTTLS or SSL/TLS.");
         RuleFor(r => r.UserName).HasMaxLength(255);
         RuleFor(r => r.Password).HasMaxLength(255);
-        RuleFor(r => r.FromAddress).HasMaxLength(320).IsEmail().When(r => !string.IsNullOrWhiteSpace(r.FromAddress));
+        RuleFor(r => r.FromAddress).HasMaxLength(320);
+        RuleFor(r => r.FromAddress).IsEmail().When(r => !string.IsNullOrWhiteSpace(r.FromAddress));
         RuleFor(r => r.FromAddress).IsRequired().When(r => r.Enabled);
         RuleFor(r => r.FromName).HasMaxLength(100);
     }

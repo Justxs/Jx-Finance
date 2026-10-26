@@ -6,20 +6,25 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { PagedResponseOfTrashEntryResponse, RestoreTransactionsResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type {
+  PagedResponseOfTrashEntryResponse,
+  RestoreDeletedRequest,
+  RestoreTransactionsRequest,
+  RestoreTransactionsResponse,
+} from "../model";
 
 export const getTrashMockHandler = (
   overrideResponse?:
     | PagedResponseOfTrashEntryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PagedResponseOfTrashEntryResponse> | PagedResponseOfTrashEntryResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/trash",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -36,12 +41,14 @@ export const getTrashMockHandler = (
 export const getRestoreDeletedMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, RestoreDeletedRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, RestoreDeletedRequest>(
     "*/api/trash/restore",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, RestoreDeletedRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -56,13 +63,13 @@ export const getRestoreTransactionsMockHandler = (
   overrideResponse?:
     | RestoreTransactionsResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, RestoreTransactionsRequest>>[0],
       ) => Promise<RestoreTransactionsResponse> | RestoreTransactionsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, RestoreTransactionsRequest>(
     "*/api/trash/restore-transactions",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, RestoreTransactionsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

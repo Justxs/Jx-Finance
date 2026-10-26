@@ -6,7 +6,7 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   DiscordSettingsResponse,
   ExchangeRateEntryResponse,
@@ -14,23 +14,27 @@ import type {
   MarketPriceSettingsResponse,
   MarketPriceSyncResponse,
   PublicSettingsResponse,
+  SetExchangeRateRequest,
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
   TelegramSettingsResponse,
+  UpdateDiscordSettingsRequest,
+  UpdateMarketPriceSettingsRequest,
+  UpdateSettingsRequest,
+  UpdateSmtpSettingsRequest,
+  UpdateTelegramSettingsRequest,
 } from "../model";
 
 export const getSettingsMockHandler = (
   overrideResponse?:
     | SettingsResponse
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<SettingsResponse> | SettingsResponse),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<SettingsResponse> | SettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -48,13 +52,13 @@ export const getUpdateSettingsMockHandler = (
   overrideResponse?:
     | SettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateSettingsRequest>>[0],
       ) => Promise<SettingsResponse> | SettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateSettingsRequest>(
     "*/api/settings",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateSettingsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -72,13 +76,13 @@ export const getDiscordSettingsMockHandler = (
   overrideResponse?:
     | DiscordSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<DiscordSettingsResponse> | DiscordSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/discord",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -96,13 +100,13 @@ export const getUpdateDiscordSettingsMockHandler = (
   overrideResponse?:
     | DiscordSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateDiscordSettingsRequest>>[0],
       ) => Promise<DiscordSettingsResponse> | DiscordSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateDiscordSettingsRequest>(
     "*/api/settings/discord",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateDiscordSettingsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -117,14 +121,12 @@ export const getUpdateDiscordSettingsMockHandler = (
 };
 
 export const getSendTestDiscordMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/settings/discord/test",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -139,13 +141,13 @@ export const getExchangeRateEntriesMockHandler = (
   overrideResponse?:
     | ExchangeRateEntryResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ExchangeRateEntryResponse[]> | ExchangeRateEntryResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/exchange-rates",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -163,13 +165,13 @@ export const getSyncExchangeRatesMockHandler = (
   overrideResponse?:
     | ExchangeRateSyncResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ExchangeRateSyncResponse> | ExchangeRateSyncResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/settings/exchange-rates/sync",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -186,12 +188,14 @@ export const getSyncExchangeRatesMockHandler = (
 export const getDeleteExchangeRateMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ currency: string; date: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ currency: string; date: string }>(
     "*/api/settings/exchange-rates/:currency/:date",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ currency: string; date: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -206,13 +210,19 @@ export const getSetExchangeRateMockHandler = (
   overrideResponse?:
     | ExchangeRateEntryResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ currency: string; date: string }, SetExchangeRateRequest>
+        >[0],
       ) => Promise<ExchangeRateEntryResponse> | ExchangeRateEntryResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ currency: string; date: string }, SetExchangeRateRequest>(
     "*/api/settings/exchange-rates/:currency/:date",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<
+        HttpResponseResolver<{ currency: string; date: string }, SetExchangeRateRequest>
+      >[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -230,13 +240,13 @@ export const getMarketPriceSettingsMockHandler = (
   overrideResponse?:
     | MarketPriceSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<MarketPriceSettingsResponse> | MarketPriceSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/market-prices",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -254,13 +264,15 @@ export const getUpdateMarketPriceSettingsMockHandler = (
   overrideResponse?:
     | MarketPriceSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMarketPriceSettingsRequest>>[0],
       ) => Promise<MarketPriceSettingsResponse> | MarketPriceSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMarketPriceSettingsRequest>(
     "*/api/settings/market-prices",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, UpdateMarketPriceSettingsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -278,13 +290,13 @@ export const getSyncMarketPricesMockHandler = (
   overrideResponse?:
     | MarketPriceSyncResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<MarketPriceSyncResponse> | MarketPriceSyncResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/settings/market-prices/sync",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -302,13 +314,13 @@ export const getPublicSettingsMockHandler = (
   overrideResponse?:
     | PublicSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PublicSettingsResponse> | PublicSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/public",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -326,13 +338,13 @@ export const getSmtpSettingsMockHandler = (
   overrideResponse?:
     | SmtpSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<SmtpSettingsResponse> | SmtpSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/smtp",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -350,13 +362,13 @@ export const getUpdateSmtpSettingsMockHandler = (
   overrideResponse?:
     | SmtpSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateSmtpSettingsRequest>>[0],
       ) => Promise<SmtpSettingsResponse> | SmtpSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateSmtpSettingsRequest>(
     "*/api/settings/smtp",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateSmtpSettingsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -373,14 +385,12 @@ export const getUpdateSmtpSettingsMockHandler = (
 export const getSendTestEmailMockHandler = (
   overrideResponse?:
     | SmtpTestResponse
-    | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
-      ) => Promise<SmtpTestResponse> | SmtpTestResponse),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<SmtpTestResponse> | SmtpTestResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/settings/smtp/test",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -398,13 +408,13 @@ export const getTelegramSettingsMockHandler = (
   overrideResponse?:
     | TelegramSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<TelegramSettingsResponse> | TelegramSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/settings/telegram",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -422,13 +432,15 @@ export const getUpdateTelegramSettingsMockHandler = (
   overrideResponse?:
     | TelegramSettingsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateTelegramSettingsRequest>>[0],
       ) => Promise<TelegramSettingsResponse> | TelegramSettingsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateTelegramSettingsRequest>(
     "*/api/settings/telegram",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, UpdateTelegramSettingsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -443,14 +455,12 @@ export const getUpdateTelegramSettingsMockHandler = (
 };
 
 export const getSendTestTelegramMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/settings/telegram/test",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }

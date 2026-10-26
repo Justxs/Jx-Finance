@@ -11,13 +11,12 @@ import * as zod from "zod";
  * Adds a person outside the household, such as a friend you lend money to or share a dinner with. The person has no login and is visible only to you. Two people may have the same name.
  * @summary Add a person
  */
-export const createContactBodyNameMin = 0;
 export const createContactBodyNameMax = 100;
 
 export const CreateContactBody = zod.object({
   name: zod
     .string()
-    .min(createContactBodyNameMin)
+    .min(1)
     .max(createContactBodyNameMax)
     .describe("The name, 1 to 100 characters."),
 });
@@ -236,13 +235,12 @@ export const DeleteContactResponse = zod.void();
  * Changes the name of one of your people. Their splits, payments and balances stay.
  * @summary Rename a person
  */
-export const updateContactBodyNameMin = 0;
 export const updateContactBodyNameMax = 100;
 
 export const UpdateContactBody = zod.object({
   name: zod
     .string()
-    .min(updateContactBodyNameMin)
+    .min(1)
     .max(updateContactBodyNameMax)
     .describe("The new name, 1 to 100 characters."),
 });

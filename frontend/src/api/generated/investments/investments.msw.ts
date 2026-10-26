@@ -6,19 +6,28 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   AllocationTargetsResponse,
   BrokerConnectionResponse,
   BrokerImportResponse,
+  CreateInvestmentTransactionRequest,
+  ImportBrokerReportRequest,
+  ImportSecurityPricesRequest,
+  ImportTradeCsvRequest,
   InvestmentTransactionResponse,
   PagedResponseOfInvestmentTransactionResponse,
   PortfolioResponse,
   PriceImportResponse,
   PriceSymbolCandidate,
+  SaveAllocationTargetsRequest,
+  SaveBrokerConnectionRequest,
+  SaveSecurityRequest,
   SecurityPriceResponse,
   SecurityResponse,
+  SetSecurityPriceRequest,
   TaxSummaryResponse,
+  UpdateInvestmentTransactionRequest,
   ValueHistoryResponse,
 } from "../model";
 
@@ -26,13 +35,13 @@ export const getAllocationTargetsMockHandler = (
   overrideResponse?:
     | AllocationTargetsResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<AllocationTargetsResponse> | AllocationTargetsResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/allocation-targets",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -50,13 +59,13 @@ export const getSaveAllocationTargetsMockHandler = (
   overrideResponse?:
     | AllocationTargetsResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, SaveAllocationTargetsRequest>>[0],
       ) => Promise<AllocationTargetsResponse> | AllocationTargetsResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, SaveAllocationTargetsRequest>(
     "*/api/investments/allocation-targets",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, SaveAllocationTargetsRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -74,13 +83,13 @@ export const getBrokerConnectionsMockHandler = (
   overrideResponse?:
     | BrokerConnectionResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<BrokerConnectionResponse[]> | BrokerConnectionResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/connections",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -97,12 +106,12 @@ export const getBrokerConnectionsMockHandler = (
 export const getDeleteBrokerConnectionMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ accountId: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ accountId: string }>(
     "*/api/investments/connections/:accountId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ accountId: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -117,13 +126,17 @@ export const getSaveBrokerConnectionMockHandler = (
   overrideResponse?:
     | BrokerConnectionResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ accountId: string }, SaveBrokerConnectionRequest>
+        >[0],
       ) => Promise<BrokerConnectionResponse> | BrokerConnectionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ accountId: string }, SaveBrokerConnectionRequest>(
     "*/api/investments/connections/:accountId",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ accountId: string }, SaveBrokerConnectionRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -141,13 +154,13 @@ export const getSyncBrokerConnectionMockHandler = (
   overrideResponse?:
     | BrokerImportResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ accountId: string }>>[0],
       ) => Promise<BrokerImportResponse> | BrokerImportResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ accountId: string }>(
     "*/api/investments/connections/:accountId/sync",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ accountId: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -165,13 +178,13 @@ export const getImportBrokerReportMockHandler = (
   overrideResponse?:
     | BrokerImportResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ImportBrokerReportRequest>>[0],
       ) => Promise<BrokerImportResponse> | BrokerImportResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ImportBrokerReportRequest>(
     "*/api/investments/import/interactive-brokers",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ImportBrokerReportRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -189,13 +202,13 @@ export const getImportTradeCsvMockHandler = (
   overrideResponse?:
     | BrokerImportResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ImportTradeCsvRequest>>[0],
       ) => Promise<BrokerImportResponse> | BrokerImportResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ImportTradeCsvRequest>(
     "*/api/investments/import/trade-csv",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ImportTradeCsvRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -213,13 +226,13 @@ export const getPortfolioMockHandler = (
   overrideResponse?:
     | PortfolioResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PortfolioResponse> | PortfolioResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/portfolio",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -237,13 +250,13 @@ export const getSecuritiesMockHandler = (
   overrideResponse?:
     | SecurityResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<SecurityResponse[]> | SecurityResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/securities",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -261,13 +274,13 @@ export const getCreateSecurityMockHandler = (
   overrideResponse?:
     | SecurityResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, SaveSecurityRequest>>[0],
       ) => Promise<SecurityResponse> | SecurityResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, SaveSecurityRequest>(
     "*/api/investments/securities",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, SaveSecurityRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -285,13 +298,13 @@ export const getUpdateSecurityMockHandler = (
   overrideResponse?:
     | SecurityResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, SaveSecurityRequest>>[0],
       ) => Promise<SecurityResponse> | SecurityResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, SaveSecurityRequest>(
     "*/api/investments/securities/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, SaveSecurityRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -309,13 +322,13 @@ export const getSetSecurityPriceMockHandler = (
   overrideResponse?:
     | SecurityResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, SetSecurityPriceRequest>>[0],
       ) => Promise<SecurityResponse> | SecurityResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, SetSecurityPriceRequest>(
     "*/api/investments/securities/:id/price",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, SetSecurityPriceRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -333,13 +346,13 @@ export const getFindPriceSymbolMockHandler = (
   overrideResponse?:
     | PriceSymbolCandidate[]
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<PriceSymbolCandidate[]> | PriceSymbolCandidate[]),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/investments/securities/:id/price-symbol/find",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -357,13 +370,13 @@ export const getSecurityPricesMockHandler = (
   overrideResponse?:
     | SecurityPriceResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<SecurityPriceResponse[]> | SecurityPriceResponse[]),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/investments/securities/:id/prices",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -381,13 +394,15 @@ export const getImportSecurityPricesMockHandler = (
   overrideResponse?:
     | PriceImportResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, ImportSecurityPricesRequest>>[0],
       ) => Promise<PriceImportResponse> | PriceImportResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, ImportSecurityPricesRequest>(
     "*/api/investments/securities/:id/prices/import",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, ImportSecurityPricesRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -404,12 +419,14 @@ export const getImportSecurityPricesMockHandler = (
 export const getDeleteSecurityPriceMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string; date: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; date: string }>(
     "*/api/investments/securities/:id/prices/:date",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; date: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -424,13 +441,13 @@ export const getTaxSummaryMockHandler = (
   overrideResponse?:
     | TaxSummaryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<TaxSummaryResponse> | TaxSummaryResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/tax-summary",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -445,14 +462,12 @@ export const getTaxSummaryMockHandler = (
 };
 
 export const getExportTaxSummaryMockHandler = (
-  overrideResponse?:
-    | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  overrideResponse?: Blob | ((info: Parameters<HttpResponseResolver>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/tax-summary/export",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -472,13 +487,15 @@ export const getCreateInvestmentTransactionMockHandler = (
   overrideResponse?:
     | InvestmentTransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateInvestmentTransactionRequest>>[0],
       ) => Promise<InvestmentTransactionResponse> | InvestmentTransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateInvestmentTransactionRequest>(
     "*/api/investments/transactions",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, CreateInvestmentTransactionRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -496,7 +513,7 @@ export const getInvestmentTransactionsMockHandler = (
   overrideResponse?:
     | PagedResponseOfInvestmentTransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) =>
         | Promise<PagedResponseOfInvestmentTransactionResponse>
         | PagedResponseOfInvestmentTransactionResponse),
@@ -504,7 +521,7 @@ export const getInvestmentTransactionsMockHandler = (
 ) => {
   return http.get(
     "*/api/investments/transactions",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -521,12 +538,12 @@ export const getInvestmentTransactionsMockHandler = (
 export const getDeleteInvestmentTransactionMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/investments/transactions/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -541,13 +558,17 @@ export const getUpdateInvestmentTransactionMockHandler = (
   overrideResponse?:
     | InvestmentTransactionResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<
+          HttpResponseResolver<{ id: string }, UpdateInvestmentTransactionRequest>
+        >[0],
       ) => Promise<InvestmentTransactionResponse> | InvestmentTransactionResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateInvestmentTransactionRequest>(
     "*/api/investments/transactions/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, UpdateInvestmentTransactionRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -565,13 +586,13 @@ export const getValueHistoryMockHandler = (
   overrideResponse?:
     | ValueHistoryResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ValueHistoryResponse> | ValueHistoryResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/investments/value-history",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

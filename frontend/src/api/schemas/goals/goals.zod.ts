@@ -11,7 +11,6 @@ import * as zod from "zod";
  * Starts tracking progress towards a target amount, optionally by a target date. A manual goal keeps the amount you type in currentAmount; moving money does not update it by itself. A goal funded from an account follows that account's reporting balance instead, taking the share given by fundingSharePercent, and ignores currentAmount.
  * @summary Create a savings goal
  */
-export const createGoalBodyNameMin = 0;
 export const createGoalBodyNameMax = 100;
 
 export const createGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -19,7 +18,7 @@ export const createGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8}
 export const createGoalBodyFundingSharePercentMax = 100;
 
 export const CreateGoalBody = zod.object({
-  name: zod.string().min(createGoalBodyNameMin).max(createGoalBodyNameMax),
+  name: zod.string().min(1).max(createGoalBodyNameMax),
   targetAmount: zod
     .stringFormat("decimal", createGoalBodyTargetAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
@@ -106,7 +105,6 @@ export const DeleteGoalResponse = zod.void();
  * Changes the name, the target, the target date, how much has been put aside, and where progress comes from. For a manual goal this is how progress is recorded: raise currentAmount as money is saved. Switching to account funding leaves the stored currentAmount alone and stops using it; switching back to manual brings that stored amount into use again.
  * @summary Update a savings goal
  */
-export const updateGoalBodyNameMin = 0;
 export const updateGoalBodyNameMax = 100;
 
 export const updateGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -114,7 +112,7 @@ export const updateGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8}
 export const updateGoalBodyFundingSharePercentMax = 100;
 
 export const UpdateGoalBody = zod.object({
-  name: zod.string().min(updateGoalBodyNameMin).max(updateGoalBodyNameMax),
+  name: zod.string().min(1).max(updateGoalBodyNameMax),
   targetAmount: zod.stringFormat("decimal", updateGoalBodyTargetAmountRegExp),
   currentAmount: zod
     .stringFormat("decimal", updateGoalBodyCurrentAmountRegExp)

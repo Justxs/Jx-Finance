@@ -6,20 +6,33 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { ImportMyDataResponse, UserProfileResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type {
+  CreateUserRequest,
+  ImportMyDataRequest,
+  ImportMyDataResponse,
+  ResetUserPasswordRequest,
+  UpdateMyDigestScopesRequest,
+  UpdateMyDiscordNotificationsRequest,
+  UpdateMyEmailNotificationsRequest,
+  UpdateMyLanguageRequest,
+  UpdateMyProfileRequest,
+  UpdateMyTelegramNotificationsRequest,
+  UpdateUserRoleRequest,
+  UserProfileResponse,
+} from "../model";
 
 export const getCreateUserMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateUserRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateUserRequest>(
     "*/api/users",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateUserRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +50,13 @@ export const getUsersMockHandler = (
   overrideResponse?:
     | UserProfileResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<UserProfileResponse[]> | UserProfileResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/users",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -61,13 +74,13 @@ export const getUpdateMyProfileMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyProfileRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyProfileRequest>(
     "*/api/users/me",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateMyProfileRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -85,13 +98,13 @@ export const getUpdateMyDigestScopesMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyDigestScopesRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyDigestScopesRequest>(
     "*/api/users/me/digest-scopes",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateMyDigestScopesRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -109,13 +122,15 @@ export const getUpdateMyDiscordNotificationsMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyDiscordNotificationsRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyDiscordNotificationsRequest>(
     "*/api/users/me/discord-notifications",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, UpdateMyDiscordNotificationsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -133,13 +148,15 @@ export const getUpdateMyEmailNotificationsMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyEmailNotificationsRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyEmailNotificationsRequest>(
     "*/api/users/me/email-notifications",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, UpdateMyEmailNotificationsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -154,14 +171,12 @@ export const getUpdateMyEmailNotificationsMockHandler = (
 };
 
 export const getExportMyDataMockHandler = (
-  overrideResponse?:
-    | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  overrideResponse?: Blob | ((info: Parameters<HttpResponseResolver>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/users/me/export",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -181,13 +196,13 @@ export const getImportMyDataMockHandler = (
   overrideResponse?:
     | ImportMyDataResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ImportMyDataRequest>>[0],
       ) => Promise<ImportMyDataResponse> | ImportMyDataResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ImportMyDataRequest>(
     "*/api/users/me/import",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ImportMyDataRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -205,13 +220,13 @@ export const getUpdateMyLanguageMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyLanguageRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyLanguageRequest>(
     "*/api/users/me/language",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UpdateMyLanguageRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -229,13 +244,15 @@ export const getUpdateMyTelegramNotificationsMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UpdateMyTelegramNotificationsRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, UpdateMyTelegramNotificationsRequest>(
     "*/api/users/me/telegram-notifications",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, UpdateMyTelegramNotificationsRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -252,12 +269,12 @@ export const getUpdateMyTelegramNotificationsMockHandler = (
 export const getDeactivateUserMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/users/:id/deactivate",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -271,12 +288,12 @@ export const getDeactivateUserMockHandler = (
 export const getReactivateUserMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }>(
     "*/api/users/:id/reactivate",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -291,13 +308,13 @@ export const getResetUserPasswordMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, ResetUserPasswordRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, ResetUserPasswordRequest>(
     "*/api/users/:id/reset-password",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, ResetUserPasswordRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -315,13 +332,13 @@ export const getUpdateUserRoleMockHandler = (
   overrideResponse?:
     | UserProfileResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserRoleRequest>>[0],
       ) => Promise<UserProfileResponse> | UserProfileResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateUserRoleRequest>(
     "*/api/users/:id/role",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserRoleRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

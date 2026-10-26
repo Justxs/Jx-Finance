@@ -37,8 +37,11 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   lines: TransactionLineRequest[] | null;
-  /** @nullable */
-  tagIds: string[] | null;
+  /**
+   * @nullable
+   * @items.minLength 1
+   */
+  tagIds?: string[] | null;
   currency?: null | Currency;
   /**
    * Optional, only on a refund: the expense it refunds.

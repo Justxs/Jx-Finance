@@ -10,20 +10,20 @@ import type { DescriptionMatch } from "./descriptionMatch";
 export interface CreateCategorizationRuleRequest {
   /**
    * What the rule is called on the rules screen and in a run's result.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 50
    */
   name: string;
   match: DescriptionMatch;
   /**
    * The text the description is compared with. Per cent and underscore are literal characters, not wildcards.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   pattern: string;
   /**
    * The tags the rule adds, at most ten; an empty list adds none. A run adds them and never removes tags the row already carries.
-   * @minItems 1
+   * @items.minLength 1
    */
   tagIds: string[];
   /**

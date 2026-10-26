@@ -8,7 +8,7 @@
 
 export interface LoginRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */

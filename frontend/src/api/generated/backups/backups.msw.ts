@@ -6,20 +6,27 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { BackupResponse, RestoreBackupResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type {
+  BackupResponse,
+  CreateBackupRequest,
+  RestoreBackupRequest,
+  RestoreBackupResponse,
+  UpdateBackupRequest,
+  UploadBackupRequest,
+} from "../model";
 
 export const getCreateBackupMockHandler = (
   overrideResponse?:
     | BackupResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateBackupRequest>>[0],
       ) => Promise<BackupResponse> | BackupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateBackupRequest>(
     "*/api/backups",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateBackupRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -36,14 +43,12 @@ export const getCreateBackupMockHandler = (
 export const getBackupsMockHandler = (
   overrideResponse?:
     | BackupResponse[]
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<BackupResponse[]> | BackupResponse[]),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<BackupResponse[]> | BackupResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/backups",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -61,13 +66,13 @@ export const getUploadBackupMockHandler = (
   overrideResponse?:
     | BackupResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, UploadBackupRequest>>[0],
       ) => Promise<BackupResponse> | BackupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, UploadBackupRequest>(
     "*/api/backups/upload",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, UploadBackupRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -84,12 +89,12 @@ export const getUploadBackupMockHandler = (
 export const getDeleteBackupMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/backups/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -104,13 +109,13 @@ export const getUpdateBackupMockHandler = (
   overrideResponse?:
     | BackupResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateBackupRequest>>[0],
       ) => Promise<BackupResponse> | BackupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateBackupRequest>(
     "*/api/backups/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateBackupRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -127,12 +132,12 @@ export const getUpdateBackupMockHandler = (
 export const getDownloadBackupMockHandler = (
   overrideResponse?:
     | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/backups/:id/download",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -152,13 +157,13 @@ export const getRestoreBackupMockHandler = (
   overrideResponse?:
     | RestoreBackupResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, RestoreBackupRequest>>[0],
       ) => Promise<RestoreBackupResponse> | RestoreBackupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, RestoreBackupRequest>(
     "*/api/backups/:id/restore",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, RestoreBackupRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

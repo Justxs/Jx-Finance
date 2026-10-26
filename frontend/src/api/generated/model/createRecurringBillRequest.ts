@@ -14,7 +14,7 @@ import type { SpreadDirection } from "./spreadDirection";
 
 export interface CreateRecurringBillRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

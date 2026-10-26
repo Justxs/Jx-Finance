@@ -6,20 +6,20 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { PayeeNameResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type { PayeeNameResponse, SetPayeeNameRequest } from "../model";
 
 export const getPayeeNamesMockHandler = (
   overrideResponse?:
     | PayeeNameResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<PayeeNameResponse[]> | PayeeNameResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/payees",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +37,13 @@ export const getSetPayeeNameMockHandler = (
   overrideResponse?:
     | PayeeNameResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, SetPayeeNameRequest>>[0],
       ) => Promise<PayeeNameResponse> | PayeeNameResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<PathParams, SetPayeeNameRequest>(
     "*/api/payees",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, SetPayeeNameRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -60,12 +60,12 @@ export const getSetPayeeNameMockHandler = (
 export const getDeletePayeeNameMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/payees/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }

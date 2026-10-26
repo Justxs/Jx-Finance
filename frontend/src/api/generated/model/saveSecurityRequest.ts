@@ -12,21 +12,18 @@ import type { SecurityType } from "./securityType";
 
 export interface SaveSecurityRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 32
    */
   symbol: string;
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   name: string;
   type: SecurityType;
   currency: Currency;
-  /**
-   * @nullable
-   * @pattern ^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$
-   */
+  /** @nullable */
   isin?: string | null;
   /**
    * @minLength 0

@@ -1,12 +1,35 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 function Menu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="menu" {...props} />;
 }
 
-function MenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="menu-trigger" {...props} />;
+const menuTriggerStyles = cva("", {
+  variants: {
+    variant: {
+      default: "",
+      tile: "gap-2.5 rounded-md p-1.5 focus-ring transition-colors hover:bg-accent data-popup-open:bg-accent",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+function MenuTrigger({
+  className,
+  variant,
+  ...props
+}: MenuPrimitive.Trigger.Props & VariantProps<typeof menuTriggerStyles>) {
+  return (
+    <MenuPrimitive.Trigger
+      data-slot="menu-trigger"
+      className={cn(menuTriggerStyles({ variant }), className)}
+      {...props}
+    />
+  );
 }
 
 function MenuContent({

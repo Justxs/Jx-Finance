@@ -222,7 +222,6 @@ export const ImportConfirmResponse = zod.object({
  * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when noHeaderRow is true. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
  * @summary Save a CSV column mapping
  */
-export const createCsvMappingBodyNameMin = 0;
 export const createCsvMappingBodyNameMax = 60;
 
 export const createCsvMappingBodySkipLinesMin = 0;
@@ -233,7 +232,7 @@ export const createCsvMappingBodyNoHeaderRowDefault = false;
 export const CreateCsvMappingBody = zod.object({
   name: zod
     .string()
-    .min(createCsvMappingBodyNameMin)
+    .min(1)
     .max(createCsvMappingBodyNameMax)
     .describe("What the provider list calls the mapping, at most 60 characters."),
   encoding: zod
@@ -512,7 +511,6 @@ export const DeleteCsvMappingResponse = zod.void();
  * Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.
  * @summary Update a CSV column mapping
  */
-export const updateCsvMappingBodyNameMin = 0;
 export const updateCsvMappingBodyNameMax = 60;
 
 export const updateCsvMappingBodySkipLinesMin = 0;
@@ -521,7 +519,7 @@ export const updateCsvMappingBodySkipLinesMax = 20;
 export const updateCsvMappingBodyNoHeaderRowDefault = false;
 
 export const UpdateCsvMappingBody = zod.object({
-  name: zod.string().min(updateCsvMappingBodyNameMin).max(updateCsvMappingBodyNameMax),
+  name: zod.string().min(1).max(updateCsvMappingBodyNameMax),
   encoding: zod
     .enum(["utf8", "windows1257", "windows1252"])
     .describe(

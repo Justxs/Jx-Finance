@@ -10,7 +10,7 @@ import type { HouseholdRole } from "./householdRole";
 export interface AddMemberRequest {
   /**
    * Email address of an existing, active user.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */

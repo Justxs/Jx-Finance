@@ -91,16 +91,11 @@ export const DeleteBrokerConnectionResponse = zod.void();
  */
 
 export const saveBrokerConnectionBodyQueryIdRegExp = new RegExp("^[0-9]{1,20}$");
-export const saveBrokerConnectionBodyTokenRegExp = new RegExp("^[0-9]{6,64}$");
 export const saveBrokerConnectionBodyIsEnabledDefault = true;
 
 export const SaveBrokerConnectionBody = zod.object({
   queryId: zod.string().min(1).regex(saveBrokerConnectionBodyQueryIdRegExp),
-  token: zod
-    .string()
-    .regex(saveBrokerConnectionBodyTokenRegExp)
-    .nullish()
-    .describe("Required the first time; optional afterwards."),
+  token: zod.string().nullish().describe("Required the first time; optional afterwards."),
   fundingAccountId: zod.uuid().nullish(),
   isEnabled: zod.boolean().default(saveBrokerConnectionBodyIsEnabledDefault),
 });
@@ -510,13 +505,10 @@ export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
  * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.
  * @summary Add a security
  */
-export const createSecurityBodySymbolMin = 0;
 export const createSecurityBodySymbolMax = 32;
 
-export const createSecurityBodyNameMin = 0;
 export const createSecurityBodyNameMax = 200;
 
-export const createSecurityBodyIsinRegExp = new RegExp("^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$");
 export const createSecurityBodyExchangeMin = 0;
 export const createSecurityBodyExchangeMax = 32;
 
@@ -525,8 +517,8 @@ export const createSecurityBodyPriceSymbolMin = 0;
 export const createSecurityBodyPriceSymbolMax = 32;
 
 export const CreateSecurityBody = zod.object({
-  symbol: zod.string().min(createSecurityBodySymbolMin).max(createSecurityBodySymbolMax),
-  name: zod.string().min(createSecurityBodyNameMin).max(createSecurityBodyNameMax),
+  symbol: zod.string().min(1).max(createSecurityBodySymbolMax),
+  name: zod.string().min(1).max(createSecurityBodyNameMax),
   type: zod.enum(["stock", "etf", "fund", "bond", "crypto", "other"]),
   currency: zod.enum([
     "eur",
@@ -560,7 +552,7 @@ export const CreateSecurityBody = zod.object({
     "ils",
     "zar",
   ]),
-  isin: zod.string().regex(createSecurityBodyIsinRegExp).nullish(),
+  isin: zod.string().nullish(),
   exchange: zod
     .string()
     .min(createSecurityBodyExchangeMin)
@@ -645,13 +637,10 @@ export const CreateSecurityResponse = zod.object({
  * Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.
  * @summary Update the details of a security
  */
-export const updateSecurityBodySymbolMin = 0;
 export const updateSecurityBodySymbolMax = 32;
 
-export const updateSecurityBodyNameMin = 0;
 export const updateSecurityBodyNameMax = 200;
 
-export const updateSecurityBodyIsinRegExp = new RegExp("^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$");
 export const updateSecurityBodyExchangeMin = 0;
 export const updateSecurityBodyExchangeMax = 32;
 
@@ -660,8 +649,8 @@ export const updateSecurityBodyPriceSymbolMin = 0;
 export const updateSecurityBodyPriceSymbolMax = 32;
 
 export const UpdateSecurityBody = zod.object({
-  symbol: zod.string().min(updateSecurityBodySymbolMin).max(updateSecurityBodySymbolMax),
-  name: zod.string().min(updateSecurityBodyNameMin).max(updateSecurityBodyNameMax),
+  symbol: zod.string().min(1).max(updateSecurityBodySymbolMax),
+  name: zod.string().min(1).max(updateSecurityBodyNameMax),
   type: zod.enum(["stock", "etf", "fund", "bond", "crypto", "other"]),
   currency: zod.enum([
     "eur",
@@ -695,7 +684,7 @@ export const UpdateSecurityBody = zod.object({
     "ils",
     "zar",
   ]),
-  isin: zod.string().regex(updateSecurityBodyIsinRegExp).nullish(),
+  isin: zod.string().nullish(),
   exchange: zod
     .string()
     .min(updateSecurityBodyExchangeMin)

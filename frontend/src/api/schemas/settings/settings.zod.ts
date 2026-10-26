@@ -603,7 +603,6 @@ export const updateSmtpSettingsBodyPasswordMax = 255;
 export const updateSmtpSettingsBodyFromAddressMin = 0;
 export const updateSmtpSettingsBodyFromAddressMax = 320;
 
-export const updateSmtpSettingsBodyFromAddressRegExp = new RegExp("^[^@]+@[^@]+$");
 export const updateSmtpSettingsBodyFromNameMin = 0;
 export const updateSmtpSettingsBodyFromNameMax = 100;
 
@@ -634,10 +633,9 @@ export const UpdateSmtpSettingsBody = zod.object({
       "Leave empty to keep the stored password; required when the host or user name changes.",
     ),
   fromAddress: zod
-    .email()
+    .string()
     .min(updateSmtpSettingsBodyFromAddressMin)
     .max(updateSmtpSettingsBodyFromAddressMax)
-    .regex(updateSmtpSettingsBodyFromAddressRegExp)
     .nullable(),
   fromName: zod
     .string()

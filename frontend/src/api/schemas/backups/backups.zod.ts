@@ -125,13 +125,12 @@ export const DownloadBackupResponse = zod.unknown();
  * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup, and the attached files of the archive are written back to the attachment directory after their SHA-256 has been checked against the restored rows; a file that does not match rolls the whole restore back. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.
  * @summary Replace all data with a stored backup
  */
-export const restoreBackupBodyPasswordMin = 0;
 export const restoreBackupBodyPasswordMax = 100;
 
 export const RestoreBackupBody = zod.object({
   password: zod
     .string()
-    .min(restoreBackupBodyPasswordMin)
+    .min(1)
     .max(restoreBackupBodyPasswordMax)
     .describe("The current password of the signed-in administrator."),
 });

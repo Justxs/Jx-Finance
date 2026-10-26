@@ -14,7 +14,7 @@ import type { Currency } from "./currency";
 export interface CreateCsvMappingRequest {
   /**
    * What the provider list calls the mapping, at most 60 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 60
    */
   name: string;

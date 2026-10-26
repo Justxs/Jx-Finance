@@ -93,7 +93,7 @@ export const RestoreDeletedResponse = zod.void();
 
 export const RestoreTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid())
+    .array(zod.uuid().min(1))
     .min(1)
     .describe("Between 1 and 200 ids of deleted transactions."),
 });

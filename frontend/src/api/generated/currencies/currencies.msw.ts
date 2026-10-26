@@ -6,20 +6,20 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, RequestHandlerOptions } from "msw";
 import type { CurrenciesResponse, ExchangeRateResponse } from "../model";
 
 export const getCurrenciesMockHandler = (
   overrideResponse?:
     | CurrenciesResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CurrenciesResponse> | CurrenciesResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/currencies",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +37,13 @@ export const getExchangeRateMockHandler = (
   overrideResponse?:
     | ExchangeRateResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ExchangeRateResponse> | ExchangeRateResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/exchange-rates",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

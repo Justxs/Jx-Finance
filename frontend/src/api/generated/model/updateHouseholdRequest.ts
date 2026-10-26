@@ -8,7 +8,7 @@
 
 export interface UpdateHouseholdRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

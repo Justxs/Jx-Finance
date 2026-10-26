@@ -43,7 +43,7 @@ jobs:
           dotnet tool install --global dotnet-outdated-tool
           export PATH="$PATH:$HOME/.dotnet/tools"
           for project in backend/*/*.csproj; do
-            dotnet outdated "$project" --upgrade
+            dotnet outdated "$project" --upgrade --exclude PDFsharp
           done
           dotnet restore backend/JxFinance.slnx
 

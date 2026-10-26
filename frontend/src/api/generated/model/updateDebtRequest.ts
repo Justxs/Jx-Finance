@@ -13,7 +13,7 @@ import type { Scope } from "./scope";
 
 export interface UpdateDebtRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

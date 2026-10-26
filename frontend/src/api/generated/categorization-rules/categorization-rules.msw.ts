@@ -6,25 +6,33 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
   CategorizationRuleResponse,
+  CreateCategorizationRuleRequest,
+  DismissSuggestedRuleRequest,
+  MoveCategorizationRuleRequest,
+  RunRulesRequest,
   RunRulesResponse,
   SuggestedRuleResponse,
+  TestCategorizationRuleRequest,
   TestCategorizationRuleResponse,
+  UpdateCategorizationRuleRequest,
 } from "../model";
 
 export const getCreateCategorizationRuleMockHandler = (
   overrideResponse?:
     | CategorizationRuleResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateCategorizationRuleRequest>>[0],
       ) => Promise<CategorizationRuleResponse> | CategorizationRuleResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateCategorizationRuleRequest>(
     "*/api/categorization-rules",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, CreateCategorizationRuleRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -42,13 +50,13 @@ export const getCategorizationRulesMockHandler = (
   overrideResponse?:
     | CategorizationRuleResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CategorizationRuleResponse[]> | CategorizationRuleResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/categorization-rules",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -66,13 +74,13 @@ export const getRunCategorizationRulesMockHandler = (
   overrideResponse?:
     | RunRulesResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, RunRulesRequest>>[0],
       ) => Promise<RunRulesResponse> | RunRulesResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, RunRulesRequest>(
     "*/api/categorization-rules/run",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, RunRulesRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -90,13 +98,13 @@ export const getPreviewCategorizationRunMockHandler = (
   overrideResponse?:
     | RunRulesResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, RunRulesRequest>>[0],
       ) => Promise<RunRulesResponse> | RunRulesResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, RunRulesRequest>(
     "*/api/categorization-rules/run/preview",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, RunRulesRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -114,13 +122,13 @@ export const getSuggestedRulesMockHandler = (
   overrideResponse?:
     | SuggestedRuleResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<SuggestedRuleResponse[]> | SuggestedRuleResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/categorization-rules/suggested",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -137,12 +145,14 @@ export const getSuggestedRulesMockHandler = (
 export const getDismissSuggestedRuleMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<PathParams, DismissSuggestedRuleRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, DismissSuggestedRuleRequest>(
     "*/api/categorization-rules/suggested/dismiss",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, DismissSuggestedRuleRequest>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -157,13 +167,15 @@ export const getTestCategorizationRuleMockHandler = (
   overrideResponse?:
     | TestCategorizationRuleResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, TestCategorizationRuleRequest>>[0],
       ) => Promise<TestCategorizationRuleResponse> | TestCategorizationRuleResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, TestCategorizationRuleRequest>(
     "*/api/categorization-rules/test",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, TestCategorizationRuleRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -180,12 +192,12 @@ export const getTestCategorizationRuleMockHandler = (
 export const getDeleteCategorizationRuleMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/categorization-rules/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -200,13 +212,15 @@ export const getUpdateCategorizationRuleMockHandler = (
   overrideResponse?:
     | CategorizationRuleResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateCategorizationRuleRequest>>[0],
       ) => Promise<CategorizationRuleResponse> | CategorizationRuleResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateCategorizationRuleRequest>(
     "*/api/categorization-rules/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, UpdateCategorizationRuleRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -224,13 +238,15 @@ export const getMoveCategorizationRuleMockHandler = (
   overrideResponse?:
     | CategorizationRuleResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, MoveCategorizationRuleRequest>>[0],
       ) => Promise<CategorizationRuleResponse[]> | CategorizationRuleResponse[]),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, MoveCategorizationRuleRequest>(
     "*/api/categorization-rules/:id/move",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, MoveCategorizationRuleRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

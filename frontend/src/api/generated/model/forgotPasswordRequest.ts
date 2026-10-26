@@ -8,7 +8,7 @@
 
 export interface ForgotPasswordRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */

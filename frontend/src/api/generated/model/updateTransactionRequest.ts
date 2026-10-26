@@ -29,8 +29,11 @@ export interface UpdateTransactionRequest {
   lines: TransactionLineRequest[] | null;
   /** The version of the record you read. Any later change to the record gives it a new version. */
   version: number;
-  /** @nullable */
-  tagIds: string[] | null;
+  /**
+   * @nullable
+   * @items.minLength 1
+   */
+  tagIds?: string[] | null;
   currency?: null | Currency;
   /** @nullable */
   refundOfTransactionId?: string | null;

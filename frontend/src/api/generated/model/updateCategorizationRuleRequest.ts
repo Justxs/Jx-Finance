@@ -9,17 +9,17 @@ import type { DescriptionMatch } from "./descriptionMatch";
 
 export interface UpdateCategorizationRuleRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 50
    */
   name: string;
   match: DescriptionMatch;
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   pattern: string;
-  /** @minItems 1 */
+  /** @items.minLength 1 */
   tagIds: string[];
   /** @nullable */
   accountId?: string | null;

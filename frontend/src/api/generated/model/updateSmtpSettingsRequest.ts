@@ -38,7 +38,6 @@ export interface UpdateSmtpSettingsRequest {
    * @minLength 0
    * @maxLength 320
    * @nullable
-   * @pattern ^[^@]+@[^@]+$
    */
   fromAddress: string | null;
   /**

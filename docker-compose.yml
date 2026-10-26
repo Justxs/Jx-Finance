@@ -6,7 +6,7 @@ x-logging: &logging
 
 services:
   db:
-    image: postgres:16.15@sha256:a3b7f434b2dc57ce85a67e171163eb8ab1a1ebcb39d27484661f26b1dfbe30d6
+    image: postgres:16.15@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
     restart: unless-stopped
     logging: *logging
     environment:
@@ -75,7 +75,7 @@ services:
       start_period: 10s
 
   aspire:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.6.0@sha256:064b50d557fcaffd10f06bf79ba4069bd50994a84034f1a0fc35c165500482d7
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.6.2@sha256:4f494c0b519ba58e56f8bb6830041f8ab071e6842c1f4dd1b474d4793dbe1593
     restart: unless-stopped
     logging: *logging
     profiles:

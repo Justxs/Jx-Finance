@@ -10,11 +10,12 @@ export interface BulkTagTransactionsRequest {
   /**
    * Between 1 and 200 transaction ids.
    * @minItems 1
+   * @items.minLength 1
    */
   transactionIds: string[];
   /**
    * The tags the listed transactions should carry, at most ten; an empty list clears them.
-   * @minItems 1
+   * @items.minLength 1
    */
   tagIds: string[];
 }

@@ -11,10 +11,8 @@ import * as zod from "zod";
  * Adds a rule that reads a transaction description and fills in a category, a set of tags, or both. The new rule goes last, so it only decides rows no earlier rule claimed; move it with the reorder operation. A rule never changes anything on its own: it suggests a category in the import preview, and it writes to the ledger only when you ask for a run.
  * @summary Create a categorization rule
  */
-export const createCategorizationRuleBodyNameMin = 0;
 export const createCategorizationRuleBodyNameMax = 50;
 
-export const createCategorizationRuleBodyPatternMin = 0;
 export const createCategorizationRuleBodyPatternMax = 200;
 
 export const createCategorizationRuleBodyMinAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -23,20 +21,19 @@ export const createCategorizationRuleBodyMaxAmountRegExp = new RegExp("^-?\\d+(\
 export const CreateCategorizationRuleBody = zod.object({
   name: zod
     .string()
-    .min(createCategorizationRuleBodyNameMin)
+    .min(1)
     .max(createCategorizationRuleBodyNameMax)
     .describe("What the rule is called on the rules screen and in a run's result."),
   match: zod.enum(["contains", "startsWith", "exact"]),
   pattern: zod
     .string()
-    .min(createCategorizationRuleBodyPatternMin)
+    .min(1)
     .max(createCategorizationRuleBodyPatternMax)
     .describe(
       "The text the description is compared with. Per cent and underscore are literal characters, not wildcards.",
     ),
   tagIds: zod
-    .array(zod.uuid())
-    .min(1)
+    .array(zod.uuid().min(1))
     .describe(
       "The tags the rule adds, at most ten; an empty list adds none. A run adds them and never removes tags the row already carries.",
     ),
@@ -184,11 +181,10 @@ export const SuggestedRulesResponse = zod.array(SuggestedRulesResponseItem);
  * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing, except that two dismissals at the same moment answer the later one with 409. It is not a deletion and has no trash entry.
  * @summary Dismiss a suggested categorization rule
  */
-export const dismissSuggestedRuleBodyKeyMin = 0;
 export const dismissSuggestedRuleBodyKeyMax = 200;
 
 export const DismissSuggestedRuleBody = zod.object({
-  key: zod.string().min(dismissSuggestedRuleBodyKeyMin).max(dismissSuggestedRuleBodyKeyMax),
+  key: zod.string().min(1).max(dismissSuggestedRuleBodyKeyMax),
   categoryId: zod.uuid().min(1),
 });
 
@@ -198,10 +194,8 @@ export const DismissSuggestedRuleResponse = zod.void();
  * Answers whether a condition that has not been saved yet would match a sample description, and whether a sample amount falls inside the range. Nothing is read from the ledger and nothing is written, so the form can ask this on every keystroke. The answer separates the two halves of the condition, so a rule that fails only on the amount can say so. The action the rule would take is already in the form, which is why this call does not repeat it.
  * @summary Try a rule against a sample description
  */
-export const testCategorizationRuleBodyPatternMin = 0;
 export const testCategorizationRuleBodyPatternMax = 200;
 
-export const testCategorizationRuleBodyDescriptionMin = 0;
 export const testCategorizationRuleBodyDescriptionMax = 500;
 
 export const testCategorizationRuleBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -212,12 +206,12 @@ export const TestCategorizationRuleBody = zod.object({
   match: zod.enum(["contains", "startsWith", "exact"]),
   pattern: zod
     .string()
-    .min(testCategorizationRuleBodyPatternMin)
+    .min(1)
     .max(testCategorizationRuleBodyPatternMax)
     .describe("The text the draft rule compares with."),
   description: zod
     .string()
-    .min(testCategorizationRuleBodyDescriptionMin)
+    .min(1)
     .max(testCategorizationRuleBodyDescriptionMax)
     .describe("The sample description typed into the form."),
   amount: zod
@@ -250,26 +244,18 @@ export const DeleteCategorizationRuleResponse = zod.void();
  * Replaces the condition, the narrowing and the action of a rule. The tag list is replaced whole, so an empty list clears the tags the rule would add. The position is not part of this body; reorder with the move operation. Transactions the rule already filled keep what they got: a rule is applied when it runs, never afterwards.
  * @summary Update a categorization rule
  */
-export const updateCategorizationRuleBodyNameMin = 0;
 export const updateCategorizationRuleBodyNameMax = 50;
 
-export const updateCategorizationRuleBodyPatternMin = 0;
 export const updateCategorizationRuleBodyPatternMax = 200;
 
 export const updateCategorizationRuleBodyMinAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateCategorizationRuleBodyMaxAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateCategorizationRuleBody = zod.object({
-  name: zod
-    .string()
-    .min(updateCategorizationRuleBodyNameMin)
-    .max(updateCategorizationRuleBodyNameMax),
+  name: zod.string().min(1).max(updateCategorizationRuleBodyNameMax),
   match: zod.enum(["contains", "startsWith", "exact"]),
-  pattern: zod
-    .string()
-    .min(updateCategorizationRuleBodyPatternMin)
-    .max(updateCategorizationRuleBodyPatternMax),
-  tagIds: zod.array(zod.uuid()).min(1),
+  pattern: zod.string().min(1).max(updateCategorizationRuleBodyPatternMax),
+  tagIds: zod.array(zod.uuid().min(1)),
   accountId: zod.uuid().nullish(),
   minAmount: zod.stringFormat("decimal", updateCategorizationRuleBodyMinAmountRegExp).nullish(),
   maxAmount: zod.stringFormat("decimal", updateCategorizationRuleBodyMaxAmountRegExp).nullish(),

@@ -9,7 +9,7 @@ import type { Scope } from "./scope";
 
 export interface UpdateCategoryRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   name: string;

@@ -11,20 +11,18 @@ import * as zod from "zod";
  * Creates the administrator account on a fresh instance and signs this browser in with a session that is not remembered, then marks the guided setup as pending in the settings. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
  * @summary Provision the first administrator
  */
-export const setupBodyEmailMin = 0;
 export const setupBodyEmailMax = 256;
 
 export const setupBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 export const setupBodyPasswordMin = 8;
 export const setupBodyPasswordMax = 100;
 
-export const setupBodyDisplayNameMin = 0;
 export const setupBodyDisplayNameMax = 100;
 
 export const SetupBody = zod.object({
-  email: zod.email().min(setupBodyEmailMin).max(setupBodyEmailMax).regex(setupBodyEmailRegExp),
+  email: zod.email().min(1).max(setupBodyEmailMax).regex(setupBodyEmailRegExp),
   password: zod.string().min(setupBodyPasswordMin).max(setupBodyPasswordMax),
-  displayName: zod.string().min(setupBodyDisplayNameMin).max(setupBodyDisplayNameMax),
+  displayName: zod.string().min(1).max(setupBodyDisplayNameMax),
 });
 
 export const SetupResponse = zod.object({

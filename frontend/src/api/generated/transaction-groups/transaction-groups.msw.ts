@@ -6,20 +6,28 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { GroupMembersResponse, TransactionGroupResponse } from "../model";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
+import type {
+  AddToTransactionGroupRequest,
+  CreateTransactionGroupRequest,
+  GroupMembersResponse,
+  RenameTransactionGroupRequest,
+  TransactionGroupResponse,
+} from "../model";
 
 export const getCreateTransactionGroupMockHandler = (
   overrideResponse?:
     | TransactionGroupResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateTransactionGroupRequest>>[0],
       ) => Promise<TransactionGroupResponse> | TransactionGroupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateTransactionGroupRequest>(
     "*/api/transaction-groups",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<PathParams, CreateTransactionGroupRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +45,13 @@ export const getTransactionGroupsMockHandler = (
   overrideResponse?:
     | TransactionGroupResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<TransactionGroupResponse[]> | TransactionGroupResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/transaction-groups",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -61,13 +69,15 @@ export const getRenameTransactionGroupMockHandler = (
   overrideResponse?:
     | TransactionGroupResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, RenameTransactionGroupRequest>>[0],
       ) => Promise<TransactionGroupResponse> | TransactionGroupResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, RenameTransactionGroupRequest>(
     "*/api/transaction-groups/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, RenameTransactionGroupRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -84,12 +94,12 @@ export const getRenameTransactionGroupMockHandler = (
 export const getUngroupTransactionGroupMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/transaction-groups/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -103,12 +113,16 @@ export const getUngroupTransactionGroupMockHandler = (
 export const getAddToTransactionGroupMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string }, AddToTransactionGroupRequest>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ id: string }, AddToTransactionGroupRequest>(
     "*/api/transaction-groups/:id/members",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ id: string }, AddToTransactionGroupRequest>>[0],
+    ) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -123,13 +137,13 @@ export const getTransactionGroupMembersMockHandler = (
   overrideResponse?:
     | GroupMembersResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }>>[0],
       ) => Promise<GroupMembersResponse> | GroupMembersResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/transaction-groups/:id/members",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -146,12 +160,14 @@ export const getTransactionGroupMembersMockHandler = (
 export const getRemoveFromTransactionGroupMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((
+        info: Parameters<HttpResponseResolver<{ id: string; transactionId: string }>>[0],
+      ) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string; transactionId: string }>(
     "*/api/transaction-groups/:id/members/:transactionId",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string; transactionId: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }

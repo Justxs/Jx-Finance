@@ -6,27 +6,32 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, PathParams, RequestHandlerOptions } from "msw";
 import type {
+  CreateCsvMappingRequest,
   CsvMappingResponse,
+  ImportConfirmRequest,
   ImportConfirmResponse,
   ImportInboxFileResponse,
   ImportInboxStatusResponse,
+  ImportPreviewRequest,
   ImportPreviewResponse,
+  InspectCsvRequest,
   InspectCsvResponse,
+  UpdateCsvMappingRequest,
 } from "../model";
 
 export const getImportConfirmMockHandler = (
   overrideResponse?:
     | ImportConfirmResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ImportConfirmRequest>>[0],
       ) => Promise<ImportConfirmResponse> | ImportConfirmResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ImportConfirmRequest>(
     "*/api/import/confirm",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ImportConfirmRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -44,13 +49,13 @@ export const getCreateCsvMappingMockHandler = (
   overrideResponse?:
     | CsvMappingResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, CreateCsvMappingRequest>>[0],
       ) => Promise<CsvMappingResponse> | CsvMappingResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, CreateCsvMappingRequest>(
     "*/api/import/csv-mappings",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, CreateCsvMappingRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -68,13 +73,13 @@ export const getListCsvMappingsMockHandler = (
   overrideResponse?:
     | CsvMappingResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<CsvMappingResponse[]> | CsvMappingResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/import/csv-mappings",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -91,12 +96,12 @@ export const getListCsvMappingsMockHandler = (
 export const getDeleteCsvMappingMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/import/csv-mappings/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -111,13 +116,13 @@ export const getUpdateCsvMappingMockHandler = (
   overrideResponse?:
     | CsvMappingResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ id: string }, UpdateCsvMappingRequest>>[0],
       ) => Promise<CsvMappingResponse> | CsvMappingResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ id: string }, UpdateCsvMappingRequest>(
     "*/api/import/csv-mappings/:id",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateCsvMappingRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -135,13 +140,13 @@ export const getInspectCsvMockHandler = (
   overrideResponse?:
     | InspectCsvResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, InspectCsvRequest>>[0],
       ) => Promise<InspectCsvResponse> | InspectCsvResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, InspectCsvRequest>(
     "*/api/import/csv/inspect",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, InspectCsvRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -159,13 +164,13 @@ export const getListImportInboxMockHandler = (
   overrideResponse?:
     | ImportInboxFileResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ImportInboxFileResponse[]> | ImportInboxFileResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/import/inbox",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -183,13 +188,13 @@ export const getImportInboxStatusMockHandler = (
   overrideResponse?:
     | ImportInboxStatusResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<ImportInboxStatusResponse> | ImportInboxStatusResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/import/inbox/status",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -206,12 +211,12 @@ export const getImportInboxStatusMockHandler = (
 export const getDismissImportInboxFileMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ id: string }>(
     "*/api/import/inbox/:id",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -225,12 +230,12 @@ export const getDismissImportInboxFileMockHandler = (
 export const getDownloadImportInboxFileMockHandler = (
   overrideResponse?:
     | Blob
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ id: string }>(
     "*/api/import/inbox/:id/file",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       const binaryBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -250,13 +255,13 @@ export const getImportPreviewMockHandler = (
   overrideResponse?:
     | ImportPreviewResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<PathParams, ImportPreviewRequest>>[0],
       ) => Promise<ImportPreviewResponse> | ImportPreviewResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<PathParams, ImportPreviewRequest>(
     "*/api/import/preview",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<PathParams, ImportPreviewRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

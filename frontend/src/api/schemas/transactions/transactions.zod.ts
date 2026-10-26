@@ -17,6 +17,7 @@ export const createTransactionBodyDescriptionMin = 0;
 export const createTransactionBodyDescriptionMax = 500;
 
 export const createTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const createTransactionBodyNoteMin = 0;
 export const createTransactionBodyNoteMax = 1000;
 
@@ -51,7 +52,7 @@ export const CreateTransactionBody = zod.object({
     )
     .nullable()
     .describe("Optional split lines. Their amounts must sum to the transaction amount."),
-  tagIds: zod.array(zod.uuid()).nullable(),
+  tagIds: zod.array(zod.uuid().min(1)).nullish(),
   currency: zod
     .union([
       zod.null(),
@@ -539,7 +540,10 @@ export const TransactionsResponse = zod.object({
  */
 
 export const BulkMoveTransactionsBody = zod.object({
-  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+  transactionIds: zod
+    .array(zod.uuid().min(1))
+    .min(1)
+    .describe("Between 1 and 200 transaction ids."),
   accountId: zod
     .uuid()
     .min(1)
@@ -565,7 +569,10 @@ export const BulkMoveTransactionsResponse = zod.object({
 export const bulkCategorizeTransactionsBodyOnlyUncategorizedDefault = false;
 
 export const BulkCategorizeTransactionsBody = zod.object({
-  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+  transactionIds: zod
+    .array(zod.uuid().min(1))
+    .min(1)
+    .describe("Between 1 and 200 transaction ids."),
   categoryId: zod
     .uuid()
     .nullable()
@@ -588,7 +595,10 @@ export const BulkCategorizeTransactionsResponse = zod.object({
  */
 
 export const BulkDeleteTransactionsBody = zod.object({
-  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+  transactionIds: zod
+    .array(zod.uuid().min(1))
+    .min(1)
+    .describe("Between 1 and 200 transaction ids."),
 });
 
 export const BulkDeleteTransactionsResponse = zod.object({
@@ -601,10 +611,12 @@ export const BulkDeleteTransactionsResponse = zod.object({
  */
 
 export const BulkTagTransactionsBody = zod.object({
-  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
-  tagIds: zod
-    .array(zod.uuid())
+  transactionIds: zod
+    .array(zod.uuid().min(1))
     .min(1)
+    .describe("Between 1 and 200 transaction ids."),
+  tagIds: zod
+    .array(zod.uuid().min(1))
     .describe(
       "The tags the listed transactions should carry, at most ten; an empty list clears them.",
     ),
@@ -886,21 +898,18 @@ export const PlacesResponse = zod.array(PlacesResponseItem);
  * Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.
  * @summary Rename a place or merge several spellings into one
  */
-export const renamePlaceBodyPlacesMin = 0;
-export const renamePlaceBodyPlacesMax = 120;
+export const renamePlaceBodyPlacesItemMax = 120;
 
-export const renamePlaceBodyNameMin = 0;
 export const renamePlaceBodyNameMax = 120;
 
 export const RenamePlaceBody = zod.object({
   places: zod
-    .array(zod.string())
-    .min(renamePlaceBodyPlacesMin)
-    .max(renamePlaceBodyPlacesMax)
+    .array(zod.string().min(1).max(renamePlaceBodyPlacesItemMax))
+    .min(1)
     .describe("Between 1 and 50 places as the place list shows them, each at most 120 characters."),
   name: zod
     .string()
-    .min(renamePlaceBodyNameMin)
+    .min(1)
     .max(renamePlaceBodyNameMax)
     .describe("The place the rows should read, trimmed, at most 120 characters."),
 });
@@ -915,7 +924,6 @@ export const RenamePlaceResponse = zod.object({
  */
 
 export const suggestCategoryBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
-export const suggestCategoryBodyDescriptionMin = 0;
 export const suggestCategoryBodyDescriptionMax = 500;
 
 export const SuggestCategoryBody = zod.object({
@@ -926,7 +934,7 @@ export const SuggestCategoryBody = zod.object({
     .describe("The amount, zero or more, with at most two decimal places."),
   description: zod
     .string()
-    .min(suggestCategoryBodyDescriptionMin)
+    .min(1)
     .max(suggestCategoryBodyDescriptionMax)
     .describe("The description as typed, at most 500 characters."),
 });
@@ -1367,6 +1375,7 @@ export const updateTransactionBodyDescriptionMin = 0;
 export const updateTransactionBodyDescriptionMax = 500;
 
 export const updateTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const updateTransactionBodyNoteMin = 0;
 export const updateTransactionBodyNoteMax = 1000;
 
@@ -1401,7 +1410,7 @@ export const UpdateTransactionBody = zod.object({
     .describe(
       "The version of the record you read. Any later change to the record gives it a new version.",
     ),
-  tagIds: zod.array(zod.uuid()).nullable(),
+  tagIds: zod.array(zod.uuid().min(1)).nullish(),
   currency: zod
     .union([
       zod.null(),

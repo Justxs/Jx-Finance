@@ -6,20 +6,25 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
-import type { MonthCloseYearResponse, MonthReviewResponse } from "../model";
+import type { HttpResponseResolver, RequestHandlerOptions } from "msw";
+import type {
+  CloseMonthRequest,
+  MonthCloseYearResponse,
+  MonthReviewResponse,
+  UpdateMonthNoteRequest,
+} from "../model";
 
 export const getMonthCloseYearMockHandler = (
   overrideResponse?:
     | MonthCloseYearResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<MonthCloseYearResponse> | MonthCloseYearResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/month-close",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -37,13 +42,13 @@ export const getCloseMonthMockHandler = (
   overrideResponse?:
     | MonthReviewResponse
     | ((
-        info: Parameters<Parameters<typeof http.post>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ month: string }, CloseMonthRequest>>[0],
       ) => Promise<MonthReviewResponse> | MonthReviewResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.post(
+  return http.post<{ month: string }, CloseMonthRequest>(
     "*/api/month-close/:month",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ month: string }, CloseMonthRequest>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -61,13 +66,13 @@ export const getMonthReviewMockHandler = (
   overrideResponse?:
     | MonthReviewResponse
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ month: string }>>[0],
       ) => Promise<MonthReviewResponse> | MonthReviewResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.get(
+  return http.get<{ month: string }>(
     "*/api/month-close/:month",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ month: string }>>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -84,12 +89,12 @@ export const getMonthReviewMockHandler = (
 export const getReopenMonthMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ month: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.delete(
+  return http.delete<{ month: string }>(
     "*/api/month-close/:month",
-    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ month: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -104,13 +109,15 @@ export const getUpdateMonthNoteMockHandler = (
   overrideResponse?:
     | MonthReviewResponse
     | ((
-        info: Parameters<Parameters<typeof http.put>[1]>[0],
+        info: Parameters<HttpResponseResolver<{ month: string }, UpdateMonthNoteRequest>>[0],
       ) => Promise<MonthReviewResponse> | MonthReviewResponse),
   options?: RequestHandlerOptions,
 ) => {
-  return http.put(
+  return http.put<{ month: string }, UpdateMonthNoteRequest>(
     "*/api/month-close/:month/note",
-    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+    async (
+      info: Parameters<HttpResponseResolver<{ month: string }, UpdateMonthNoteRequest>>[0],
+    ) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

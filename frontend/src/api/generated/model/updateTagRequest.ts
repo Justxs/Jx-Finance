@@ -9,7 +9,7 @@ import type { Scope } from "./scope";
 
 export interface UpdateTagRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 50
    */
   name: string;

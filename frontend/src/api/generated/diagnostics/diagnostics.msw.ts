@@ -6,20 +6,18 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, RequestHandlerOptions } from "msw";
 import type { GetPingResponse } from "../model";
 
 export const getPingMockHandler = (
   overrideResponse?:
     | GetPingResponse
-    | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<GetPingResponse> | GetPingResponse),
+    | ((info: Parameters<HttpResponseResolver>[0]) => Promise<GetPingResponse> | GetPingResponse),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/ping",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"

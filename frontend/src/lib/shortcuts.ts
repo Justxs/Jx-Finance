@@ -1,10 +1,8 @@
 import {
   formatForDisplay,
   getHotkeyManager,
-  getSequenceManager,
   normalizeHotkey,
-  normalizeRegisterableHotkey,
-  type RegisterableHotkey,
+  type RegisterableHotkeyChord,
 } from "@tanstack/react-hotkeys";
 import type { TranslationKey } from "@/lib/i18n";
 import { PUBLIC_PATHS, type RoutePath, navPages } from "@/lib/navigation";
@@ -130,7 +128,7 @@ export function shouldIgnoreShortcut(context: ShortcutContext) {
   );
 }
 
-export function toHotkeySteps(shortcut: Shortcut): RegisterableHotkey[] {
+export function toHotkeySteps(shortcut: Shortcut): RegisterableHotkeyChord[] {
   return shortcut.keys.map((key) => (key === "?" ? { key, shift: true } : normalizeHotkey(key)));
 }
 
@@ -233,8 +231,6 @@ export function registerShortcuts(target: ShortcutRouter, runtime: Partial<Short
   }
 
   const handles = shortcuts.map((shortcut) => {
-    const steps = toHotkeySteps(shortcut);
-    const [first, ...rest] = steps;
     const modified = isModifierShortcut(shortcut);
 
     function callback(event: KeyboardEvent) {
@@ -244,12 +240,7 @@ export function registerShortcuts(target: ShortcutRouter, runtime: Partial<Short
       runAction(event, shortcut.action, modified);
     }
 
-    if (first !== undefined && rest.length === 0) {
-      return getHotkeyManager().register(first, callback, HOTKEY_OPTIONS);
-    }
-
-    const sequence = steps.map((step) => normalizeRegisterableHotkey(step));
-    return getSequenceManager().register(sequence, callback, {
+    return getHotkeyManager().register(toHotkeySteps(shortcut), callback, {
       ...HOTKEY_OPTIONS,
       timeout: PREFIX_TIMEOUT_MS,
     });

@@ -10,7 +10,7 @@ import type { TokenAccess } from "./tokenAccess";
 export interface CreatePersonalApiTokenRequest {
   /**
    * A name for the list, at most 60 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 60
    */
   name: string;

@@ -11,13 +11,13 @@ export interface TestCategorizationRuleRequest {
   match: DescriptionMatch;
   /**
    * The text the draft rule compares with.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 200
    */
   pattern: string;
   /**
    * The sample description typed into the form.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 500
    */
   description: string;

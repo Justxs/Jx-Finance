@@ -9,7 +9,7 @@
 export interface RestoreBackupRequest {
   /**
    * The current password of the signed-in administrator.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    */
   password: string;

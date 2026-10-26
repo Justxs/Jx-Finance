@@ -18,7 +18,7 @@ export interface SuggestCategoryRequest {
   amount: string;
   /**
    * The description as typed, at most 500 characters.
-   * @minLength 0
+   * @minLength 1
    * @maxLength 500
    */
   description: string;

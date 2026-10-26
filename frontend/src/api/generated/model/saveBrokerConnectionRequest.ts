@@ -15,7 +15,6 @@ export interface SaveBrokerConnectionRequest {
   /**
    * Required the first time; optional afterwards.
    * @nullable
-   * @pattern ^[0-9]{6,64}$
    */
   token?: string | null;
   /** @nullable */

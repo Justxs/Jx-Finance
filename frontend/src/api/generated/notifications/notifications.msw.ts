@@ -6,20 +6,20 @@
  * OpenAPI spec version: v1
  */
 import { HttpResponse, http } from "msw";
-import type { RequestHandlerOptions } from "msw";
+import type { HttpResponseResolver, RequestHandlerOptions } from "msw";
 import type { NotificationResponse } from "../model";
 
 export const getNotificationsMockHandler = (
   overrideResponse?:
     | NotificationResponse[]
     | ((
-        info: Parameters<Parameters<typeof http.get>[1]>[0],
+        info: Parameters<HttpResponseResolver>[0],
       ) => Promise<NotificationResponse[]> | NotificationResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/notifications",
-    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -34,14 +34,12 @@ export const getNotificationsMockHandler = (
 };
 
 export const getMarkAllNotificationsReadMockHandler = (
-  overrideResponse?:
-    | void
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
     "*/api/notifications/read-all",
-    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
@@ -55,12 +53,12 @@ export const getMarkAllNotificationsReadMockHandler = (
 export const getMarkNotificationReadMockHandler = (
   overrideResponse?:
     | void
-    | ((info: Parameters<Parameters<typeof http.patch>[1]>[0]) => Promise<void> | void),
+    | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<void> | void),
   options?: RequestHandlerOptions,
 ) => {
-  return http.patch(
+  return http.patch<{ id: string }>(
     "*/api/notifications/:id/read",
-    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+    async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
       }
