@@ -24,12 +24,8 @@ export type UsersParams = {
    * @nullable
    */
   isActive?: boolean | null;
-  /**
-   * Field to sort by. Defaults to display name.
-   */
+  /** Field to sort by. Defaults to display name. */
   sort?: UserSortField;
-  /**
-   * Asc or Desc. Defaults to Asc.
-   */
+  /** Asc or Desc. Defaults to Asc. */
   direction?: SortDirection;
 };

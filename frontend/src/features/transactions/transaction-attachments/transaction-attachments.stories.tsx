@@ -49,7 +49,7 @@ function statefulHandlers(initial: AttachmentResponse[]) {
     getUploadAttachmentMockHandler(async ({ params, request }) => {
       const file = await readUpload(request);
       const created = uploadedAttachment(
-        String(params.transactionId),
+        params.transactionId,
         file ?? new File([], "receipt.pdf", { type: "application/pdf" }),
       );
       live = [...live, created];

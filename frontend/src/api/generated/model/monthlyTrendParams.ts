@@ -8,17 +8,13 @@
 import type { SpendingShare } from "./spendingShare";
 
 export type MonthlyTrendParams = {
-  /**
-   * How many months to include, counting back from the last one. Defaults to 6.
-   */
+  /** How many months to include, counting back from the last one. Defaults to 6. */
   months: number;
   /**
    * Last month to include as YYYY-MM. Defaults to the current month.
    * @nullable
    */
   month?: string | null;
-  /**
-   * How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction.
-   */
+  /** How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction. */
   share?: SpendingShare;
 };

@@ -13,8 +13,6 @@ export type BudgetsParams = {
    * @nullable
    */
   asOf?: string | null;
-  /**
-   * How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction. It applies to personal budgets only: a household budget keeps the household's figure, the same for every member.
-   */
+  /** How to count an expense split with a household or with people: full, the default, counts it at its whole amount; mine counts it at your own share, your part of what you paid and your share of a household split another member paid, which is dated on the split's date while you cannot see its transaction. It applies to personal budgets only: a household budget keeps the household's figure, the same for every member. */
   share?: SpendingShare;
 };

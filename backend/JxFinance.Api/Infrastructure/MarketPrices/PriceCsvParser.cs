@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using CsvHelper;
-using CsvHelper.Configuration;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
@@ -18,15 +17,8 @@ public static class PriceCsvParser
     public static Result<PriceFile> Parse(Stream stream)
     {
         using var reader = new StreamReader(stream, new UTF8Encoding(false), detectEncodingFromByteOrderMarks: true);
-        var configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            DetectDelimiter = true,
-            PrepareHeaderForMatch = args => args.Header.Trim().ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null,
-        };
-        using var csv = new CsvReader(reader, configuration);
-        if (!csv.Read() || !csv.ReadHeader() || csv.HeaderRecord is not { Length: > 0 } headers)
+        using var csv = CsvReader.Create(reader, CsvReaderOptions.Default);
+        if (csv.Headers is not { Count: > 0 } headers)
         {
             return new DomainError(ErrorCodes.ImportInvalidFile, "The file is not a CSV with a header row.");
         }
@@ -59,7 +51,7 @@ public static class PriceCsvParser
     }
 
     private static string? Text(CsvReader csv, string name) =>
-        csv.TryGetField<string>(name, out var value) && value?.Trim() is { Length: > 0 } text ? text : null;
+        csv.TryGetFieldIndex(name, out var index) && csv.GetString(index).Trim() is { Length: > 0 } text ? text : null;
 }
 
 public sealed record PricePoint(DateOnly Date, decimal Price);

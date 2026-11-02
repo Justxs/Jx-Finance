@@ -68,7 +68,7 @@ export const settingsHandlers = [
   getSyncExchangeRatesMockHandler({ added: 62, ratesAsOf: FIXTURE_TODAY }),
   getExchangeRateEntriesMockHandler(exchangeRateEntries),
   getSetExchangeRateMockHandler(async ({ request, params }) => ({
-    date: String(params.date),
+    date: params.date,
     currency: currencyCode.parse(params.currency),
     rate: text((await readBody(request)).rate) ?? "",
     source: "manual",

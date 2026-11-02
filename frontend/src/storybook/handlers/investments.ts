@@ -215,7 +215,7 @@ export const investmentHandlers = [
     const body = await readBody(request);
     const existing = brokerConnections.find((item) => item.accountId === params.accountId);
     return {
-      accountId: String(params.accountId),
+      accountId: params.accountId,
       fundingAccountId: text(body.fundingAccountId),
       queryId: text(body.queryId) ?? "",
       isEnabled: body.isEnabled !== false,

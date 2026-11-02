@@ -23,9 +23,7 @@ export type UncategorizedSuggestionsParams = {
    * @nullable
    */
   tagIds?: string | null;
-  /**
-   * Income or Expense.
-   */
+  /** Income or Expense. */
   type?: FlowType;
   /**
    * Case-insensitive match against the description, the note, your name for the payee, while the locations feature is on the place, and while the receipt reading feature is on the item names of your own readings of the transaction's attached receipts. A listed transaction matched by an item answers it as receiptItem, with the warranty date of its file.

@@ -55,7 +55,7 @@ public static class CsvInspector
                 .ToList();
             return new InspectCsvResponse(chosenEncoding, chosenDelimiter, headerAt, positional, columns, samples, []);
         }
-        catch (CsvHelperException)
+        catch (CsvFormatException)
         {
             return Invalid();
         }

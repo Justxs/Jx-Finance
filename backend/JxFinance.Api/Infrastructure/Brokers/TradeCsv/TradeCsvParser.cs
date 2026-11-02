@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using CsvHelper;
-using CsvHelper.Configuration;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
@@ -28,15 +27,8 @@ public static class TradeCsvParser
     public static Result<FlexStatement> Parse(Stream stream)
     {
         using var reader = new StreamReader(stream, new UTF8Encoding(false), detectEncodingFromByteOrderMarks: true);
-        var configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            DetectDelimiter = true,
-            PrepareHeaderForMatch = args => args.Header.Trim().Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null,
-        };
-        using var csv = new CsvReader(reader, configuration);
-        if (!csv.Read() || !csv.ReadHeader() || csv.HeaderRecord is not { } headers
+        using var csv = CsvReader.Create(reader, new CsvReaderOptions { NormalizeHeaderName = Key });
+        if (csv.Headers is not { } headers
             || !Required.All(name => headers.Any(header => Key(header) == name)))
         {
             return Invalid();
@@ -60,7 +52,7 @@ public static class TradeCsvParser
                 continue;
             }
 
-            var id = row.Id ?? Hash(csv.Parser.RawRecord.Trim());
+            var id = row.Id ?? Hash(Encoding.UTF8.GetString(csv.RawRecord).Trim());
             var occurrence = seen.GetValueOrDefault(id);
             seen[id] = occurrence + 1;
             if (occurrence > 0)
@@ -152,7 +144,7 @@ public static class TradeCsvParser
     }
 
     private static string? Text(CsvReader csv, string name) =>
-        csv.TryGetField<string>(name, out var value) && value?.Trim() is { Length: > 0 } text ? text : null;
+        csv.TryGetFieldIndex(name, out var index) && csv.GetString(index).Trim() is { Length: > 0 } text ? text : null;
 
     private static string Key(string header) => header.Trim().Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
 

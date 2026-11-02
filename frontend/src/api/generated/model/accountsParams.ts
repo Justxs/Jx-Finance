@@ -20,17 +20,11 @@ export type AccountsParams = {
    * @nullable
    */
   iban?: string | null;
-  /**
-   * Keep only accounts of this type.
-   */
+  /** Keep only accounts of this type. */
   type?: AccountType;
-  /**
-   * Field to sort by. Defaults to creation order.
-   */
+  /** Field to sort by. Defaults to creation order. */
   sort?: AccountSortField;
-  /**
-   * Asc or Desc. Defaults to Asc.
-   */
+  /** Asc or Desc. Defaults to Asc. */
   direction?: SortDirection;
   /**
    * Date to compute the balances at, as YYYY-MM-DD. Defaults to today.

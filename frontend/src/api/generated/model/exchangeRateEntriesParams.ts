@@ -8,8 +8,6 @@
 import type { Currency } from "./currency";
 
 export type ExchangeRateEntriesParams = {
-  /**
-   * The currency, such as usd. The euro has no rate of its own.
-   */
+  /** The currency, such as usd. The euro has no rate of its own. */
   currency: Currency;
 };

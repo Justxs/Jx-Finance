@@ -18,9 +18,7 @@ export type InvestmentTransactionsParams = {
    * @nullable
    */
   securityId?: string | null;
-  /**
-   * Only entries of this type.
-   */
+  /** Only entries of this type. */
   type?: InvestmentTransactionType;
   page: number;
   pageSize: number;

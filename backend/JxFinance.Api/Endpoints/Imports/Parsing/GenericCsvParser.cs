@@ -36,7 +36,7 @@ public static class GenericCsvParser
             var entries = Rest(records);
             return Read(mapping.NoHeaderRow ? entries.Prepend(first) : entries, new Reader(mapping, header, accountCurrency));
         }
-        catch (CsvHelperException)
+        catch (CsvFormatException)
         {
             return Invalid();
         }

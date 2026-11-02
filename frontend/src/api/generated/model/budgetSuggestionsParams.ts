@@ -8,8 +8,6 @@
 import type { BudgetPeriod } from "./budgetPeriod";
 
 export type BudgetSuggestionsParams = {
-  /**
-   * Weekly, Monthly, Quarterly, or Yearly: the windows to measure.
-   */
+  /** Weekly, Monthly, Quarterly, or Yearly: the windows to measure. */
   period: BudgetPeriod;
 };

@@ -42,11 +42,11 @@ export async function readUpload(request: Request): Promise<File | null> {
 }
 
 export const attachmentHandlers = [
-  getAttachmentsMockHandler(({ params }) => byTransaction[String(params.transactionId)] ?? []),
+  getAttachmentsMockHandler(({ params }) => byTransaction[params.transactionId] ?? []),
   getUploadAttachmentMockHandler(async ({ params, request }) => {
     const file = await readUpload(request);
     return uploadedAttachment(
-      String(params.transactionId),
+      params.transactionId,
       file ?? new File([], "attachment.pdf", { type: "application/pdf" }),
     );
   }),
@@ -54,7 +54,7 @@ export const attachmentHandlers = [
   getSetAttachmentWarrantyMockHandler(async ({ params, request }) => {
     const found = Object.values(byTransaction)
       .flat()
-      .find((item) => item.id === String(params.id));
+      .find((item) => item.id === params.id);
     return {
       ...(found ?? uploadedAttachment(ids.transactions.maxima, new File([], "receipt.pdf"))),
       warrantyUntil: text((await readBody(request)).warrantyUntil),

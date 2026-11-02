@@ -13,8 +13,6 @@ export type ReconciliationPreviewParams = {
    * @minLength 1
    */
   date: string;
-  /**
-   * Optional. The currency of the statement; the account's main currency when left out.
-   */
+  /** Optional. The currency of the statement; the account's main currency when left out. */
   currency?: Currency;
 };

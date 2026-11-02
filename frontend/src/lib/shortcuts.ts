@@ -106,7 +106,7 @@ export function isModifierShortcut(shortcut: Shortcut) {
 }
 
 export function shortcutKeyLabel(key: string) {
-  return key.includes("+") ? formatForDisplay(key) : key;
+  return key.includes("+") ? formatForDisplay(normalizeHotkey(key)) : key;
 }
 
 interface ShortcutContext {

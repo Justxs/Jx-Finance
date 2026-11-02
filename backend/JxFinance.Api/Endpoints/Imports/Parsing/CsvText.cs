@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using CsvHelper;
-using CsvHelper.Configuration;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Imports;
 
@@ -20,17 +19,10 @@ public static partial class CsvText
 
     public static IEnumerable<string[]> Records(TextReader reader, string delimiter)
     {
-        using var parser = new CsvParser(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+        using var csv = CsvReader.Create(reader, new CsvReaderOptions { Separator = delimiter[0], HasHeader = false });
+        while (csv.Read())
         {
-            Delimiter = delimiter,
-            HasHeaderRecord = false,
-            BadDataFound = null,
-            MissingFieldFound = null,
-            DetectColumnCountChanges = false,
-        });
-        while (parser.Read())
-        {
-            if (parser.Record is { } record && record.Any(cell => cell.Trim().Length > 0))
+            if (csv.Current.ToArray() is var record && record.Any(cell => cell.Trim().Length > 0))
             {
                 yield return record;
             }

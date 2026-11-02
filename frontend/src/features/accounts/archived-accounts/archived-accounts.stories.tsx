@@ -32,7 +32,7 @@ function restorableHandlers() {
     getArchivedAccountsMockHandler(() => live),
     getRestoreAccountMockHandler(({ params }) => {
       live = live.filter((account) => account.id !== params.id);
-      return { ...checkingAccount, id: String(params.id) };
+      return { ...checkingAccount, id: params.id };
     }),
     ...handlers,
   ];

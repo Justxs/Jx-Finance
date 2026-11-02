@@ -7,12 +7,8 @@
  */
 
 export type SharedExpensesParams = {
-  /**
-   * One-based page number. Defaults to 1.
-   */
+  /** One-based page number. Defaults to 1. */
   page: number;
-  /**
-   * Rows per page. Defaults to 20.
-   */
+  /** Rows per page. Defaults to 20. */
   pageSize: number;
 };

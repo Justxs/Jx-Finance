@@ -6,6 +6,10 @@ catalog:
   vitest: 5.0.5
   vite-plus: 1.4.0
   "@vitest/coverage-v8": 5.0.5
+minimumReleaseAgeExclude:
+  - "@tanstack/hotkeys@0.24.0"
+  - "@tanstack/react-hotkeys@0.22.0"
+  - "@vitejs/plugin-react@6.2.1"
 overrides:
   vite@*: "catalog:"
   vitest@*: "catalog:"
@@ -17,4 +21,3 @@ peerDependencyRules:
   allowedVersions:
     vite: "*"
     vitest: "*"
-    "@vitejs/plugin-react>oxc-transform-react": "^0.155.0"
