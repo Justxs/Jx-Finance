@@ -118,6 +118,10 @@ export type MonthCloseYearSuspenseQueryResult = NonNullable<
 >;
 export type MonthCloseYearSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers twelve entries, January to December, each with its status: notEnded while the month is still running in the installation time zone, open when it has ended and is not closed, closed, or closedChanged when a transaction or investment entry dated in that month was created, edited, deleted or moved out of it after the close, its total income or expense differs from the snapshot, or the reporting currency changed since. Closes are yours alone and belong to the household scope you are viewing, so switching the active household shows that scope's closes. The month review also compares each category.
+ * @summary List the close status of every month in a year
+ */
 export function useMonthCloseYearSuspense<
   TData = Awaited<ReturnType<typeof monthCloseYear>>,
   TError = ErrorType<ProblemDetails>,
@@ -131,19 +135,10 @@ export function useMonthCloseYearSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useMonthCloseYearSuspense<
-  TData = Awaited<ReturnType<typeof monthCloseYear>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: MonthCloseYearParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthCloseYear>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers twelve entries, January to December, each with its status: notEnded while the month is still running in the installation time zone, open when it has ended and is not closed, closed, or closedChanged when a transaction or investment entry dated in that month was created, edited, deleted or moved out of it after the close, its total income or expense differs from the snapshot, or the reporting currency changed since. Closes are yours alone and belong to the household scope you are viewing, so switching the active household shows that scope's closes. The month review also compares each category.
+ * @summary List the close status of every month in a year
+ */
 export function useMonthCloseYearSuspense<
   TData = Awaited<ReturnType<typeof monthCloseYear>>,
   TError = ErrorType<ProblemDetails>,
@@ -158,9 +153,26 @@ export function useMonthCloseYearSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers twelve entries, January to December, each with its status: notEnded while the month is still running in the installation time zone, open when it has ended and is not closed, closed, or closedChanged when a transaction or investment entry dated in that month was created, edited, deleted or moved out of it after the close, its total income or expense differs from the snapshot, or the reporting currency changed since. Closes are yours alone and belong to the household scope you are viewing, so switching the active household shows that scope's closes. The month review also compares each category.
  * @summary List the close status of every month in a year
  */
-
+export function useMonthCloseYearSuspense<
+  TData = Awaited<ReturnType<typeof monthCloseYear>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: MonthCloseYearParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthCloseYear>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers twelve entries, January to December, each with its status: notEnded while the month is still running in the installation time zone, open when it has ended and is not closed, closed, or closedChanged when a transaction or investment entry dated in that month was created, edited, deleted or moved out of it after the close, its total income or expense differs from the snapshot, or the reporting currency changed since. Closes are yours alone and belong to the household scope you are viewing, so switching the active household shows that scope's closes. The month review also compares each category.
+ * @summary List the close status of every month in a year
+ */
 export function useMonthCloseYearSuspense<
   TData = Awaited<ReturnType<typeof monthCloseYear>>,
   TError = ErrorType<ProblemDetails>,
@@ -268,6 +280,7 @@ export type CloseMonthMutationError = ErrorType<ProblemDetails>;
 export type CloseMonthMutationVariables = { month: string; data: CloseMonthRequest };
 
 /**
+ * Freezes a snapshot of the month's figures as the report summary answers them now, for you and the household scope you are viewing. Nothing is locked: every transaction stays editable, and later changes show as drift in the month review. Closing an already closed month replaces its snapshot, which is how drift is accepted. A note is optional; leaving it out keeps the note already saved, and an empty note clears it. Only a month that has ended in the installation time zone can be closed.
  * @summary Close or re-close a month
  */
 export const useCloseMonth = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -344,6 +357,10 @@ export const getMonthReviewSuspenseQueryOptions = <
 export type MonthReviewSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof monthReview>>>;
 export type MonthReviewSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked "not unusual" while the unusualAmounts feature is on, possible duplicates dated in the month (the same rows as the ledger with duplicates=true), and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.
+ * @summary Review one month for closing
+ */
 export function useMonthReviewSuspense<
   TData = Awaited<ReturnType<typeof monthReview>>,
   TError = ErrorType<ProblemDetails>,
@@ -355,19 +372,10 @@ export function useMonthReviewSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useMonthReviewSuspense<
-  TData = Awaited<ReturnType<typeof monthReview>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  month: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthReview>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked "not unusual" while the unusualAmounts feature is on, possible duplicates dated in the month (the same rows as the ledger with duplicates=true), and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.
+ * @summary Review one month for closing
+ */
 export function useMonthReviewSuspense<
   TData = Awaited<ReturnType<typeof monthReview>>,
   TError = ErrorType<ProblemDetails>,
@@ -382,9 +390,26 @@ export function useMonthReviewSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked "not unusual" while the unusualAmounts feature is on, possible duplicates dated in the month (the same rows as the ledger with duplicates=true), and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.
  * @summary Review one month for closing
  */
-
+export function useMonthReviewSuspense<
+  TData = Awaited<ReturnType<typeof monthReview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  month: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthReview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked "not unusual" while the unusualAmounts feature is on, possible duplicates dated in the month (the same rows as the ledger with duplicates=true), and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.
+ * @summary Review one month for closing
+ */
 export function useMonthReviewSuspense<
   TData = Awaited<ReturnType<typeof monthReview>>,
   TError = ErrorType<ProblemDetails>,
@@ -470,6 +495,7 @@ export type ReopenMonthMutationError = ErrorType<ProblemDetails>;
 export type ReopenMonthMutationVariables = { month: string };
 
 /**
+ * Deletes the close and its snapshot in the household scope you are viewing. The month's transactions are not touched. Reopening a month that is not closed does nothing.
  * @summary Reopen a closed month
  */
 export const useReopenMonth = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -577,6 +603,7 @@ export type UpdateMonthNoteMutationError = ErrorType<ProblemDetails>;
 export type UpdateMonthNoteMutationVariables = { month: string; data: UpdateMonthNoteRequest };
 
 /**
+ * Replaces the note of the close in the household scope you are viewing, without touching its snapshot. An empty note clears it.
  * @summary Change the note of a closed month
  */
 export const useUpdateMonthNote = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

@@ -122,6 +122,10 @@ export type CategoryBreakdownSuspenseQueryResult = NonNullable<
 >;
 export type CategoryBreakdownSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null. Each entry also carries comparisonAmount, the same category in the previous month, and an entry appears when either month had spending. On the current month, which has not ended, the previous month is cut to the same number of days, so the 1st to the 12th is compared with the 1st to the 12th; comparisonStart and comparisonEnd give the compared days.
+ * @summary Get spending split by category
+ */
 export function useCategoryBreakdownSuspense<
   TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
@@ -135,19 +139,10 @@ export function useCategoryBreakdownSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCategoryBreakdownSuspense<
-  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: CategoryBreakdownParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null. Each entry also carries comparisonAmount, the same category in the previous month, and an entry appears when either month had spending. On the current month, which has not ended, the previous month is cut to the same number of days, so the 1st to the 12th is compared with the 1st to the 12th; comparisonStart and comparisonEnd give the compared days.
+ * @summary Get spending split by category
+ */
 export function useCategoryBreakdownSuspense<
   TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
@@ -162,9 +157,26 @@ export function useCategoryBreakdownSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null. Each entry also carries comparisonAmount, the same category in the previous month, and an entry appears when either month had spending. On the current month, which has not ended, the previous month is cut to the same number of days, so the 1st to the 12th is compared with the 1st to the 12th; comparisonStart and comparisonEnd give the compared days.
  * @summary Get spending split by category
  */
-
+export function useCategoryBreakdownSuspense<
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: CategoryBreakdownParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null. Each entry also carries comparisonAmount, the same category in the previous month, and an entry appears when either month had spending. On the current month, which has not ended, the previous month is cut to the same number of days, so the 1st to the 12th is compared with the 1st to the 12th; comparisonStart and comparisonEnd give the compared days.
+ * @summary Get spending split by category
+ */
 export function useCategoryBreakdownSuspense<
   TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
@@ -255,6 +267,10 @@ export const getMonthlyTrendSuspenseQueryOptions = <
 export type MonthlyTrendSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof monthlyTrend>>>;
 export type MonthlyTrendSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
+ * @summary Get the monthly income and expense trend
+ */
 export function useMonthlyTrendSuspense<
   TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
@@ -268,19 +284,10 @@ export function useMonthlyTrendSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useMonthlyTrendSuspense<
-  TData = Awaited<ReturnType<typeof monthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: MonthlyTrendParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
+ * @summary Get the monthly income and expense trend
+ */
 export function useMonthlyTrendSuspense<
   TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
@@ -295,9 +302,26 @@ export function useMonthlyTrendSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
  * @summary Get the monthly income and expense trend
  */
-
+export function useMonthlyTrendSuspense<
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: MonthlyTrendParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns income and expense totals per month, oldest first, ending with the requested month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
+ * @summary Get the monthly income and expense trend
+ */
 export function useMonthlyTrendSuspense<
   TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
@@ -390,6 +414,10 @@ export type DashboardSummarySuspenseQueryResult = NonNullable<
 >;
 export type DashboardSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
+ * @summary Get the dashboard summary
+ */
 export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -403,19 +431,10 @@ export function useDashboardSummarySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDashboardSummarySuspense<
-  TData = Awaited<ReturnType<typeof dashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: DashboardSummaryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
+ * @summary Get the dashboard summary
+ */
 export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -430,9 +449,26 @@ export function useDashboardSummarySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
  * @summary Get the dashboard summary
  */
-
+export function useDashboardSummarySuspense<
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: DashboardSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the headline figures for one month: total balance across all visible accounts as of the month's last day, or as of today for the current month, and the month's income, expenses and resulting net flow. The month defaults to the current one, resolved in the instance time zone, not the caller's. A past month's balance counts only rows dated on or before its last day and values currencies and holdings at the rates and prices of that day. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.
+ * @summary Get the dashboard summary
+ */
 export function useDashboardSummarySuspense<
   TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -509,6 +545,10 @@ export type DashboardLayoutSuspenseQueryResult = NonNullable<
 >;
 export type DashboardLayoutSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
+ * @summary Get your dashboard layout
+ */
 export function useDashboardLayoutSuspense<
   TData = Awaited<ReturnType<typeof dashboardLayout>>,
   TError = ErrorType<ProblemDetails>,
@@ -521,18 +561,10 @@ export function useDashboardLayoutSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDashboardLayoutSuspense<
-  TData = Awaited<ReturnType<typeof dashboardLayout>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
+ * @summary Get your dashboard layout
+ */
 export function useDashboardLayoutSuspense<
   TData = Awaited<ReturnType<typeof dashboardLayout>>,
   TError = ErrorType<ProblemDetails>,
@@ -546,9 +578,25 @@ export function useDashboardLayoutSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
  * @summary Get your dashboard layout
  */
-
+export function useDashboardLayoutSuspense<
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
+ * @summary Get your dashboard layout
+ */
 export function useDashboardLayoutSuspense<
   TData = Awaited<ReturnType<typeof dashboardLayout>>,
   TError = ErrorType<ProblemDetails>,
@@ -631,6 +679,7 @@ export type ResetDashboardLayoutMutationResult = NonNullable<
 export type ResetDashboardLayoutMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Forgets the saved layout of the signed-in user, so the dashboard shows every card in the default order again. The layouts of other users are untouched. Safe to repeat.
  * @summary Reset your dashboard layout
  */
 export const useResetDashboardLayout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -732,6 +781,7 @@ export type SaveDashboardLayoutMutationError = ErrorType<ProblemDetails>;
 export type SaveDashboardLayoutMutationVariables = { data: SaveDashboardLayoutRequest };
 
 /**
+ * Stores the order of the dashboard cards and which of them are hidden, for the signed-in user only; household members each keep their own. Cards left out of the order are placed after the listed ones in their default order. A card whose feature switch is off keeps its place and comes back there when the feature is switched on again.
  * @summary Save your dashboard layout
  */
 export const useSaveDashboardLayout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -806,6 +856,10 @@ export type GettingStartedSuspenseQueryResult = NonNullable<
 >;
 export type GettingStartedSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
+ * @summary Get your getting started steps
+ */
 export function useGettingStartedSuspense<
   TData = Awaited<ReturnType<typeof gettingStarted>>,
   TError = ErrorType<ProblemDetails>,
@@ -818,18 +872,10 @@ export function useGettingStartedSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGettingStartedSuspense<
-  TData = Awaited<ReturnType<typeof gettingStarted>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
+ * @summary Get your getting started steps
+ */
 export function useGettingStartedSuspense<
   TData = Awaited<ReturnType<typeof gettingStarted>>,
   TError = ErrorType<ProblemDetails>,
@@ -843,9 +889,25 @@ export function useGettingStartedSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
  * @summary Get your getting started steps
  */
-
+export function useGettingStartedSuspense<
+  TData = Awaited<ReturnType<typeof gettingStarted>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof gettingStarted>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the first steps through the application in order, each marked done or not. Every step is worked out from your data at the time of the request, so nothing is stored: deleting your only budget marks planning as not done again. A step whose feature is switched off is left out; inviting a member, setting up email and taking a backup are listed for administrators only. Sorting your spending is done once you have a transaction and none dated in the last 30 days is uncategorized.
+ * @summary Get your getting started steps
+ */
 export function useGettingStartedSuspense<
   TData = Awaited<ReturnType<typeof gettingStarted>>,
   TError = ErrorType<ProblemDetails>,

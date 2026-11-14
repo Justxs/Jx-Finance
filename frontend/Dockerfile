@@ -1,5 +1,5 @@
-FROM node:24.22.2-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS build
-RUN apk add --no-cache libgcc libstdc++ && npm install --global --ignore-scripts vite-plus@1.4.0
+FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS build
+RUN apk add --no-cache libgcc libstdc++ && npm install --global --ignore-scripts vite-plus@1.6.0
 WORKDIR /app
 
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
@@ -8,7 +8,7 @@ RUN vp install --frozen-lockfile
 COPY frontend/ ./
 RUN vp run build
 
-FROM caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+FROM caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
 LABEL org.opencontainers.image.title="Jx Finance web" \
       org.opencontainers.image.description="A private household ledger you run yourself: the web app, served by Caddy." \
       org.opencontainers.image.source="https://github.com/Justxs/Jx-Finance" \

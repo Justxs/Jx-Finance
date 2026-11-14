@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import type { CategoryResponse } from "@/api/generated/model";
+import { stubTranslate } from "@/test/translate";
 import {
   isOptimistic,
   optimisticId,
@@ -7,9 +8,7 @@ import {
   transactionName,
 } from "./transaction-row";
 
-function t(key: string) {
-  return key;
-}
+const t = stubTranslate();
 
 const food: CategoryResponse = {
   id: "food",

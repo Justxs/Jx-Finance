@@ -156,6 +156,7 @@ export type CreateTransactionMutationError = ErrorType<ProblemDetails>;
 export type CreateTransactionMutationVariables = { data: CreateTransactionRequest };
 
 /**
+ * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Record a transaction
  */
 export const useCreateTransaction = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -244,6 +245,10 @@ export const getTransactionsSuspenseQueryOptions = <
 export type TransactionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transactions>>>;
 export type TransactionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
+ * @summary List transactions
+ */
 export function useTransactionsSuspense<
   TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -257,19 +262,10 @@ export function useTransactionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof transactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: TransactionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
+ * @summary List transactions
+ */
 export function useTransactionsSuspense<
   TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -284,9 +280,26 @@ export function useTransactionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
  * @summary List transactions
  */
-
+export function useTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof transactions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: TransactionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND. A refund is an expense with a negative amount; it carries refundOf (the purchase it refunds, null when that is not visible), and a purchase carries refundedAmount, the reporting-currency total of the visible refunds that name it.
+ * @summary List transactions
+ */
 export function useTransactionsSuspense<
   TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -395,6 +408,7 @@ export type BulkMoveTransactionsMutationError = ErrorType<ProblemDetails>;
 export type BulkMoveTransactionsMutationVariables = { data: BulkMoveTransactionsRequest };
 
 /**
+ * Puts every listed transaction on the account sent, as changing the account in the transaction form does: the amount, currency, date, category, split lines, tags, files, refund link, group and import reference stay, so the reporting amount needs no revaluation, and an imported row keeps guarding its new account against being imported twice. Rows already on that account are left alone and not counted. A row whose link would no longer hold stays where it is and is listed in refused with its code: the fee of a currency conversion (transaction.conversionFee), an expense split with a household when its payer does not own the account (settleUp.notPayer), and a payment of a shared debt when the account is not shared with the debt's household (household.referenceNotShared). Split rows and members of a transaction group move like any other row. An invisible id or account refuses the whole request. Repeated ids count once. A read-and-write API token cannot call it.
  * @summary Move several transactions to another account
  */
 export const useBulkMoveTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -504,6 +518,7 @@ export type BulkCategorizeTransactionsMutationVariables = {
 };
 
 /**
+ * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.
  * @summary Set the category of several transactions
  */
 export const useBulkCategorizeTransactions = <
@@ -613,6 +628,7 @@ export type BulkDeleteTransactionsMutationError = ErrorType<ProblemDetails>;
 export type BulkDeleteTransactionsMutationVariables = { data: BulkDeleteTransactionsRequest };
 
 /**
+ * Deletes every listed transaction exactly as DELETE /api/transactions/{id} does, in one save: each keeps its split lines, tags and files, and each gets its own trash entry, so POST /api/trash/restore-transactions brings the whole selection back in one call and POST /api/trash/restore brings back any one of them. Split rows and members of a transaction group are accepted like any other row. The request is all-or-nothing: if any id is not visible to you, nothing is deleted. Repeated ids count once. A read-and-write API token cannot call it.
  * @summary Delete several transactions
  */
 export const useBulkDeleteTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -719,6 +735,7 @@ export type BulkTagTransactionsMutationError = ErrorType<ProblemDetails>;
 export type BulkTagTransactionsMutationVariables = { data: BulkTagTransactionsRequest };
 
 /**
+ * Replaces the whole set of tags on every listed transaction with the tags sent, so an empty list clears them. Unlike the category operation this accepts split transactions, because a tag belongs to the payment and not to a split line. The request is all-or-nothing: if any id is not visible to you or any tag is not visible to you, nothing changes. Repeated ids count once, and the amounts, categories and split lines of the transactions are untouched.
  * @summary Set the tags of several transactions
  */
 export const useBulkTagTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -809,6 +826,10 @@ export type ExportTransactionsSuspenseQueryResult = NonNullable<
 >;
 export type ExportTransactionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
+ * @summary Export transactions as CSV
+ */
 export function useExportTransactionsSuspense<
   TData = Awaited<ReturnType<typeof exportTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -822,19 +843,10 @@ export function useExportTransactionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
+ * @summary Export transactions as CSV
+ */
 export function useExportTransactionsSuspense<
   TData = Awaited<ReturnType<typeof exportTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -849,9 +861,26 @@ export function useExportTransactionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
  * @summary Export transactions as CSV
  */
-
+export function useExportTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExportTransactionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the filtered ledger as a UTF-8 CSV attachment named jx-finance-transactions-<from>-to-<to>.csv (or with only the dates given, or none), with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
+ * @summary Export transactions as CSV
+ */
 export function useExportTransactionsSuspense<
   TData = Awaited<ReturnType<typeof exportTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -946,6 +975,10 @@ export type ExportTransactionsPdfSuspenseQueryResult = NonNullable<
 >;
 export type ExportTransactionsPdfSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
+ * @summary Export transactions as PDF
+ */
 export function useExportTransactionsPdfSuspense<
   TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
   TError = ErrorType<ProblemDetails>,
@@ -959,19 +992,10 @@ export function useExportTransactionsPdfSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactionsPdfSuspense<
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
+ * @summary Export transactions as PDF
+ */
 export function useExportTransactionsPdfSuspense<
   TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
   TError = ErrorType<ProblemDetails>,
@@ -986,9 +1010,26 @@ export function useExportTransactionsPdfSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
  * @summary Export transactions as PDF
  */
-
+export function useExportTransactionsPdfSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExportTransactionsPdfParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Renders the filtered ledger as a printable PDF, attached as jx-finance-transactions-<from>-to-<to>.pdf (or with only the dates given, or none). It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
+ * @summary Export transactions as PDF
+ */
 export function useExportTransactionsPdfSuspense<
   TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
   TError = ErrorType<ProblemDetails>,
@@ -1077,6 +1118,10 @@ export const getLedgerSuspenseQueryOptions = <
 export type LedgerSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof ledger>>>;
 export type LedgerSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
+ * @summary List the ledger with transaction groups folded
+ */
 export function useLedgerSuspense<
   TData = Awaited<ReturnType<typeof ledger>>,
   TError = ErrorType<ProblemDetails>,
@@ -1088,17 +1133,10 @@ export function useLedgerSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useLedgerSuspense<
-  TData = Awaited<ReturnType<typeof ledger>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: LedgerParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
+ * @summary List the ledger with transaction groups folded
+ */
 export function useLedgerSuspense<
   TData = Awaited<ReturnType<typeof ledger>>,
   TError = ErrorType<ProblemDetails>,
@@ -1111,9 +1149,24 @@ export function useLedgerSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
  * @summary List the ledger with transaction groups folded
  */
-
+export function useLedgerSuspense<
+  TData = Awaited<ReturnType<typeof ledger>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: LedgerParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ledger>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the ledger in which the members of each of your transaction groups are folded into one item of kind Group, and every other transaction is an item of kind Transaction. Filters apply to the members: a group appears when at least one member matches, and its matchingCount, date range and net count only the matching members, while memberCount counts them all. The net is the sum of the members' reporting amounts with income positive. Sorting by date places a group at its newest matching member, by amount at the size of its net, by description at its name, and by category or account after every transaction, by name. The total counts ledger items, not transactions; GET /api/transactions/summary still counts transactions. A group is personal, so a housemate sees its members on a shared account as ordinary transactions. GET /api/transactions is unchanged and never folds anything.
+ * @summary List the ledger with transaction groups folded
+ */
 export function useLedgerSuspense<
   TData = Awaited<ReturnType<typeof ledger>>,
   TError = ErrorType<ProblemDetails>,
@@ -1200,6 +1253,10 @@ export const getPlacesSuspenseQueryOptions = <
 export type PlacesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof places>>>;
 export type PlacesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
+ * @summary Suggest places used before
+ */
 export function usePlacesSuspense<
   TData = Awaited<ReturnType<typeof places>>,
   TError = ErrorType<ProblemDetails>,
@@ -1211,17 +1268,10 @@ export function usePlacesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePlacesSuspense<
-  TData = Awaited<ReturnType<typeof places>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: PlacesParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
+ * @summary Suggest places used before
+ */
 export function usePlacesSuspense<
   TData = Awaited<ReturnType<typeof places>>,
   TError = ErrorType<ProblemDetails>,
@@ -1234,9 +1284,24 @@ export function usePlacesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
  * @summary Suggest places used before
  */
-
+export function usePlacesSuspense<
+  TData = Awaited<ReturnType<typeof places>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PlacesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof places>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers up to 20 distinct places of the transactions you can see, narrowed by the active household, most used first. Places that differ only in case or surrounding spaces are one entry, named by the newest spelling, with the number of transactions and the average of the coordinates stored with them (null when none has any). With lat and lon, the nearest place within 150 metres comes first with nearby true, so a position taken in a shop can be named after the shop. With own true it answers every place of the transactions you entered, by name, which is the list a rename or merge works on. Nothing is looked up outside the installation. Needs the locations feature.
+ * @summary Suggest places used before
+ */
 export function usePlacesSuspense<
   TData = Awaited<ReturnType<typeof places>>,
   TError = ErrorType<ProblemDetails>,
@@ -1341,6 +1406,7 @@ export type RenamePlaceMutationError = ErrorType<ProblemDetails>;
 export type RenamePlaceMutationVariables = { data: RenamePlaceRequest };
 
 /**
+ * Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.
  * @summary Rename a place or merge several spellings into one
  */
 export const useRenamePlace = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1447,6 +1513,7 @@ export type SuggestCategoryMutationError = ErrorType<ProblemDetails>;
 export type SuggestCategoryMutationVariables = { data: SuggestCategoryRequest };
 
 /**
+ * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise, while the learnedCategories feature is on, the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. With both features off every field is null.
  * @summary Suggest a category for a transaction being entered
  */
 export const useSuggestCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1537,6 +1604,10 @@ export type TransactionsSummarySuspenseQueryResult = NonNullable<
 >;
 export type TransactionsSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
+ * @summary Total the filtered transactions
+ */
 export function useTransactionsSummarySuspense<
   TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -1550,19 +1621,10 @@ export function useTransactionsSummarySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransactionsSummarySuspense<
-  TData = Awaited<ReturnType<typeof transactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: TransactionsSummaryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
+ * @summary Total the filtered transactions
+ */
 export function useTransactionsSummarySuspense<
   TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -1577,9 +1639,26 @@ export function useTransactionsSummarySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
  * @summary Total the filtered transactions
  */
-
+export function useTransactionsSummarySuspense<
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TransactionsSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted. A refund is an expense with a negative amount, so the expense total is net of refunds.
+ * @summary Total the filtered transactions
+ */
 export function useTransactionsSummarySuspense<
   TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -1675,6 +1754,10 @@ export type UncategorizedSuggestionsSuspenseQueryResult = NonNullable<
 >;
 export type UncategorizedSuggestionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
+ * @summary Suggest categories for uncategorized transactions
+ */
 export function useUncategorizedSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1688,19 +1771,10 @@ export function useUncategorizedSuggestionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useUncategorizedSuggestionsSuspense<
-  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: UncategorizedSuggestionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
+ * @summary Suggest categories for uncategorized transactions
+ */
 export function useUncategorizedSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1715,9 +1789,26 @@ export function useUncategorizedSuggestionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
  * @summary Suggest categories for uncategorized transactions
  */
-
+export function useUncategorizedSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UncategorizedSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof uncategorizedSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Takes the newest 200 transactions that match the filters, have no category and are not split, and suggests a category for each: the first matching categorization rule while the categorizationRules feature is on, otherwise a naive Bayes model trained inside the API on the categorized transactions you can see, when it is sure enough. Only transactions that got a suggestion are answered, each with the transaction itself, the category, the source and the rule's name or the model's confidence. Nothing is written: apply a suggestion through POST /api/transactions/bulk-category with onlyUncategorized. Needs the learnedCategories feature.
+ * @summary Suggest categories for uncategorized transactions
+ */
 export function useUncategorizedSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof uncategorizedSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1805,6 +1896,7 @@ export type DeleteTransactionMutationError = ErrorType<ProblemDetails>;
 export type DeleteTransactionMutationVariables = { id: string };
 
 /**
+ * Removes the transaction and adjusts the account balance accordingly. Its split lines, tags and attached files are kept with it, so POST /api/trash/restore brings it back whole for the next 30 days.
  * @summary Delete a transaction
  */
 export const useDeleteTransaction = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1881,6 +1973,10 @@ export const getTransactionSuspenseQueryOptions = <
 export type TransactionSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transaction>>>;
 export type TransactionSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
+ * @summary Get one transaction
+ */
 export function useTransactionSuspense<
   TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
@@ -1892,19 +1988,10 @@ export function useTransactionSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransactionSuspense<
-  TData = Awaited<ReturnType<typeof transaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
+ * @summary Get one transaction
+ */
 export function useTransactionSuspense<
   TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
@@ -1919,9 +2006,26 @@ export function useTransactionSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
-
+export function useTransactionSuspense<
+  TData = Awaited<ReturnType<typeof transaction>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries, and for a refund the purchase it refunds (refundOf) or for a purchase the total refunded (refundedAmount). A transaction you cannot see is reported as missing rather than forbidden.
+ * @summary Get one transaction
+ */
 export function useTransactionSuspense<
   TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
@@ -2031,6 +2135,7 @@ export type UpdateTransactionMutationError = ErrorType<ProblemDetails>;
 export type UpdateTransactionMutationVariables = { id: string; data: UpdateTransactionRequest };
 
 /**
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note, spreadMonths and spreadDirection are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
 export const useUpdateTransaction = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2116,6 +2221,7 @@ export type KeepPossibleDuplicatesMutationError = ErrorType<ProblemDetails>;
 export type KeepPossibleDuplicatesMutationVariables = { id: string };
 
 /**
+ * Answers "keep both" for every pair the duplicates=true filter currently finds with this transaction: each pair is stored and never offered again, so both rows leave the filter unless one of them still pairs with a third row. Changes neither transaction. To remove the extra row instead, delete it through DELETE /api/transactions/{id}. A transaction without a possible duplicate answers 204 and stores nothing.
  * @summary Keep a transaction and its possible duplicates
  */
 export const useKeepPossibleDuplicates = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2201,6 +2307,7 @@ export type DismissUnusualAmountMutationError = ErrorType<ProblemDetails>;
 export type DismissUnusualAmountMutationVariables = { id: string };
 
 /**
+ * Keeps the flag the background check stored but stops showing it: the ledger's unusual filter leaves the row out and the response reports unusualDismissed. The mark survives later edits of the transaction, so correcting a typo does not bring the flag back. Only an annotation; the transaction itself is not changed. Needs the unusualAmounts feature.
  * @summary Mark an unusual expense as not unusual
  */
 export const useDismissUnusualAmount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2286,6 +2393,7 @@ export type RestoreUnusualAmountMutationError = ErrorType<ProblemDetails>;
 export type RestoreUnusualAmountMutationVariables = { id: string };
 
 /**
+ * Removes the "not unusual" mark, so a stored flag shows in the ledger and in its unusual filter again. The undo of POST /api/transactions/{id}/unusual/dismiss. Needs the unusualAmounts feature.
  * @summary Mark an expense as unusual again
  */
 export const useRestoreUnusualAmount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

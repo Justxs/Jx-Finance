@@ -149,6 +149,7 @@ export type CreateAssetMutationError = ErrorType<ProblemDetails>;
 export type CreateAssetMutationVariables = { data: CreateAssetRequest };
 
 /**
+ * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency. The value and date become its first valuation.
  * @summary Add an asset
  */
 export const useCreateAsset = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -219,6 +220,10 @@ export const getAssetsSuspenseQueryOptions = <
 export type AssetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof assets>>>;
 export type AssetsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
+ * @summary List assets
+ */
 export function useAssetsSuspense<
   TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
@@ -229,16 +234,10 @@ export function useAssetsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAssetsSuspense<
-  TData = Awaited<ReturnType<typeof assets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
+ * @summary List assets
+ */
 export function useAssetsSuspense<
   TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
@@ -250,9 +249,23 @@ export function useAssetsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
  * @summary List assets
  */
-
+export function useAssetsSuspense<
+  TData = Awaited<ReturnType<typeof assets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
+ * @summary List assets
+ */
 export function useAssetsSuspense<
   TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
@@ -335,6 +348,7 @@ export type DeleteAssetMutationError = ErrorType<ProblemDetails>;
 export type DeleteAssetMutationVariables = { id: string };
 
 /**
+ * Stops tracking the asset. Snapshots already recorded keep the value it had.
  * @summary Delete an asset
  */
 export const useDeleteAsset = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -440,6 +454,7 @@ export type UpdateAssetMutationError = ErrorType<ProblemDetails>;
 export type UpdateAssetMutationVariables = { id: string; data: UpdateAssetRequest };
 
 /**
+ * Revalues, renames or sets the depreciation of an asset. A changed value or date records a valuation for that date instead of overwriting the history. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
  * @summary Update an asset
  */
 export const useUpdateAsset = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -518,6 +533,10 @@ export type AssetValuationsSuspenseQueryResult = NonNullable<
 >;
 export type AssetValuationsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
+ * @summary List the valuations of an asset
+ */
 export function useAssetValuationsSuspense<
   TData = Awaited<ReturnType<typeof assetValuations>>,
   TError = ErrorType<ProblemDetails>,
@@ -531,19 +550,10 @@ export function useAssetValuationsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAssetValuationsSuspense<
-  TData = Awaited<ReturnType<typeof assetValuations>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
+ * @summary List the valuations of an asset
+ */
 export function useAssetValuationsSuspense<
   TData = Awaited<ReturnType<typeof assetValuations>>,
   TError = ErrorType<ProblemDetails>,
@@ -558,9 +568,26 @@ export function useAssetValuationsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
  * @summary List the valuations of an asset
  */
-
+export function useAssetValuationsSuspense<
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
+ * @summary List the valuations of an asset
+ */
 export function useAssetValuationsSuspense<
   TData = Awaited<ReturnType<typeof assetValuations>>,
   TError = ErrorType<ProblemDetails>,
@@ -649,6 +676,7 @@ export type DeleteAssetValuationMutationError = ErrorType<ProblemDetails>;
 export type DeleteAssetValuationMutationVariables = { id: string; date: string };
 
 /**
+ * Removes the valuation recorded for one date for good; it does not go to the trash. The current value of the asset becomes the newest remaining valuation. The last valuation cannot be deleted.
  * @summary Delete a valuation of an asset
  */
 export const useDeleteAssetValuation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -761,6 +789,7 @@ export type SetAssetValuationMutationVariables = {
 };
 
 /**
+ * Records what the asset was worth on one date, replacing a valuation already recorded for that date. The current value and as-of date of the asset follow the newest valuation, so a valuation for an earlier date only adds history. On a depreciating asset a valuation on or after the start date restarts the decline from that value at the same monthly amount. Net worth snapshots already taken are not rewritten.
  * @summary Record a valuation of an asset
  */
 export const useSetAssetValuation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -853,6 +882,10 @@ export type AssetValueHistorySuspenseQueryResult = NonNullable<
 >;
 export type AssetValueHistorySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
+ * @summary Get the value of an asset over time
+ */
 export function useAssetValueHistorySuspense<
   TData = Awaited<ReturnType<typeof assetValueHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -867,20 +900,10 @@ export function useAssetValueHistorySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAssetValueHistorySuspense<
-  TData = Awaited<ReturnType<typeof assetValueHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params?: AssetValueHistoryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
+ * @summary Get the value of an asset over time
+ */
 export function useAssetValueHistorySuspense<
   TData = Awaited<ReturnType<typeof assetValueHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -896,9 +919,27 @@ export function useAssetValueHistorySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
  * @summary Get the value of an asset over time
  */
-
+export function useAssetValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
+ * @summary Get the value of an asset over time
+ */
 export function useAssetValueHistorySuspense<
   TData = Awaited<ReturnType<typeof assetValueHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -1006,6 +1047,7 @@ export type CreateDebtMutationError = ErrorType<ProblemDetails>;
 export type CreateDebtMutationVariables = { data: CreateDebtRequest };
 
 /**
+ * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add a debt
  */
 export const useCreateDebt = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1076,6 +1118,10 @@ export const getDebtsSuspenseQueryOptions = <
 export type DebtsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debts>>>;
 export type DebtsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
+ * @summary List debts
+ */
 export function useDebtsSuspense<
   TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
@@ -1086,16 +1132,10 @@ export function useDebtsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDebtsSuspense<
-  TData = Awaited<ReturnType<typeof debts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
+ * @summary List debts
+ */
 export function useDebtsSuspense<
   TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
@@ -1107,9 +1147,23 @@ export function useDebtsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
  * @summary List debts
  */
-
+export function useDebtsSuspense<
+  TData = Awaited<ReturnType<typeof debts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
+ * @summary List debts
+ */
 export function useDebtsSuspense<
   TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
@@ -1192,6 +1246,7 @@ export type DeleteDebtMutationError = ErrorType<ProblemDetails>;
 export type DeleteDebtMutationVariables = { id: string };
 
 /**
+ * Stops tracking the debt, for instance once it is settled. Snapshots already recorded keep the balance it had.
  * @summary Delete a debt
  */
 export const useDeleteDebt = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1297,6 +1352,7 @@ export type UpdateDebtMutationError = ErrorType<ProblemDetails>;
 export type UpdateDebtMutationVariables = { id: string; data: UpdateDebtRequest };
 
 /**
+ * Records a new outstanding balance, rate, name or repayment terms. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down. The request replaces the debt, so repayment terms left out are cleared.
  * @summary Update a debt
  */
 export const useUpdateDebt = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1373,6 +1429,10 @@ export const getDebtBalancesSuspenseQueryOptions = <
 export type DebtBalancesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtBalances>>>;
 export type DebtBalancesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
+ * @summary List the recorded balances of a debt
+ */
 export function useDebtBalancesSuspense<
   TData = Awaited<ReturnType<typeof debtBalances>>,
   TError = ErrorType<ProblemDetails>,
@@ -1386,19 +1446,10 @@ export function useDebtBalancesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDebtBalancesSuspense<
-  TData = Awaited<ReturnType<typeof debtBalances>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
+ * @summary List the recorded balances of a debt
+ */
 export function useDebtBalancesSuspense<
   TData = Awaited<ReturnType<typeof debtBalances>>,
   TError = ErrorType<ProblemDetails>,
@@ -1413,9 +1464,26 @@ export function useDebtBalancesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
  * @summary List the recorded balances of a debt
  */
-
+export function useDebtBalancesSuspense<
+  TData = Awaited<ReturnType<typeof debtBalances>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtBalances>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the dated outstanding amounts recorded for a debt, newest first, in the currency of the debt. Creating or editing the debt records one, and the newest is the outstanding amount and as-of date of the debt. Tracked payments write none: they are counted from the newest on every read.
+ * @summary List the recorded balances of a debt
+ */
 export function useDebtBalancesSuspense<
   TData = Awaited<ReturnType<typeof debtBalances>>,
   TError = ErrorType<ProblemDetails>,
@@ -1504,6 +1572,7 @@ export type DeleteDebtBalanceMutationError = ErrorType<ProblemDetails>;
 export type DeleteDebtBalanceMutationVariables = { id: string; date: string };
 
 /**
+ * Removes the balance recorded for one date for good; it does not go to the trash. The outstanding amount of the debt becomes the newest remaining balance. The last balance cannot be deleted.
  * @summary Delete a recorded balance of a debt
  */
 export const useDeleteDebtBalance = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1614,6 +1683,7 @@ export type SetDebtBalanceMutationVariables = {
 };
 
 /**
+ * Records what was owed on one date, replacing a balance already recorded for that date. The outstanding amount and as-of date of the debt follow the newest recorded balance, so a balance for an earlier date only adds history. A debt that tracks payments counts them from the newest. Net worth snapshots already taken are not rewritten.
  * @summary Record a balance of a debt
  */
 export const useSetDebtBalance = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1711,6 +1781,10 @@ export type DebtPaymentCandidatesSuspenseQueryResult = NonNullable<
 >;
 export type DebtPaymentCandidatesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
+ * @summary Suggest transactions to link to a debt
+ */
 export function useDebtPaymentCandidatesSuspense<
   TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -1725,20 +1799,10 @@ export function useDebtPaymentCandidatesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDebtPaymentCandidatesSuspense<
-  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params?: DebtPaymentCandidatesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
+ * @summary Suggest transactions to link to a debt
+ */
 export function useDebtPaymentCandidatesSuspense<
   TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -1754,9 +1818,27 @@ export function useDebtPaymentCandidatesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
  * @summary Suggest transactions to link to a debt
  */
-
+export function useDebtPaymentCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
+ * @summary Suggest transactions to link to a debt
+ */
 export function useDebtPaymentCandidatesSuspense<
   TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -1836,6 +1918,10 @@ export const getDebtPaymentsSuspenseQueryOptions = <
 export type DebtPaymentsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtPayments>>>;
 export type DebtPaymentsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
+ * @summary List the payments of a debt
+ */
 export function useDebtPaymentsSuspense<
   TData = Awaited<ReturnType<typeof debtPayments>>,
   TError = ErrorType<ProblemDetails>,
@@ -1849,19 +1935,10 @@ export function useDebtPaymentsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDebtPaymentsSuspense<
-  TData = Awaited<ReturnType<typeof debtPayments>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
+ * @summary List the payments of a debt
+ */
 export function useDebtPaymentsSuspense<
   TData = Awaited<ReturnType<typeof debtPayments>>,
   TError = ErrorType<ProblemDetails>,
@@ -1876,9 +1953,26 @@ export function useDebtPaymentsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
  * @summary List the payments of a debt
  */
-
+export function useDebtPaymentsSuspense<
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
+ * @summary List the payments of a debt
+ */
 export function useDebtPaymentsSuspense<
   TData = Awaited<ReturnType<typeof debtPayments>>,
   TError = ErrorType<ProblemDetails>,
@@ -1988,6 +2082,7 @@ export type LinkDebtPaymentMutationError = ErrorType<ProblemDetails>;
 export type LinkDebtPaymentMutationVariables = { id: string; data: LinkDebtPaymentRequest };
 
 /**
+ * Marks an expense transaction as a payment of a debt that tracks its payments, lowering the tracked balance by its principal. The transaction stays an ordinary expense in reports and budgets. A transaction pays at most one debt. The link is private to the owner of the debt, even on a shared account.
  * @summary Link a payment to a debt
  */
 export const useLinkDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2074,6 +2169,7 @@ export type UnlinkDebtPaymentMutationError = ErrorType<ProblemDetails>;
 export type UnlinkDebtPaymentMutationVariables = { id: string; paymentId: string };
 
 /**
+ * Removes the link for good; it does not go to the trash. The transaction itself is not touched.
  * @summary Unlink a payment from a debt
  */
 export const useUnlinkDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2186,6 +2282,7 @@ export type UpdateDebtPaymentMutationVariables = {
 };
 
 /**
+ * Sets the kind of a linked payment and the principal typed from the bank statement. Leaving the principal out goes back to the calculated split.
  * @summary Change how a payment counts against a debt
  */
 export const useUpdateDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2276,6 +2373,10 @@ export const getDebtScheduleSuspenseQueryOptions = <
 export type DebtScheduleSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtSchedule>>>;
 export type DebtScheduleSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
+ * @summary Get the repayment schedule of a debt
+ */
 export function useDebtScheduleSuspense<
   TData = Awaited<ReturnType<typeof debtSchedule>>,
   TError = ErrorType<ProblemDetails>,
@@ -2290,20 +2391,10 @@ export function useDebtScheduleSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDebtScheduleSuspense<
-  TData = Awaited<ReturnType<typeof debtSchedule>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params?: DebtScheduleParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
+ * @summary Get the repayment schedule of a debt
+ */
 export function useDebtScheduleSuspense<
   TData = Awaited<ReturnType<typeof debtSchedule>>,
   TError = ErrorType<ProblemDetails>,
@@ -2319,9 +2410,27 @@ export function useDebtScheduleSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
  * @summary Get the repayment schedule of a debt
  */
-
+export function useDebtScheduleSuspense<
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtScheduleParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments and the same payment, and what they save, and lowerPayment, the other choice: the same number of payments, with the payment recomputed for the remaining term after every overpayment, the first lowered payment and the interest that saves.
+ * @summary Get the repayment schedule of a debt
+ */
 export function useDebtScheduleSuspense<
   TData = Awaited<ReturnType<typeof debtSchedule>>,
   TError = ErrorType<ProblemDetails>,
@@ -2395,6 +2504,10 @@ export const getNetWorthSuspenseQueryOptions = <
 export type NetWorthSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof netWorth>>>;
 export type NetWorthSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
+ * @summary Get current net worth
+ */
 export function useNetWorthSuspense<
   TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
@@ -2405,16 +2518,10 @@ export function useNetWorthSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useNetWorthSuspense<
-  TData = Awaited<ReturnType<typeof netWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
+ * @summary Get current net worth
+ */
 export function useNetWorthSuspense<
   TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
@@ -2426,9 +2533,23 @@ export function useNetWorthSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
  * @summary Get current net worth
  */
-
+export function useNetWorthSuspense<
+  TData = Awaited<ReturnType<typeof netWorth>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then. CountsOpenBalances is your choice made with PUT /api/networth/open-balances; while it is true, Receivable, what your households and people outside them owe you, is inside Assets and Payable, what you owe them, is inside Debts, and the snapshot carries both. They are zero otherwise.
+ * @summary Get current net worth
+ */
 export function useNetWorthSuspense<
   TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
@@ -2502,6 +2623,10 @@ export type NetWorthHistorySuspenseQueryResult = NonNullable<
 >;
 export type NetWorthHistorySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
+ * @summary Get the net worth history
+ */
 export function useNetWorthHistorySuspense<
   TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -2514,18 +2639,10 @@ export function useNetWorthHistorySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useNetWorthHistorySuspense<
-  TData = Awaited<ReturnType<typeof netWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
+ * @summary Get the net worth history
+ */
 export function useNetWorthHistorySuspense<
   TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -2539,9 +2656,25 @@ export function useNetWorthHistorySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
  * @summary Get the net worth history
  */
-
+export function useNetWorthHistorySuspense<
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
+ * @summary Get the net worth history
+ */
 export function useNetWorthHistorySuspense<
   TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -2649,6 +2782,7 @@ export type CountOpenBalancesMutationError = ErrorType<ProblemDetails>;
 export type CountOpenBalancesMutationVariables = { data: CountOpenBalancesRequest };
 
 /**
+ * Chooses, for you alone, whether your open balances with your households and with people outside them count in your net worth: what others owe you as a receivable inside assets and what you owe as a payable inside debts, each converted at today's rate. Off by default. Answers your net worth as it now stands and records today's snapshot with it, so the history follows from today; earlier snapshots are not rewritten.
  * @summary Count open settle-up balances in your net worth
  */
 export const useCountOpenBalances = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

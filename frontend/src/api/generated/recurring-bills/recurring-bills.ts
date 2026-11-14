@@ -140,6 +140,7 @@ export type CreateRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type CreateRecurringBillMutationVariables = { data: CreateRecurringBillRequest };
 
 /**
+ * Schedules a recurring expense, a recurring income or a recurring transfer. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction or a transfer is only written once the occurrence is confirmed.
  * @summary Create a recurring entry
  */
 export const useCreateRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -214,6 +215,10 @@ export type RecurringBillsSuspenseQueryResult = NonNullable<
 >;
 export type RecurringBillsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
+ * @summary List recurring entries
+ */
 export function useRecurringBillsSuspense<
   TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
@@ -226,18 +231,10 @@ export function useRecurringBillsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useRecurringBillsSuspense<
-  TData = Awaited<ReturnType<typeof recurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
+ * @summary List recurring entries
+ */
 export function useRecurringBillsSuspense<
   TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
@@ -251,9 +248,25 @@ export function useRecurringBillsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
  * @summary List recurring entries
  */
-
+export function useRecurringBillsSuspense<
+  TData = Awaited<ReturnType<typeof recurringBills>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
+ * @summary List recurring entries
+ */
 export function useRecurringBillsSuspense<
   TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
@@ -345,6 +358,10 @@ export type BillsCalendarSuspenseQueryResult = NonNullable<
 >;
 export type BillsCalendarSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
+ * @summary Lay out one month of recurring entries
+ */
 export function useBillsCalendarSuspense<
   TData = Awaited<ReturnType<typeof billsCalendar>>,
   TError = ErrorType<ProblemDetails>,
@@ -358,19 +375,10 @@ export function useBillsCalendarSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useBillsCalendarSuspense<
-  TData = Awaited<ReturnType<typeof billsCalendar>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: BillsCalendarParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
+ * @summary Lay out one month of recurring entries
+ */
 export function useBillsCalendarSuspense<
   TData = Awaited<ReturnType<typeof billsCalendar>>,
   TError = ErrorType<ProblemDetails>,
@@ -385,9 +393,26 @@ export function useBillsCalendarSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
  * @summary Lay out one month of recurring entries
  */
-
+export function useBillsCalendarSuspense<
+  TData = Awaited<ReturnType<typeof billsCalendar>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BillsCalendarParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof billsCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers every occurrence of your active recurring entries that falls in the month, walking each schedule forward from its next due date and back from it, never before the entry was created. Each occurrence has a status: paid when a ledger row with the entry's match key or name, on its account, lies within 5 days of the date (2 for a weekly entry), each row paying at most one occurrence; overdue when it is before today and not yet confirmed; noMatch for an earlier past date with no matching row; and due otherwise. A paid occurrence carries the row's amount and transactionId (null for a transfer), and unconfirmed when the entry still waits for that confirmation. Other occurrences carry the entry's amount, or the median of its newest six matching rows within 13 months for a variable entry, marked estimated, in the account's currency; without an account, or with one you cannot see (accountNotVisible), the amount is null. expectedOut and expectedIn add up every expense and income occurrence in the reporting currency at the newest exchange rate, paidOut the matched expense rows at their own reporting amounts; transfers count in none of them. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the expense and income entries left out for want of an amount. Nothing is stored. Needs the recurringBills feature.
+ * @summary Lay out one month of recurring entries
+ */
 export function useBillsCalendarSuspense<
   TData = Awaited<ReturnType<typeof billsCalendar>>,
   TError = ErrorType<ProblemDetails>,
@@ -466,6 +491,10 @@ export type SubscriptionCandidatesSuspenseQueryResult = NonNullable<
 >;
 export type SubscriptionCandidatesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
+ * @summary Suggest subscriptions found in the ledger
+ */
 export function useSubscriptionCandidatesSuspense<
   TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -478,18 +507,10 @@ export function useSubscriptionCandidatesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSubscriptionCandidatesSuspense<
-  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
+ * @summary Suggest subscriptions found in the ledger
+ */
 export function useSubscriptionCandidatesSuspense<
   TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -503,9 +524,25 @@ export function useSubscriptionCandidatesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
  * @summary Suggest subscriptions found in the ledger
  */
-
+export function useSubscriptionCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
+ * @summary Suggest subscriptions found in the ledger
+ */
 export function useSubscriptionCandidatesSuspense<
   TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
   TError = ErrorType<ProblemDetails>,
@@ -616,6 +653,7 @@ export type DismissSubscriptionCandidateMutationVariables = {
 };
 
 /**
+ * Hides one suggested subscription for the signed-in user. The dismissal is stored against the account and the normalized description the suggestion was grouped by, not against the transactions behind it, so a new payment arriving in the same group does not bring the suggestion back. Dismissing the same group twice changes nothing. It is a personal choice: another member of the same household still sees the suggestion.
  * @summary Dismiss a subscription suggestion
  */
 export const useDismissSubscriptionCandidate = <
@@ -693,6 +731,10 @@ export type RecurringTotalsSuspenseQueryResult = NonNullable<
 >;
 export type RecurringTotalsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
+ * @summary Sum what recurring entries cost a month and a year
+ */
 export function useRecurringTotalsSuspense<
   TData = Awaited<ReturnType<typeof recurringTotals>>,
   TError = ErrorType<ProblemDetails>,
@@ -705,18 +747,10 @@ export function useRecurringTotalsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useRecurringTotalsSuspense<
-  TData = Awaited<ReturnType<typeof recurringTotals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
+ * @summary Sum what recurring entries cost a month and a year
+ */
 export function useRecurringTotalsSuspense<
   TData = Awaited<ReturnType<typeof recurringTotals>>,
   TError = ErrorType<ProblemDetails>,
@@ -730,9 +764,25 @@ export function useRecurringTotalsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
  * @summary Sum what recurring entries cost a month and a year
  */
-
+export function useRecurringTotalsSuspense<
+  TData = Awaited<ReturnType<typeof recurringTotals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringTotals>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Adds up your active expense entries (monthlyOut, yearlyOut) and, separately, your active income entries (monthlyIn, yearlyIn) in the reporting currency at the newest exchange rate. A weekly entry counts 52 times a year, a monthly one 12, a quarterly one 4 and a yearly one once, and a month is a twelfth of the year. A variable entry counts at the median of its newest 6 matching rows within 13 months. Transfers count in none of the figures. partial is true when an estimate or an amount without a fresh rate is inside a figure, and unpriced counts the entries left out for want of an amount. possiblyCancelled lists the active expense entries whose last 2 past occurrences no ledger row paid, matched as the calendar matches them. Nothing is stored. Needs the recurringBills feature.
+ * @summary Sum what recurring entries cost a month and a year
+ */
 export function useRecurringTotalsSuspense<
   TData = Awaited<ReturnType<typeof recurringTotals>>,
   TError = ErrorType<ProblemDetails>,
@@ -819,6 +869,7 @@ export type DeleteRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type DeleteRecurringBillMutationVariables = { id: string };
 
 /**
+ * Removes the schedule and its reminders. Transactions and transfers already posted from it stay in the ledger.
  * @summary Delete a recurring entry
  */
 export const useDeleteRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -897,6 +948,10 @@ export type RecurringBillSuspenseQueryResult = NonNullable<
 >;
 export type RecurringBillSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
+ * @summary Get one recurring entry
+ */
 export function useRecurringBillSuspense<
   TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
@@ -910,19 +965,10 @@ export function useRecurringBillSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useRecurringBillSuspense<
-  TData = Awaited<ReturnType<typeof recurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
+ * @summary Get one recurring entry
+ */
 export function useRecurringBillSuspense<
   TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
@@ -937,9 +983,26 @@ export function useRecurringBillSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
  * @summary Get one recurring entry
  */
-
+export function useRecurringBillSuspense<
+  TData = Awaited<ReturnType<typeof recurringBill>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
+ * @summary Get one recurring entry
+ */
 export function useRecurringBillSuspense<
   TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
@@ -1049,6 +1112,7 @@ export type UpdateRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type UpdateRecurringBillMutationVariables = { id: string; data: UpdateRecurringBillRequest };
 
 /**
+ * Changes the shape, the schedule, the expected amount, or the reminder lead time. A shape change must bring the fields the new shape needs: a Transfer needs both accounts and no category, an Expense or an Income needs no destination account. Setting isActive to false stops reminders without losing the schedule or the rows already posted from it.
  * @summary Update a recurring entry
  */
 export const useUpdateRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1159,6 +1223,7 @@ export type ConfirmRecurringBillMutationVariables = {
 };
 
 /**
+ * Posts one occurrence of the schedule and rolls the next due date forward by the cadence. An Expense writes an expense transaction, an Income writes an income transaction and a Transfer writes a transfer between the two accounts on the entry. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same occurrence twice.
  * @summary Confirm a due occurrence
  */
 export const useConfirmRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1266,6 +1331,7 @@ export type SkipRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type SkipRecurringBillMutationVariables = { id: string; data: SkipRecurringBillRequest };
 
 /**
+ * Rolls the next due date forward by the cadence without writing a transaction or a transfer, for an occurrence a bank row already paid or one deliberately skipped, and marks the entry's unread reminders read. expectedDueDate identifies the occurrence, as it does for a confirmation. When the entry pays a debt that tracks payments and transactionId names a visible expense that pays no debt yet, that row is linked to the debt as a regular payment, as a confirmation links the row it writes.
  * @summary Mark a due occurrence as done
  */
 export const useSkipRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

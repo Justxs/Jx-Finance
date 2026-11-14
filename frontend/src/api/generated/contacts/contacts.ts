@@ -137,6 +137,7 @@ export type CreateContactMutationError = ErrorType<ProblemDetails>;
 export type CreateContactMutationVariables = { data: CreateContactRequest };
 
 /**
+ * Adds a person outside the household, such as a friend you lend money to or share a dinner with. The person has no login and is visible only to you. Two people may have the same name.
  * @summary Add a person
  */
 export const useCreateContact = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -207,6 +208,10 @@ export const getContactsSuspenseQueryOptions = <
 export type ContactsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof contacts>>>;
 export type ContactsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your people outside the household, by name, each with the open balance per currency. A positive amount is owed to you, a negative one is owed by you. A balance is what the person's shares of your splits add up to, plus the payments you made to them, minus the payments they made to you. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted, and nothing here enters reports, budgets or net worth. People are personal: nobody else sees them.
+ * @summary List the people you keep money with
+ */
 export function useContactsSuspense<
   TData = Awaited<ReturnType<typeof contacts>>,
   TError = ErrorType<ProblemDetails>,
@@ -217,16 +222,10 @@ export function useContactsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useContactsSuspense<
-  TData = Awaited<ReturnType<typeof contacts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contacts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your people outside the household, by name, each with the open balance per currency. A positive amount is owed to you, a negative one is owed by you. A balance is what the person's shares of your splits add up to, plus the payments you made to them, minus the payments they made to you. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted, and nothing here enters reports, budgets or net worth. People are personal: nobody else sees them.
+ * @summary List the people you keep money with
+ */
 export function useContactsSuspense<
   TData = Awaited<ReturnType<typeof contacts>>,
   TError = ErrorType<ProblemDetails>,
@@ -238,9 +237,23 @@ export function useContactsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your people outside the household, by name, each with the open balance per currency. A positive amount is owed to you, a negative one is owed by you. A balance is what the person's shares of your splits add up to, plus the payments you made to them, minus the payments they made to you. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted, and nothing here enters reports, budgets or net worth. People are personal: nobody else sees them.
  * @summary List the people you keep money with
  */
-
+export function useContactsSuspense<
+  TData = Awaited<ReturnType<typeof contacts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contacts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your people outside the household, by name, each with the open balance per currency. A positive amount is owed to you, a negative one is owed by you. A balance is what the person's shares of your splits add up to, plus the payments you made to them, minus the payments they made to you. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted, and nothing here enters reports, budgets or net worth. People are personal: nobody else sees them.
+ * @summary List the people you keep money with
+ */
 export function useContactsSuspense<
   TData = Awaited<ReturnType<typeof contacts>>,
   TError = ErrorType<ProblemDetails>,
@@ -325,6 +338,7 @@ export type DeleteContactPaymentMutationError = ErrorType<ProblemDetails>;
 export type DeleteContactPaymentMutationVariables = { id: string };
 
 /**
+ * Removes the payment from the person's balance. It is listed in your trash, from where POST /api/trash/restore brings it back while the person still exists.
  * @summary Delete a payment with a person
  */
 export const useDeleteContactPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -431,6 +445,7 @@ export type CreateContactSplitMutationError = ErrorType<ProblemDetails>;
 export type CreateContactSplitMutationVariables = { data: CreateContactSplitRequest };
 
 /**
+ * Splits an expense you paid from one of your own accounts with people outside the household, the way a household split divides it between members: Equal, Shares by whole weights from 1 to 100, or Exact amounts that add up to the expense, cents left over going to the largest remainders in the order listed with you first. own is your part, or null when you take no part, which records the whole amount as owed, for example money you lent with an ordinary bank payment. The split keeps a copy of the transaction's date, description and amount. A transaction is split once, with a household or with people.
  * @summary Split an expense with people
  */
 export const useCreateContactSplit = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -516,6 +531,7 @@ export type DeleteContactSplitMutationError = ErrorType<ProblemDetails>;
 export type DeleteContactSplitMutationVariables = { id: string };
 
 /**
+ * Removes the split from every person's balance and leaves the transaction as it is. It is listed in your trash, from where POST /api/trash/restore brings it back while its transaction exists and is not split again.
  * @summary Delete a split with people
  */
 export const useDeleteContactSplit = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -623,6 +639,7 @@ export type UpdateContactSplitMutationError = ErrorType<ProblemDetails>;
 export type UpdateContactSplitMutationVariables = { id: string; data: UpdateContactSplitRequest };
 
 /**
+ * Replaces the method, your part and the people with their amounts. The split first copies the transaction's current amount, date and description, so saving it again follows a corrected transaction.
  * @summary Change a split with people
  */
 export const useUpdateContactSplit = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -706,6 +723,7 @@ export type DeleteContactMutationError = ErrorType<ProblemDetails>;
 export type DeleteContactMutationVariables = { id: string };
 
 /**
+ * Removes the person, and with them their balances, payments and shares, from every list. Splits they shared with others keep the other people's shares. The person is listed in your trash, from where POST /api/trash/restore brings everything back; after 30 days the person, their payments and their shares are purged, and a split left with nobody else goes with them.
  * @summary Delete a person
  */
 export const useDeleteContact = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -811,6 +829,7 @@ export type UpdateContactMutationError = ErrorType<ProblemDetails>;
 export type UpdateContactMutationVariables = { id: string; data: UpdateContactRequest };
 
 /**
+ * Changes the name of one of your people. Their splits, payments and balances stay.
  * @summary Rename a person
  */
 export const useUpdateContact = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -903,6 +922,10 @@ export type ContactEntriesSuspenseQueryResult = NonNullable<
 >;
 export type ContactEntriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the person's history, newest first: each split with its copied date and description and the person's share as amount, and each payment with its direction and note. counted is false while a split's transaction is deleted; a payment always counts.
+ * @summary List what you shared with a person
+ */
 export function useContactEntriesSuspense<
   TData = Awaited<ReturnType<typeof contactEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -917,20 +940,10 @@ export function useContactEntriesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useContactEntriesSuspense<
-  TData = Awaited<ReturnType<typeof contactEntries>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params: ContactEntriesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof contactEntries>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the person's history, newest first: each split with its copied date and description and the person's share as amount, and each payment with its direction and note. counted is false while a split's transaction is deleted; a payment always counts.
+ * @summary List what you shared with a person
+ */
 export function useContactEntriesSuspense<
   TData = Awaited<ReturnType<typeof contactEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -946,9 +959,27 @@ export function useContactEntriesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the person's history, newest first: each split with its copied date and description and the person's share as amount, and each payment with its direction and note. counted is false while a split's transaction is deleted; a payment always counts.
  * @summary List what you shared with a person
  */
-
+export function useContactEntriesSuspense<
+  TData = Awaited<ReturnType<typeof contactEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ContactEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof contactEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the person's history, newest first: each split with its copied date and description and the person's share as amount, and each payment with its direction and note. counted is false while a split's transaction is deleted; a payment always counts.
+ * @summary List what you shared with a person
+ */
 export function useContactEntriesSuspense<
   TData = Awaited<ReturnType<typeof contactEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -1062,6 +1093,7 @@ export type CreateContactPaymentMutationVariables = {
 };
 
 /**
+ * Records that you paid the person (ToContact), for example a loan or paying back what you owed, or that they paid you or paid for you (FromContact). Your paying raises what they owe you; their paying lowers it. Only the payment is stored: no account changes, and money that left or reached your bank stays the ordinary ledger row it is.
  * @summary Record money between you and a person
  */
 export const useCreateContactPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

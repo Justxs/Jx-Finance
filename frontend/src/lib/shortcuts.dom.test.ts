@@ -1,4 +1,5 @@
 import { createSequenceMatcher } from "@tanstack/react-hotkeys";
+import { renderHook } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { readPreferences, savePreferences } from "@/stores/preferences";
@@ -8,10 +9,10 @@ import {
   SEARCH_SHORTCUT_TARGET,
   isModifierShortcut,
   registerShortcuts,
-  shortcutKeyLabel,
   shortcuts,
   shouldIgnoreShortcut,
   toHotkeySteps,
+  useShortcutKeyLabel,
   visibleShortcuts,
 } from "./shortcuts";
 
@@ -44,8 +45,9 @@ describe("key map", () => {
     expect(shortcuts.filter(isModifierShortcut).map((shortcut) => shortcut.id)).toEqual([
       "command-palette",
     ]);
-    expect(shortcutKeyLabel("Mod+K")).toMatch(/K$/u);
-    expect(shortcutKeyLabel("g")).toBe("g");
+    const { result } = renderHook(() => useShortcutKeyLabel());
+    expect(result.current("Mod+K")).toMatch(/K$/u);
+    expect(result.current("g")).toBe("g");
   });
 
   test("go-to shortcuts map to a G sequence", () => {

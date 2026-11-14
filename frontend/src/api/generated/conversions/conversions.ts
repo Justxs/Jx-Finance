@@ -134,6 +134,7 @@ export type CreateConversionMutationError = ErrorType<ProblemDetails>;
 export type CreateConversionMutationVariables = { data: CreateConversionRequest };
 
 /**
+ * Records an exchange of one currency for another inside a single account, such as selling euros for dollars at a broker. The sold balance drops, the bought balance rises, and neither side counts as income or expense. An optional fee is booked as an ordinary expense transaction on the same account so it shows in reports and budgets.
  * @summary Convert currency inside an account
  */
 export const useCreateConversion = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -222,6 +223,10 @@ export const getConversionsSuspenseQueryOptions = <
 export type ConversionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof conversions>>>;
 export type ConversionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
+ * @summary List currency conversions
+ */
 export function useConversionsSuspense<
   TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
@@ -233,19 +238,10 @@ export function useConversionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useConversionsSuspense<
-  TData = Awaited<ReturnType<typeof conversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ConversionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
+ * @summary List currency conversions
+ */
 export function useConversionsSuspense<
   TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
@@ -260,9 +256,26 @@ export function useConversionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
  * @summary List currency conversions
  */
-
+export function useConversionsSuspense<
+  TData = Awaited<ReturnType<typeof conversions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ConversionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
+ * @summary List currency conversions
+ */
 export function useConversionsSuspense<
   TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
@@ -350,6 +363,7 @@ export type DeleteConversionMutationError = ErrorType<ProblemDetails>;
 export type DeleteConversionMutationVariables = { id: string };
 
 /**
+ * Removes the conversion and the fee transaction it created, restoring both balances.
  * @summary Delete a currency conversion
  */
 export const useDeleteConversion = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -457,6 +471,7 @@ export type UpdateConversionMutationError = ErrorType<ProblemDetails>;
 export type UpdateConversionMutationVariables = { id: string; data: UpdateConversionRequest };
 
 /**
+ * Replaces the date, the sold and bought amounts and currencies, the description and the fee of a conversion; the account stays the same. The fee fields describe the fee as it should be afterwards: with feeAmount the linked expense transaction is created or updated (amount, currency, date, category, and its value in the reporting currency at the rate for the new date), without feeAmount an existing fee transaction is deleted. Conversion and fee change together or not at all. A fee transaction that the user has split into lines cannot be changed or removed from here and answers transaction.splitNotAllowed; edit that transaction instead. A conversion imported from a broker (isImported) answers resource.readOnly: correct it at the broker and import again.
  * @summary Update a currency conversion
  */
 export const useUpdateConversion = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

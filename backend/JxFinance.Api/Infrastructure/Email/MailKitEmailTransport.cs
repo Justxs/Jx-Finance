@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
 using JxFinance.Infrastructure.Configuration;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -58,7 +59,7 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
                 await client.AuthenticateAsync(delivery.UserName, delivery.Password ?? string.Empty, cancellationToken);
             }
 
-            await client.SendAsync(message, cancellationToken);
+            await client.SendAsync(new SendRequest(message), cancellationToken);
             await client.DisconnectAsync(quit: true, cancellationToken);
             return Result.Success();
         }

@@ -131,6 +131,7 @@ export type CreateGoalMutationError = ErrorType<ProblemDetails>;
 export type CreateGoalMutationVariables = { data: CreateGoalRequest };
 
 /**
+ * Starts tracking progress towards a target amount, optionally by a target date. A manual goal keeps the amount you type in currentAmount; moving money does not update it by itself. A goal funded from an account follows that account's reporting balance instead, taking the share given by fundingSharePercent, and ignores currentAmount.
  * @summary Create a savings goal
  */
 export const useCreateGoal = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -201,6 +202,10 @@ export const getGoalsSuspenseQueryOptions = <
 export type GoalsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof goals>>>;
 export type GoalsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
+ * @summary List savings goals
+ */
 export function useGoalsSuspense<
   TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
@@ -211,16 +216,10 @@ export function useGoalsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGoalsSuspense<
-  TData = Awaited<ReturnType<typeof goals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
+ * @summary List savings goals
+ */
 export function useGoalsSuspense<
   TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
@@ -232,9 +231,23 @@ export function useGoalsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
  * @summary List savings goals
  */
-
+export function useGoalsSuspense<
+  TData = Awaited<ReturnType<typeof goals>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
+ * @summary List savings goals
+ */
 export function useGoalsSuspense<
   TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
@@ -317,6 +330,7 @@ export type DeleteGoalMutationError = ErrorType<ProblemDetails>;
 export type DeleteGoalMutationVariables = { id: string };
 
 /**
+ * Removes the goal and its recorded progress. Nothing else in the ledger changes.
  * @summary Delete a savings goal
  */
 export const useDeleteGoal = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -422,6 +436,7 @@ export type UpdateGoalMutationError = ErrorType<ProblemDetails>;
 export type UpdateGoalMutationVariables = { id: string; data: UpdateGoalRequest };
 
 /**
+ * Changes the name, the target, the target date, how much has been put aside, and where progress comes from. For a manual goal this is how progress is recorded: raise currentAmount as money is saved. Switching to account funding leaves the stored currentAmount alone and stops using it; switching back to manual brings that stored amount into use again.
  * @summary Update a savings goal
  */
 export const useUpdateGoal = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -529,6 +544,7 @@ export type UpdateGoalProgressMutationError = ErrorType<ProblemDetails>;
 export type UpdateGoalProgressMutationVariables = { id: string; data: UpdateGoalProgressRequest };
 
 /**
+ * Moves the saved amount of a manual goal without sending the rest of the goal, so a script or an automation can record what it put aside. Send currentAmount to set the amount, or delta to add to it (a negative delta takes money out); exactly one of the two. The result may exceed the target but never fall below zero. A goal funded from an account follows that account and answers goal.notManual. A read-and-write personal API token may call this.
  * @summary Update a manual goal's progress
  */
 export const useUpdateGoalProgress = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

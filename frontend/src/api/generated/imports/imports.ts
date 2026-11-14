@@ -138,6 +138,7 @@ export type ImportConfirmMutationError = ErrorType<ProblemDetails>;
 export type ImportConfirmMutationVariables = { data: ImportConfirmRequest };
 
 /**
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency, and that balance is recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row cannot be spread (value.mustBeEmpty). With group, every row written as a transaction and every linked row is put in one transaction group in the same database transaction: an existing group by id, under the rules of POST /api/transaction-groups/{id}/members, or a new group by name, shared with the household of the account when the account is shared and personal otherwise. Transfers and skipped duplicates are not grouped, and nothing is written when the group refuses a row.
  * @summary Commit previewed statement rows
  */
 export const useImportConfirm = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -244,6 +245,7 @@ export type CreateCsvMappingMutationError = ErrorType<ProblemDetails>;
 export type CreateCsvMappingMutationVariables = { data: CreateCsvMappingRequest };
 
 /**
+ * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when noHeaderRow is true. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
  * @summary Save a CSV column mapping
  */
 export const useCreateCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -318,6 +320,10 @@ export type ListCsvMappingsSuspenseQueryResult = NonNullable<
 >;
 export type ListCsvMappingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
+ * @summary List CSV column mappings
+ */
 export function useListCsvMappingsSuspense<
   TData = Awaited<ReturnType<typeof listCsvMappings>>,
   TError = ErrorType<ProblemDetails>,
@@ -330,18 +336,10 @@ export function useListCsvMappingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useListCsvMappingsSuspense<
-  TData = Awaited<ReturnType<typeof listCsvMappings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
+ * @summary List CSV column mappings
+ */
 export function useListCsvMappingsSuspense<
   TData = Awaited<ReturnType<typeof listCsvMappings>>,
   TError = ErrorType<ProblemDetails>,
@@ -355,9 +353,25 @@ export function useListCsvMappingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
  * @summary List CSV column mappings
  */
-
+export function useListCsvMappingsSuspense<
+  TData = Awaited<ReturnType<typeof listCsvMappings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listCsvMappings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your saved CSV column mappings by name. The import dialog lists each one as a provider next to Swedbank and camt.053. Mappings are personal: nobody else sees them.
+ * @summary List CSV column mappings
+ */
 export function useListCsvMappingsSuspense<
   TData = Awaited<ReturnType<typeof listCsvMappings>>,
   TError = ErrorType<ProblemDetails>,
@@ -444,6 +458,7 @@ export type DeleteCsvMappingMutationError = ErrorType<ProblemDetails>;
 export type DeleteCsvMappingMutationVariables = { id: string };
 
 /**
+ * Removes a saved mapping from the provider list. Rows imported through it stay as they are. The deletion is listed in the trash, and POST /api/trash/restore brings the mapping back.
  * @summary Delete a CSV column mapping
  */
 export const useDeleteCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -551,6 +566,7 @@ export type UpdateCsvMappingMutationError = ErrorType<ProblemDetails>;
 export type UpdateCsvMappingMutationVariables = { id: string; data: UpdateCsvMappingRequest };
 
 /**
+ * Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.
  * @summary Update a CSV column mapping
  */
 export const useUpdateCsvMapping = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -652,6 +668,7 @@ export type InspectCsvMutationError = ErrorType<ProblemDetails>;
 export type InspectCsvMutationVariables = { data: InspectCsvRequest };
 
 /**
+ * Reads a CSV export from any bank, card issuer or payment app and proposes how to read it: the text encoding (a byte-order mark decides UTF-8 or UTF-16, otherwise windows1257 is proposed when the bytes are not valid UTF-8), the delimiter (comma, semicolon, tab or pipe) and how many lines sit above the header row. It returns the header names, up to ten sample rows of raw cells, and for each column the date formats that read every sample and the decimal separator its numbers use. matchingMappingIds lists your saved mappings whose every named column is in this header, so the client can offer one. Send encoding, delimiter or skipLines to read the file again after the user corrected a proposal; noHeaderRow says whether the file was read without a header row. Nothing is written. Send the file as multipart/form-data.
  * @summary Inspect a CSV file for a column mapping
  */
 export const useInspectCsv = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -726,6 +743,10 @@ export type ListImportInboxSuspenseQueryResult = NonNullable<
 >;
 export type ListImportInboxSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
+ * @summary List statements waiting in the import inbox
+ */
 export function useListImportInboxSuspense<
   TData = Awaited<ReturnType<typeof listImportInbox>>,
   TError = ErrorType<ProblemDetails>,
@@ -738,18 +759,10 @@ export function useListImportInboxSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useListImportInboxSuspense<
-  TData = Awaited<ReturnType<typeof listImportInbox>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
+ * @summary List statements waiting in the import inbox
+ */
 export function useListImportInboxSuspense<
   TData = Awaited<ReturnType<typeof listImportInbox>>,
   TError = ErrorType<ProblemDetails>,
@@ -763,9 +776,25 @@ export function useListImportInboxSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
  * @summary List statements waiting in the import inbox
  */
-
+export function useListImportInboxSuspense<
+  TData = Awaited<ReturnType<typeof listImportInbox>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof listImportInbox>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the statement files the import inbox received for accounts you own and that you have not imported or dismissed yet, newest first. Each names the account, the format and, for a CSV file, the saved mapping the inbox chose. A file whose account is no longer visible to you is left out. Nothing is imported until you review it: fetch the file and send it through POST /api/import/preview and confirm as usual.
+ * @summary List statements waiting in the import inbox
+ */
 export function useListImportInboxSuspense<
   TData = Awaited<ReturnType<typeof listImportInbox>>,
   TError = ErrorType<ProblemDetails>,
@@ -841,6 +870,10 @@ export type ImportInboxStatusSuspenseQueryResult = NonNullable<
 >;
 export type ImportInboxStatusSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
+ * @summary Read the import inbox of this installation
+ */
 export function useImportInboxStatusSuspense<
   TData = Awaited<ReturnType<typeof importInboxStatus>>,
   TError = ErrorType<ProblemDetails>,
@@ -853,18 +886,10 @@ export function useImportInboxStatusSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useImportInboxStatusSuspense<
-  TData = Awaited<ReturnType<typeof importInboxStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
+ * @summary Read the import inbox of this installation
+ */
 export function useImportInboxStatusSuspense<
   TData = Awaited<ReturnType<typeof importInboxStatus>>,
   TError = ErrorType<ProblemDetails>,
@@ -878,9 +903,25 @@ export function useImportInboxStatusSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
  * @summary Read the import inbox of this installation
  */
-
+export function useImportInboxStatusSuspense<
+  TData = Awaited<ReturnType<typeof importInboxStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof importInboxStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the folder the API watches for statement files (App:ImportInbox, null when the inbox is off) and the latest 20 files it could not use, newest first, each with the reason written beside it in the failed folder. Administrators only.
+ * @summary Read the import inbox of this installation
+ */
 export function useImportInboxStatusSuspense<
   TData = Awaited<ReturnType<typeof importInboxStatus>>,
   TError = ErrorType<ProblemDetails>,
@@ -967,6 +1008,7 @@ export type DismissImportInboxFileMutationError = ErrorType<ProblemDetails>;
 export type DismissImportInboxFileMutationVariables = { id: string };
 
 /**
+ * Takes a waiting statement off your list and deletes its stored copy. The import dialog calls it after the statement is imported, and Dismiss calls it without importing. The file's fingerprint is kept for 90 days from its arrival, so the same file dropped into the inbox again in that time is ignored. Nothing in the ledger changes.
  * @summary Remove a statement from the import inbox
  */
 export const useDismissImportInboxFile = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1048,6 +1090,10 @@ export type DownloadImportInboxFileSuspenseQueryResult = NonNullable<
 >;
 export type DownloadImportInboxFileSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
+ * @summary Download a statement waiting in the import inbox
+ */
 export function useDownloadImportInboxFileSuspense<
   TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
   TError = ErrorType<ProblemDetails>,
@@ -1061,19 +1107,10 @@ export function useDownloadImportInboxFileSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDownloadImportInboxFileSuspense<
-  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
+ * @summary Download a statement waiting in the import inbox
+ */
 export function useDownloadImportInboxFileSuspense<
   TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
   TError = ErrorType<ProblemDetails>,
@@ -1088,9 +1125,26 @@ export function useDownloadImportInboxFileSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
  * @summary Download a statement waiting in the import inbox
  */
-
+export function useDownloadImportInboxFileSuspense<
+  TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadImportInboxFile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the stored bytes of a waiting statement file exactly as the inbox received them, as an attachment. The import dialog sends them to POST /api/import/preview to open the usual review.
+ * @summary Download a statement waiting in the import inbox
+ */
 export function useDownloadImportInboxFileSuspense<
   TData = Awaited<ReturnType<typeof downloadImportInboxFile>>,
   TError = ErrorType<ProblemDetails>,
@@ -1191,6 +1245,7 @@ export type ImportPreviewMutationError = ErrorType<ProblemDetails>;
 export type ImportPreviewMutationVariables = { data: ImportPreviewRequest };
 
 /**
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Three formats are read: swedbankCsv, the Swedbank CSV export, camt053, an ISO 20022 camt.053 XML statement, and genericCsv, any CSV export read through the saved column mapping named by mappingId. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. A mapped CSV counts rows its status filter leaves out or whose amount is zero in notBooked and rows it cannot read in unreadable, and with a balance column answers the balance of its latest row as the closing balance. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. While the learnedCategories feature is on, a row that is not a duplicate and got no category from a rule carries learnedCategoryId and learnedConfidence when a model trained on the categorized rows you can see is sure enough; otherwise both are null. The suggestion is a suggestion: confirm sends back whatever the client decided. A row that is not a duplicate and has the same flow type, amount and currency as a transaction entered by hand on the account within three days of it carries that transaction in matchedTransaction, each transaction offered to one row at most, the closest date first. An incoming row that is neither a duplicate nor matched carries refundCandidate when an expense on the account, not a refund, in the same currency, of at least the row's amount and dated at most 90 days before it has the same normalized payee or description as the row; the most recent such expense wins. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a bank statement
  */
 export const useImportPreview = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

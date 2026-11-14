@@ -133,6 +133,7 @@ export type CreateBackupMutationError = ErrorType<ProblemDetails | void>;
 export type CreateBackupMutationVariables = { data: CreateBackupRequest };
 
 /**
+ * Administrators only. Writes every table of the installation as JSON, together with every file attached to a transaction, into one zip archive in the backup directory of the server: users with their password hashes, households, settings, exchange rates and all financial data of every user. Sign-in sessions are left out. Attached files, those in the trash included, are stored uncompressed next to the JSON, so the archive is about as large as the attachment directory plus the compressed data. The file is read from one database snapshot, so it is consistent even while others keep working. Broker tokens inside it stay encrypted with the key directory of this installation and have to be entered again on any other one.
  * @summary Take a backup of the whole installation
  */
 export const useCreateBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -203,6 +204,10 @@ export const getBackupsSuspenseQueryOptions = <
 export type BackupsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof backups>>>;
 export type BackupsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Administrators only. Returns every backup in the backup directory, newest first, with its size and row count. The first entry answers when the last backup was taken. restorable is false for a backup taken at another database version than the running application.
+ * @summary List the backups kept on the server
+ */
 export function useBackupsSuspense<
   TData = Awaited<ReturnType<typeof backups>>,
   TError = ErrorType<ProblemDetails>,
@@ -213,16 +218,10 @@ export function useBackupsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useBackupsSuspense<
-  TData = Awaited<ReturnType<typeof backups>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof backups>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Returns every backup in the backup directory, newest first, with its size and row count. The first entry answers when the last backup was taken. restorable is false for a backup taken at another database version than the running application.
+ * @summary List the backups kept on the server
+ */
 export function useBackupsSuspense<
   TData = Awaited<ReturnType<typeof backups>>,
   TError = ErrorType<ProblemDetails>,
@@ -234,9 +233,23 @@ export function useBackupsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Administrators only. Returns every backup in the backup directory, newest first, with its size and row count. The first entry answers when the last backup was taken. restorable is false for a backup taken at another database version than the running application.
  * @summary List the backups kept on the server
  */
-
+export function useBackupsSuspense<
+  TData = Awaited<ReturnType<typeof backups>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof backups>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Returns every backup in the backup directory, newest first, with its size and row count. The first entry answers when the last backup was taken. restorable is false for a backup taken at another database version than the running application.
+ * @summary List the backups kept on the server
+ */
 export function useBackupsSuspense<
   TData = Awaited<ReturnType<typeof backups>>,
   TError = ErrorType<ProblemDetails>,
@@ -328,6 +341,7 @@ export type UploadBackupMutationError = ErrorType<ProblemDetails | void>;
 export type UploadBackupMutationVariables = { data: UploadBackupRequest };
 
 /**
+ * Administrators only. Stores a backup file that was downloaded earlier, from this or another installation, so it appears in the list and can be restored. Nothing is restored by this call. The listed date is the moment the backup was taken, not the upload. Send the file as multipart/form-data.
  * @summary Add a downloaded backup to the server
  */
 export const useUploadBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -411,6 +425,7 @@ export type DeleteBackupMutationError = ErrorType<ProblemDetails>;
 export type DeleteBackupMutationVariables = { id: string };
 
 /**
+ * Administrators only. Removes the backup file from the server for good. The data of the installation is not touched.
  * @summary Delete a backup
  */
 export const useDeleteBackup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -516,6 +531,7 @@ export type UpdateBackupMutationError = ErrorType<ProblemDetails>;
 export type UpdateBackupMutationVariables = { id: string; data: UpdateBackupRequest };
 
 /**
+ * Administrators only. The note is the only part of a stored backup that can change; the file itself is never rewritten.
  * @summary Change the note of a backup
  */
 export const useUpdateBackup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -594,6 +610,10 @@ export type DownloadBackupSuspenseQueryResult = NonNullable<
 >;
 export type DownloadBackupSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Administrators only. Streams the stored file, named after the moment the backup was taken. Keep a copy away from the server: a backup that lives only next to the database is lost together with it. The file holds password hashes; treat it as a secret.
+ * @summary Download a backup file
+ */
 export function useDownloadBackupSuspense<
   TData = Awaited<ReturnType<typeof downloadBackup>>,
   TError = ErrorType<ProblemDetails>,
@@ -607,19 +627,10 @@ export function useDownloadBackupSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDownloadBackupSuspense<
-  TData = Awaited<ReturnType<typeof downloadBackup>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadBackup>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Streams the stored file, named after the moment the backup was taken. Keep a copy away from the server: a backup that lives only next to the database is lost together with it. The file holds password hashes; treat it as a secret.
+ * @summary Download a backup file
+ */
 export function useDownloadBackupSuspense<
   TData = Awaited<ReturnType<typeof downloadBackup>>,
   TError = ErrorType<ProblemDetails>,
@@ -634,9 +645,26 @@ export function useDownloadBackupSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Administrators only. Streams the stored file, named after the moment the backup was taken. Keep a copy away from the server: a backup that lives only next to the database is lost together with it. The file holds password hashes; treat it as a secret.
  * @summary Download a backup file
  */
-
+export function useDownloadBackupSuspense<
+  TData = Awaited<ReturnType<typeof downloadBackup>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadBackup>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Streams the stored file, named after the moment the backup was taken. Keep a copy away from the server: a backup that lives only next to the database is lost together with it. The file holds password hashes; treat it as a secret.
+ * @summary Download a backup file
+ */
 export function useDownloadBackupSuspense<
   TData = Awaited<ReturnType<typeof downloadBackup>>,
   TError = ErrorType<ProblemDetails>,
@@ -744,6 +772,7 @@ export type RestoreBackupMutationError = ErrorType<ProblemDetails | void>;
 export type RestoreBackupMutationVariables = { id: string; data: RestoreBackupRequest };
 
 /**
+ * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup, and the attached files of the archive are written back to the attachment directory after their SHA-256 has been checked against the restored rows; a file that does not match rolls the whole restore back. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.
  * @summary Replace all data with a stored backup
  */
 export const useRestoreBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(

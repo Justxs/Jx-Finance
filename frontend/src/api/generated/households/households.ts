@@ -146,6 +146,7 @@ export type CreateHouseholdMutationError = ErrorType<ProblemDetails>;
 export type CreateHouseholdMutationVariables = { data: CreateHouseholdRequest };
 
 /**
+ * Creates a household and makes you its owner. A household is the unit that shared accounts, categories, and transactions belong to; adding members is what gives other people sight of that data.
  * @summary Create a household
  */
 export const useCreateHousehold = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -216,6 +217,10 @@ export const getHouseholdsSuspenseQueryOptions = <
 export type HouseholdsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof households>>>;
 export type HouseholdsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
+ * @summary List households
+ */
 export function useHouseholdsSuspense<
   TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
@@ -226,16 +231,10 @@ export function useHouseholdsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useHouseholdsSuspense<
-  TData = Awaited<ReturnType<typeof households>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
+ * @summary List households
+ */
 export function useHouseholdsSuspense<
   TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
@@ -247,9 +246,23 @@ export function useHouseholdsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
  * @summary List households
  */
-
+export function useHouseholdsSuspense<
+  TData = Awaited<ReturnType<typeof households>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
+ * @summary List households
+ */
 export function useHouseholdsSuspense<
   TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
@@ -334,6 +347,7 @@ export type DeleteHouseholdMutationError = ErrorType<ProblemDetails>;
 export type DeleteHouseholdMutationVariables = { id: string };
 
 /**
+ * Disbands the household. Only an owner may do this. Every account, category and tag shared into it becomes personal to the member who owns it; the memberships are kept. Which rows were shared is recorded, so the deletion is listed in the trash and POST /api/trash/restore brings the household back and shares those rows into it again.
  * @summary Delete a household
  */
 export const useDeleteHousehold = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -408,6 +422,10 @@ export const getHouseholdSuspenseQueryOptions = <
 export type HouseholdSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof household>>>;
 export type HouseholdSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
+ * @summary Get one household
+ */
 export function useHouseholdSuspense<
   TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
@@ -419,17 +437,10 @@ export function useHouseholdSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useHouseholdSuspense<
-  TData = Awaited<ReturnType<typeof household>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
+ * @summary Get one household
+ */
 export function useHouseholdSuspense<
   TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
@@ -442,9 +453,24 @@ export function useHouseholdSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
  * @summary Get one household
  */
-
+export function useHouseholdSuspense<
+  TData = Awaited<ReturnType<typeof household>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
+ * @summary Get one household
+ */
 export function useHouseholdSuspense<
   TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
@@ -552,6 +578,7 @@ export type UpdateHouseholdMutationError = ErrorType<ProblemDetails>;
 export type UpdateHouseholdMutationVariables = { id: string; data: UpdateHouseholdRequest };
 
 /**
+ * Changes the household name. Only an owner may do this; a plain member gets 403 rather than 404, because membership already tells them the household exists.
  * @summary Rename a household
  */
 export const useUpdateHousehold = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -644,6 +671,10 @@ export type HouseholdAuditSuspenseQueryResult = NonNullable<
 >;
 export type HouseholdAuditSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
+ * @summary List what members changed in a household
+ */
 export function useHouseholdAuditSuspense<
   TData = Awaited<ReturnType<typeof householdAudit>>,
   TError = ErrorType<ProblemDetails>,
@@ -658,20 +689,10 @@ export function useHouseholdAuditSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useHouseholdAuditSuspense<
-  TData = Awaited<ReturnType<typeof householdAudit>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params: HouseholdAuditParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
+ * @summary List what members changed in a household
+ */
 export function useHouseholdAuditSuspense<
   TData = Awaited<ReturnType<typeof householdAudit>>,
   TError = ErrorType<ProblemDetails>,
@@ -687,9 +708,27 @@ export function useHouseholdAuditSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
  * @summary List what members changed in a household
  */
-
+export function useHouseholdAuditSuspense<
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
+ * @summary List what members changed in a household
+ */
 export function useHouseholdAuditSuspense<
   TData = Awaited<ReturnType<typeof householdAudit>>,
   TError = ErrorType<ProblemDetails>,
@@ -798,6 +837,7 @@ export type AddMemberMutationError = ErrorType<ProblemDetails>;
 export type AddMemberMutationVariables = { id: string; data: AddMemberRequest };
 
 /**
+ * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
 export const useAddMember = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -882,6 +922,7 @@ export type RemoveMemberMutationError = ErrorType<ProblemDetails>;
 export type RemoveMemberMutationVariables = { id: string; userId: string };
 
 /**
+ * Revokes a member and with them their sight of the shared data. The last owner cannot be removed. Data the household owns stays with the household.
  * @summary Remove a member
  */
 export const useRemoveMember = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -994,6 +1035,7 @@ export type UpdateMemberRoleMutationVariables = {
 };
 
 /**
+ * Promotes a member to owner or demotes an owner to member. The last owner cannot be demoted, so a household is never left without someone who can manage it.
  * @summary Change a member role
  */
 export const useUpdateMemberRole = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1068,6 +1110,10 @@ export const getSettleUpSuspenseQueryOptions = <
 export type SettleUpSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settleUp>>>;
 export type SettleUpSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
+ * @summary Who owes whom in a household
+ */
 export function useSettleUpSuspense<
   TData = Awaited<ReturnType<typeof settleUp>>,
   TError = ErrorType<ProblemDetails>,
@@ -1079,17 +1125,10 @@ export function useSettleUpSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSettleUpSuspense<
-  TData = Awaited<ReturnType<typeof settleUp>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
+ * @summary Who owes whom in a household
+ */
 export function useSettleUpSuspense<
   TData = Awaited<ReturnType<typeof settleUp>>,
   TError = ErrorType<ProblemDetails>,
@@ -1102,9 +1141,24 @@ export function useSettleUpSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
  * @summary Who owes whom in a household
  */
-
+export function useSettleUpSuspense<
+  TData = Awaited<ReturnType<typeof settleUp>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settleUp>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns each member's open balance per currency and the fewest payments that would settle them. A positive balance is owed to the member, a negative one is owed by them. A balance is what the member paid for others in splits, minus what others paid for them, plus the payments they made, minus the payments they received. A split whose transaction is deleted stops counting until the transaction is restored. Currencies are never converted. A former member with an open balance is still listed. Nothing here enters reports, budgets or net worth.
+ * @summary Who owes whom in a household
+ */
 export function useSettleUpSuspense<
   TData = Awaited<ReturnType<typeof settleUp>>,
   TError = ErrorType<ProblemDetails>,
@@ -1212,6 +1266,7 @@ export type CreateSettlementMutationError = ErrorType<ProblemDetails>;
 export type CreateSettlementMutationVariables = { id: string; data: CreateSettlementRequest };
 
 /**
+ * Records a payment between two members, which settles that much of their balance in the payment's currency. You must be one of the two. Each must be a member of the household, or a former member who still has an open balance there. With transfer, the ordinary transfer from an account of the payer to an account of the payee is written in the same database transaction; both accounts must be visible to you, owned by the right member and held in the payment's currency. transferId links a transfer that already exists instead, under the same checks. Without either, only the payment is stored and no account changes.
  * @summary Record that one member paid another
  */
 export const useCreateSettlement = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1302,6 +1357,10 @@ export const getSettlementsSuspenseQueryOptions = <
 export type SettlementsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settlements>>>;
 export type SettlementsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
+ * @summary List a household's recorded payments
+ */
 export function useSettlementsSuspense<
   TData = Awaited<ReturnType<typeof settlements>>,
   TError = ErrorType<ProblemDetails>,
@@ -1314,20 +1373,10 @@ export function useSettlementsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSettlementsSuspense<
-  TData = Awaited<ReturnType<typeof settlements>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params: SettlementsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
+ * @summary List a household's recorded payments
+ */
 export function useSettlementsSuspense<
   TData = Awaited<ReturnType<typeof settlements>>,
   TError = ErrorType<ProblemDetails>,
@@ -1343,9 +1392,27 @@ export function useSettlementsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
  * @summary List a household's recorded payments
  */
-
+export function useSettlementsSuspense<
+  TData = Awaited<ReturnType<typeof settlements>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SettlementsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof settlements>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the payments members recorded to settle up, newest first. hasTransfer says whether an ordinary transfer between the two members' accounts was recorded with it.
+ * @summary List a household's recorded payments
+ */
 export function useSettlementsSuspense<
   TData = Awaited<ReturnType<typeof settlements>>,
   TError = ErrorType<ProblemDetails>,
@@ -1435,6 +1502,7 @@ export type DeleteSettlementMutationError = ErrorType<ProblemDetails>;
 export type DeleteSettlementMutationVariables = { id: string; settlementId: string };
 
 /**
+ * Removes the payment from the balances. Either of the two members can delete it. A transfer recorded with it stays, because it is a fact of the ledger with its own delete. The payment is listed in your trash, from where POST /api/trash/restore brings it back.
  * @summary Delete a recorded payment
  */
 export const useDeleteSettlement = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1542,6 +1610,7 @@ export type CreateSharedExpenseMutationError = ErrorType<ProblemDetails>;
 export type CreateSharedExpenseMutationVariables = { id: string; data: CreateSharedExpenseRequest };
 
 /**
+ * Splits an expense you paid from one of your own accounts between members of the household. The split keeps a copy of the transaction's date, description and amount, which is what the other members see, even when the account is personal and they cannot see the transaction itself. Each member's amount is computed once, now, and stored: Equal divides the amount evenly, Shares by whole weights from 1 to 100, and Exact takes the amounts given, which must add up to the expense. Cents left over by a division go to the largest remainders, ties in the order the members are listed, so the shares always add up to the amount. A transaction can be split once. Income, transfers, refunds and a housemate's payment on a shared account cannot be split.
  * @summary Split an expense with the household
  */
 export const useCreateSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1634,6 +1703,10 @@ export type SharedExpensesSuspenseQueryResult = NonNullable<
 >;
 export type SharedExpensesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
+ * @summary List a household's split expenses
+ */
 export function useSharedExpensesSuspense<
   TData = Awaited<ReturnType<typeof sharedExpenses>>,
   TError = ErrorType<ProblemDetails>,
@@ -1648,20 +1721,10 @@ export function useSharedExpensesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSharedExpensesSuspense<
-  TData = Awaited<ReturnType<typeof sharedExpenses>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params: SharedExpensesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
+ * @summary List a household's split expenses
+ */
 export function useSharedExpensesSuspense<
   TData = Awaited<ReturnType<typeof sharedExpenses>>,
   TError = ErrorType<ProblemDetails>,
@@ -1677,9 +1740,27 @@ export function useSharedExpensesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
  * @summary List a household's split expenses
  */
-
+export function useSharedExpensesSuspense<
+  TData = Awaited<ReturnType<typeof sharedExpenses>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: SharedExpensesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof sharedExpenses>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the household's splits, newest first, with the payer, the copied date, description and amount, every member's share and your own. counted is false while the split's transaction is deleted. transactionId and amountDiffers are filled only for the member who paid, because the transaction may sit on an account the others cannot see.
+ * @summary List a household's split expenses
+ */
 export function useSharedExpensesSuspense<
   TData = Awaited<ReturnType<typeof sharedExpenses>>,
   TError = ErrorType<ProblemDetails>,
@@ -1769,6 +1850,7 @@ export type DeleteSharedExpenseMutationError = ErrorType<ProblemDetails>;
 export type DeleteSharedExpenseMutationVariables = { id: string; expenseId: string };
 
 /**
+ * Removes the split from the balances. Only the member who paid can delete it. The transaction itself is not touched, and the split is listed in the payer's trash, from where POST /api/trash/restore brings it back.
  * @summary Delete a split
  */
 export const useDeleteSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1881,6 +1963,7 @@ export type UpdateSharedExpenseMutationVariables = {
 };
 
 /**
+ * Replaces the members and their amounts. Only the member who paid can change it. With refreshFromTransaction the split first copies the transaction's current amount, date and description, which is how a split follows a corrected transaction; otherwise it keeps its copy.
  * @summary Change a split
  */
 export const useUpdateSharedExpense = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

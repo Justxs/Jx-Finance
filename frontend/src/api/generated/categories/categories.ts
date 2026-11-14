@@ -130,6 +130,7 @@ export type CreateCategoryMutationError = ErrorType<ProblemDetails>;
 export type CreateCategoryMutationVariables = { data: CreateCategoryRequest };
 
 /**
+ * Adds a category for transactions to be attributed to. The flow type is fixed at creation and cannot be changed afterwards, because moving a category between income and expense would silently rewrite the meaning of every transaction already filed under it.
  * @summary Create a category
  */
 export const useCreateCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -200,6 +201,10 @@ export const getCategoriesSuspenseQueryOptions = <
 export type CategoriesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof categories>>>;
 export type CategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -210,16 +215,10 @@ export function useCategoriesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof categories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -231,9 +230,23 @@ export function useCategoriesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
  * @summary List categories
  */
-
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -316,6 +329,7 @@ export type DeleteCategoryMutationError = ErrorType<ProblemDetails>;
 export type DeleteCategoryMutationVariables = { id: string };
 
 /**
+ * Removes the category. Transactions, split lines and recurring entries filed under it are kept and become uncategorised, and the budgets on it are deleted with it. Which rows it cleared is recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the category back on the rows that are still uncategorised.
  * @summary Delete a category
  */
 export const useDeleteCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -421,6 +435,7 @@ export type UpdateCategoryMutationError = ErrorType<ProblemDetails>;
 export type UpdateCategoryMutationVariables = { id: string; data: UpdateCategoryRequest };
 
 /**
+ * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.
  * @summary Update a category
  */
 export const useUpdateCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

@@ -111,6 +111,10 @@ export type NotificationsSuspenseQueryResult = NonNullable<
 >;
 export type NotificationsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your notifications, newest first. Background jobs raise them: a recurring bill about to fall due, or a budget that has reached 80% or 100% of its effective limit in the current window. Each row carries a typed payload the client turns into localized text, and rows stay listed even when the feature that produced them is switched off afterwards.
+ * @summary List notifications
+ */
 export function useNotificationsSuspense<
   TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
@@ -124,19 +128,10 @@ export function useNotificationsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useNotificationsSuspense<
-  TData = Awaited<ReturnType<typeof notifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: NotificationsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your notifications, newest first. Background jobs raise them: a recurring bill about to fall due, or a budget that has reached 80% or 100% of its effective limit in the current window. Each row carries a typed payload the client turns into localized text, and rows stay listed even when the feature that produced them is switched off afterwards.
+ * @summary List notifications
+ */
 export function useNotificationsSuspense<
   TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
@@ -151,9 +146,26 @@ export function useNotificationsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your notifications, newest first. Background jobs raise them: a recurring bill about to fall due, or a budget that has reached 80% or 100% of its effective limit in the current window. Each row carries a typed payload the client turns into localized text, and rows stay listed even when the feature that produced them is switched off afterwards.
  * @summary List notifications
  */
-
+export function useNotificationsSuspense<
+  TData = Awaited<ReturnType<typeof notifications>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: NotificationsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your notifications, newest first. Background jobs raise them: a recurring bill about to fall due, or a budget that has reached 80% or 100% of its effective limit in the current window. Each row carries a typed payload the client turns into localized text, and rows stay listed even when the feature that produced them is switched off afterwards.
+ * @summary List notifications
+ */
 export function useNotificationsSuspense<
   TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
@@ -237,6 +249,7 @@ export type MarkAllNotificationsReadMutationResult = NonNullable<
 export type MarkAllNotificationsReadMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Clears the unread badge by marking all of your notifications read at once.
  * @summary Mark every notification read
  */
 export const useMarkAllNotificationsRead = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -322,6 +335,7 @@ export type MarkNotificationReadMutationError = ErrorType<ProblemDetails>;
 export type MarkNotificationReadMutationVariables = { id: string };
 
 /**
+ * Marks a single notification as read. Marking an already read notification again changes nothing and still answers 204.
  * @summary Mark one notification read
  */
 export const useMarkNotificationRead = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

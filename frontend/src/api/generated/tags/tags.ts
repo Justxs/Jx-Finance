@@ -125,6 +125,7 @@ export type CreateTagMutationError = ErrorType<ProblemDetails>;
 export type CreateTagMutationVariables = { data: CreateTagRequest };
 
 /**
+ * Adds a tag that transactions can be marked with. A tag says what a payment was for across categories — a holiday, a renovation, something to be reimbursed — so it has no flow type and the same tag can sit on income and on an expense. Names are unique per owner, ignoring case.
  * @summary Create a tag
  */
 export const useCreateTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -193,6 +194,10 @@ export const getTagsSuspenseQueryOptions = <
 export type TagsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof tags>>>;
 export type TagsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -203,16 +208,10 @@ export function useTagsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTagsSuspense<
-  TData = Awaited<ReturnType<typeof tags>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof tags>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -224,9 +223,23 @@ export function useTagsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
  * @summary List tags
  */
-
+export function useTagsSuspense<
+  TData = Awaited<ReturnType<typeof tags>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof tags>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -309,6 +322,7 @@ export type DeleteTagMutationError = ErrorType<ProblemDetails>;
 export type DeleteTagMutationVariables = { id: string };
 
 /**
+ * Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag. The transactions it was on are recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the tag back on them.
  * @summary Delete a tag
  */
 export const useDeleteTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -414,6 +428,7 @@ export type UpdateTagMutationError = ErrorType<ProblemDetails>;
 export type UpdateTagMutationVariables = { id: string; data: UpdateTagRequest };
 
 /**
+ * Renames a tag or moves it between personal and shared. A household member can rename a shared tag; only its owner can change the sharing or delete it. The transactions already marked with the tag keep it.
  * @summary Update a tag
  */
 export const useUpdateTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

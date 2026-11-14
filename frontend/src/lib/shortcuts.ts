@@ -1,8 +1,8 @@
 import {
-  formatForDisplay,
   getHotkeyManager,
   normalizeHotkey,
   type RegisterableHotkeyChord,
+  useFormatForDisplay,
 } from "@tanstack/react-hotkeys";
 import type { TranslationKey } from "@/lib/i18n";
 import { PUBLIC_PATHS, type RoutePath, navPages } from "@/lib/navigation";
@@ -105,8 +105,9 @@ export function isModifierShortcut(shortcut: Shortcut) {
   return shortcut.keys.some((key) => key.includes("+"));
 }
 
-export function shortcutKeyLabel(key: string) {
-  return key.includes("+") ? formatForDisplay(normalizeHotkey(key)) : key;
+export function useShortcutKeyLabel() {
+  const formatForDisplay = useFormatForDisplay();
+  return (key: string) => (key.includes("+") ? formatForDisplay(normalizeHotkey(key)) : key);
 }
 
 interface ShortcutContext {

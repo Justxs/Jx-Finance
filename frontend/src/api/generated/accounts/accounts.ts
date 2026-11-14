@@ -138,6 +138,7 @@ export type CreateAccountMutationError = ErrorType<ProblemDetails>;
 export type CreateAccountMutationVariables = { data: CreateAccountRequest };
 
 /**
+ * Opens a new account. A personal account belongs to you alone; a shared account must name a household you are a member of, and everyone in that household sees it and its transactions. The starting balance is the balance before any transaction is recorded.
  * @summary Create an account
  */
 export const useCreateAccount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -222,6 +223,10 @@ export const getAccountsSuspenseQueryOptions = <
 export type AccountsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof accounts>>>;
 export type AccountsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.
+ * @summary List accounts
+ */
 export function useAccountsSuspense<
   TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -233,17 +238,10 @@ export function useAccountsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAccountsSuspense<
-  TData = Awaited<ReturnType<typeof accounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: AccountsParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.
+ * @summary List accounts
+ */
 export function useAccountsSuspense<
   TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -256,9 +254,24 @@ export function useAccountsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.
  * @summary List accounts
  */
-
+export function useAccountsSuspense<
+  TData = Awaited<ReturnType<typeof accounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: AccountsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND. With asOf, the balances are as of that date instead: only rows dated on or before it count, and currencies and holdings are valued at the exchange rates and security prices of that day. The same accounts are returned either way.
+ * @summary List accounts
+ */
 export function useAccountsSuspense<
   TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -333,6 +346,10 @@ export type ArchivedAccountsSuspenseQueryResult = NonNullable<
 >;
 export type ArchivedAccountsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
+ * @summary List archived accounts
+ */
 export function useArchivedAccountsSuspense<
   TData = Awaited<ReturnType<typeof archivedAccounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -345,18 +362,10 @@ export function useArchivedAccountsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useArchivedAccountsSuspense<
-  TData = Awaited<ReturnType<typeof archivedAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
+ * @summary List archived accounts
+ */
 export function useArchivedAccountsSuspense<
   TData = Awaited<ReturnType<typeof archivedAccounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -370,9 +379,25 @@ export function useArchivedAccountsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
  * @summary List archived accounts
  */
-
+export function useArchivedAccountsSuspense<
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
+ * @summary List archived accounts
+ */
 export function useArchivedAccountsSuspense<
   TData = Awaited<ReturnType<typeof archivedAccounts>>,
   TError = ErrorType<ProblemDetails>,
@@ -464,6 +489,10 @@ export type CashFlowForecastSuspenseQueryResult = NonNullable<
 >;
 export type CashFlowForecastSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
+ * @summary Forecast account balances from recurring entries
+ */
 export function useCashFlowForecastSuspense<
   TData = Awaited<ReturnType<typeof cashFlowForecast>>,
   TError = ErrorType<ProblemDetails>,
@@ -477,19 +506,10 @@ export function useCashFlowForecastSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCashFlowForecastSuspense<
-  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: CashFlowForecastParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
+ * @summary Forecast account balances from recurring entries
+ */
 export function useCashFlowForecastSuspense<
   TData = Awaited<ReturnType<typeof cashFlowForecast>>,
   TError = ErrorType<ProblemDetails>,
@@ -504,9 +524,26 @@ export function useCashFlowForecastSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
  * @summary Forecast account balances from recurring entries
  */
-
+export function useCashFlowForecastSuspense<
+  TData = Awaited<ReturnType<typeof cashFlowForecast>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: CashFlowForecastParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof cashFlowForecast>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Projects each visible account's balance in its main currency from today to the end of the horizon. It starts from the balance as of today, places ledger rows already dated after today on their own dates, and adds every occurrence of the caller's own active recurring entries: expenses and income on their account, transfers out of the source and, when the caller can see it, into the destination at the newest exchange rate. A fixed entry counts its amount; a variable entry counts the median of its last six matching rows within 13 months and is marked estimated. An occurrence before today is placed on today and marked overdue, and the next one is skipped when a matching row already paid it. usualDailySpending is the median daily spending of the last three complete months outside the entries, null with less history. Only accounts with an entry in the horizon are listed, those that go below zero first. notCounted names the entries that could not be placed. Nothing is stored. Needs the recurringBills feature.
+ * @summary Forecast account balances from recurring entries
+ */
 export function useCashFlowForecastSuspense<
   TData = Awaited<ReturnType<typeof cashFlowForecast>>,
   TError = ErrorType<ProblemDetails>,
@@ -592,6 +629,7 @@ export type DeleteAccountMutationError = ErrorType<ProblemDetails>;
 export type DeleteAccountMutationVariables = { id: string };
 
 /**
+ * Archives the account instead of deleting it: the transactions posted to it stay in the ledger and in reports, but the account no longer appears in listings or pickers.
  * @summary Archive an account
  */
 export const useDeleteAccount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -666,6 +704,10 @@ export const getAccountSuspenseQueryOptions = <
 export type AccountSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof account>>>;
 export type AccountSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
+ * @summary Get one account
+ */
 export function useAccountSuspense<
   TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
@@ -677,17 +719,10 @@ export function useAccountSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAccountSuspense<
-  TData = Awaited<ReturnType<typeof account>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
+ * @summary Get one account
+ */
 export function useAccountSuspense<
   TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
@@ -700,9 +735,24 @@ export function useAccountSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
  * @summary Get one account
  */
-
+export function useAccountSuspense<
+  TData = Awaited<ReturnType<typeof account>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
+ * @summary Get one account
+ */
 export function useAccountSuspense<
   TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
@@ -808,6 +858,7 @@ export type UpdateAccountMutationError = ErrorType<ProblemDetails>;
 export type UpdateAccountMutationVariables = { id: string; data: UpdateAccountRequest };
 
 /**
+ * Replaces the editable fields of an account. Moving an account from Personal to Shared hands its history to the household; moving it back makes it private again. Transactions already posted to the account keep their amounts.
  * @summary Update an account
  */
 export const useUpdateAccount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -886,6 +937,10 @@ export type ReconciliationsSuspenseQueryResult = NonNullable<
 >;
 export type ReconciliationsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * @summary List the reconciliations of an account
+ */
 export function useReconciliationsSuspense<
   TData = Awaited<ReturnType<typeof reconciliations>>,
   TError = ErrorType<ProblemDetails>,
@@ -899,19 +954,10 @@ export function useReconciliationsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useReconciliationsSuspense<
-  TData = Awaited<ReturnType<typeof reconciliations>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * @summary List the reconciliations of an account
+ */
 export function useReconciliationsSuspense<
   TData = Awaited<ReturnType<typeof reconciliations>>,
   TError = ErrorType<ProblemDetails>,
@@ -926,9 +972,26 @@ export function useReconciliationsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
  * @summary List the reconciliations of an account
  */
-
+export function useReconciliationsSuspense<
+  TData = Awaited<ReturnType<typeof reconciliations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the newest 24 statement balances recorded for the account, typed by hand or taken from a statement import, in any currency of the account, newest date first. Only the statement's balance is stored: the ledger balance on each date in the reconciliation's currency and the difference (statement minus ledger) are computed on every read, so an edit dated on or before a statement date changes its difference.
+ * @summary List the reconciliations of an account
+ */
 export function useReconciliationsSuspense<
   TData = Awaited<ReturnType<typeof reconciliations>>,
   TError = ErrorType<ProblemDetails>,
@@ -1041,6 +1104,7 @@ export type RecordReconciliationMutationVariables = {
 };
 
 /**
+ * Saves the balance a bank statement printed for the account on a date, in one currency the account holds, whether or not it agrees with the ledger. A balance already recorded for that date and currency, typed or imported, is replaced, and its source becomes manual. Anyone who can see the account can record one.
  * @summary Record a statement balance for an account
  */
 export const useRecordReconciliation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1138,6 +1202,10 @@ export type ReconciliationPreviewSuspenseQueryResult = NonNullable<
 >;
 export type ReconciliationPreviewSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * @summary Preview a reconciliation of an account
+ */
 export function useReconciliationPreviewSuspense<
   TData = Awaited<ReturnType<typeof reconciliationPreview>>,
   TError = ErrorType<ProblemDetails>,
@@ -1152,20 +1220,10 @@ export function useReconciliationPreviewSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useReconciliationPreviewSuspense<
-  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params: ReconciliationPreviewParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * @summary Preview a reconciliation of an account
+ */
 export function useReconciliationPreviewSuspense<
   TData = Awaited<ReturnType<typeof reconciliationPreview>>,
   TError = ErrorType<ProblemDetails>,
@@ -1181,9 +1239,27 @@ export function useReconciliationPreviewSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
  * @summary Preview a reconciliation of an account
  */
-
+export function useReconciliationPreviewSuspense<
+  TData = Awaited<ReturnType<typeof reconciliationPreview>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: ReconciliationPreviewParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reconciliationPreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers what the ledger holds on a statement date in one currency of the account, before the balance printed on the statement is saved: the ledger balance on that date in that currency (the starting balance when it is the main currency, plus every transaction, transfer, conversion and investment entry in that currency dated on or before it), the latest reconciliation in that currency dated before it, and the rows in that currency dated after that reconciliation, or from the beginning when there is none, up to the date, newest first, at most 100, with their count. Nothing is stored.
+ * @summary Preview a reconciliation of an account
+ */
 export function useReconciliationPreviewSuspense<
   TData = Awaited<ReturnType<typeof reconciliationPreview>>,
   TError = ErrorType<ProblemDetails>,
@@ -1273,6 +1349,7 @@ export type DeleteReconciliationMutationError = ErrorType<ProblemDetails>;
 export type DeleteReconciliationMutationVariables = { id: string; reconciliationId: string };
 
 /**
+ * Removes a recorded statement balance for good. It does not go to the trash and is not audited, because it moves no money and can be typed again.
  * @summary Delete a reconciliation of an account
  */
 export const useDeleteReconciliation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1356,6 +1433,7 @@ export type RestoreAccountMutationError = ErrorType<ProblemDetails>;
 export type RestoreAccountMutationVariables = { id: string };
 
 /**
+ * Brings an archived account back into listings, pickers and totals. Archiving only hid the account, so everything posted to it (transactions, transfers, conversions, investment entries, recurring entries, goals funded from it) reappears with it unchanged. An account that is still shared into a household its owner no longer belongs to comes back personal. Only the owner can restore. Restoring an account that is already active changes nothing and still answers 200, so it is safe to repeat.
  * @summary Restore an archived account
  */
 export const useRestoreAccount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

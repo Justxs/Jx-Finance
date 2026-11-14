@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.403@sha256:de4fe90a98845d75910b9769662465c84de1a934665c431279d1382b2bddc02b AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.404@sha256:fe0fd4e93bd2fbb47c883b7a6369e5c8d3db8bf01cdc5981f6ee35fbdf3ff4fb AS build
 ARG TARGETARCH
 WORKDIR /src
 
@@ -10,7 +10,7 @@ RUN dotnet restore backend/JxFinance.Api/JxFinance.Api.csproj -a $TARGETARCH
 COPY backend/ backend/
 RUN dotnet publish backend/JxFinance.Api/JxFinance.Api.csproj -c Release -a $TARGETARCH --self-contained false --no-restore -o /app
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.14@sha256:de0ee358cdd672f7017a003bed21e9ac9ed48a27c922a59b18175b6e82fa7fee
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.15@sha256:bfd912c83295ce66d4b706ebb8541b9f14259b0e76fbb88b2751f58ce2399d2e
 LABEL org.opencontainers.image.title="Jx Finance API" \
       org.opencontainers.image.description="A private household ledger you run yourself: the ASP.NET Core API." \
       org.opencontainers.image.source="https://github.com/Justxs/Jx-Finance" \

@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog/dialog";
 import { useSettings } from "@/hooks/use-settings";
-import { type Shortcut, shortcutKeyLabel, visibleShortcuts } from "@/lib/shortcuts";
+import { type Shortcut, useShortcutKeyLabel, visibleShortcuts } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
 import { useShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
 
@@ -17,6 +17,7 @@ interface RowProps {
 
 export function ShortcutRow({ shortcut }: Readonly<RowProps>) {
   const { t } = useTranslation();
+  const shortcutKeyLabel = useShortcutKeyLabel();
 
   return (
     <li className="flex items-center justify-between gap-3 border-b py-1.5">
