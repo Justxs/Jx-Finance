@@ -1,5 +1,5 @@
 {
-  "openapi": "3.1.1",
+  "openapi": "3.2.0",
   "info": {
     "title": "Jx Finance API",
     "description": "Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.",
@@ -31948,17 +31948,11 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "default": "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1"
           },
           "title": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "default": "One or more validation errors occurred."
           },
           "status": {
@@ -37270,10 +37264,6 @@
       "description": "Sign in, sign out, the current profile, and two-factor enrolment."
     },
     {
-      "name": "Setup",
-      "description": "First-run provisioning of the administrator account."
-    },
-    {
       "name": "Backups",
       "description": "Snapshots of the whole instance: create, download, upload, and restore one."
     },
@@ -37303,6 +37293,10 @@
     {
       "name": "Dashboard",
       "description": "Aggregates for the home screen: balances, trends, category splits."
+    },
+    {
+      "name": "Diagnostics",
+      "description": "Unauthenticated liveness probes."
     },
     {
       "name": "Goals",
@@ -37335,10 +37329,6 @@
       "name": "Payees"
     },
     {
-      "name": "Diagnostics",
-      "description": "Unauthenticated liveness probes."
-    },
-    {
       "name": "Receipts"
     },
     {
@@ -37352,6 +37342,10 @@
     {
       "name": "Settings",
       "description": "Instance-wide preferences: language, time zone, reporting currency, features, and outgoing mail."
+    },
+    {
+      "name": "Setup",
+      "description": "First-run provisioning of the administrator account."
     },
     {
       "name": "Tags",

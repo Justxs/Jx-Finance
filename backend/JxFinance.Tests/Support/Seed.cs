@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-
 namespace JxFinance.Tests.Support;
 
 public static class Seed

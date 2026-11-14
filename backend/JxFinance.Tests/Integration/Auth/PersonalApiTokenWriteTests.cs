@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Tests.Support;
 using Microsoft.AspNetCore.Identity;

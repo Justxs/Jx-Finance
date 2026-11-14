@@ -10,8 +10,8 @@ const images = [
   { registry: "registry-1.docker.io", repository: "library/postgres", reference: "postgres", tags: /^16\.(\d+)$/ },
   { registry: "registry-1.docker.io", repository: "library/caddy", reference: "caddy", tags: /^2\.(\d+)\.(\d+)-alpine$/ },
   { registry: "registry-1.docker.io", repository: "library/node", reference: "node", tags: /^24\.(\d+)\.(\d+)-alpine$/ },
-  { registry: "mcr.microsoft.com", repository: "dotnet/aspnet", reference: "mcr.microsoft.com/dotnet/aspnet", tags: /^10\.0\.(\d+)$/ },
-  { registry: "mcr.microsoft.com", repository: "dotnet/sdk", reference: "mcr.microsoft.com/dotnet/sdk", tags: /^10\.0\.(\d+)$/ },
+  { registry: "mcr.microsoft.com", repository: "dotnet/aspnet", reference: "mcr.microsoft.com/dotnet/aspnet", tags: /^11\.0\.(\d+)$/ },
+  { registry: "mcr.microsoft.com", repository: "dotnet/sdk", reference: "mcr.microsoft.com/dotnet/sdk", tags: /^11\.0\.(\d+)$/ },
   { registry: "mcr.microsoft.com", repository: "dotnet/aspire-dashboard", reference: "mcr.microsoft.com/dotnet/aspire-dashboard", tags: /^13\.(\d+)(?:\.(\d+))?$/ },
 ];
 

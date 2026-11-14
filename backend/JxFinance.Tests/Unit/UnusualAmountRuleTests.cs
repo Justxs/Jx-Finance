@@ -45,8 +45,8 @@ public sealed class UnusualAmountRuleTests
     }
 
     [Theory]
-    [InlineData(13.99)]
-    [InlineData(14.00)]
+    [InlineData("13.99")]
+    [InlineData("14.00")]
     public void Small_amounts_need_ten_units_above_the_median(decimal amount)
     {
         var history = Enumerable.Repeat(4m, 4).ToList();
@@ -65,12 +65,12 @@ public sealed class UnusualAmountRuleTests
     }
 
     [Theory]
-    [InlineData(9.99, 10.50, true)]
-    [InlineData(9.99, 10.49, false)]
+    [InlineData("9.99", "10.50", true)]
+    [InlineData("9.99", "10.49", false)]
     [InlineData(100, 103, false)]
-    [InlineData(100, 103.01, true)]
-    [InlineData(5, 5.50, false)]
-    [InlineData(5, 5.51, true)]
+    [InlineData(100, "103.01", true)]
+    [InlineData(5, "5.50", false)]
+    [InlineData(5, "5.51", true)]
     public void A_price_rise_is_three_percent_and_fifty_cents(decimal expected, decimal charged, bool rise)
     {
         Assert.Equal(rise, PriceRiseRule.IsRise(charged, expected));

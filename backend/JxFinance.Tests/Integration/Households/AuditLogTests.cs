@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Households;
 using JxFinance.Infrastructure.BackgroundJobs;

@@ -9,12 +9,12 @@ public sealed class AmortizationCalculatorTests
     private static readonly DateOnly First = new(2026, 1, 15);
 
     [Theory]
-    [InlineData(100000, 5, 360, 536.82)]
-    [InlineData(200000, 6, 360, 1199.10)]
-    [InlineData(10000, 7, 60, 198.01)]
-    [InlineData(150000, 4.5, 180, 1147.49)]
-    [InlineData(1200, 0, 12, 100.00)]
-    [InlineData(1000, 12, 1, 1010.00)]
+    [InlineData(100000, 5, 360, "536.82")]
+    [InlineData(200000, 6, 360, "1199.10")]
+    [InlineData(10000, 7, 60, "198.01")]
+    [InlineData(150000, "4.5", 180, "1147.49")]
+    [InlineData(1200, 0, 12, "100.00")]
+    [InlineData(1000, 12, 1, "1010.00")]
     public void Level_payment_matches_the_known_annuity_values(decimal principal, decimal rate, int term, decimal expected) =>
         Assert.Equal(expected, AmortizationCalculator.LevelPayment(principal, rate, term));
 
@@ -108,10 +108,10 @@ public sealed class AmortizationCalculatorTests
     }
 
     [Theory]
-    [InlineData(100000, 6, 500.00)]
-    [InlineData(100000, 6, 499.99)]
-    [InlineData(100000, 6, 500.01)]
-    [InlineData(100000, 5, 420.00)]
+    [InlineData(100000, 6, "500.00")]
+    [InlineData(100000, 6, "499.99")]
+    [InlineData(100000, 6, "500.01")]
+    [InlineData(100000, 5, "420.00")]
     public void A_payment_that_does_not_repay_within_fifty_years_is_refused(decimal principal, decimal rate, decimal payment)
     {
         var result = AmortizationCalculator.Calculate(new AmortizationTerms(principal, rate, First, null, payment));

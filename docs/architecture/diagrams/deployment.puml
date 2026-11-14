@@ -13,7 +13,7 @@ node "Docker host on a private network" <<device>> as host {
     component "Caddy\nTLS, headers, CSP\npublished :443" as caddy
     artifact "SPA bundle\n/usr/share/caddy" as spa
   }
-  node "api\ndotnet/aspnet:10.0, user app" <<container>> as api {
+  node "api\ndotnet/aspnet:11.0, user app" <<container>> as api {
     component "ASP.NET Core API\nFastEndpoints :8080" as kestrel
     component "15 hosted jobs" as jobs
     artifact "tesseract\nghostscript" as ocr

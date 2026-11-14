@@ -12,10 +12,8 @@ import type { ProblemDetailsErrorsItem } from "./problemDetailsErrorsItem";
  * ```app.UseFastEndpoints(c =&gt; c.Errors.UseProblemDetails())```
  */
 export interface ProblemDetails {
-  /** @nullable */
-  type?: string | null;
-  /** @nullable */
-  title?: string | null;
+  type?: string;
+  title?: string;
   status?: number;
   instance?: string;
   traceId?: string;

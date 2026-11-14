@@ -63,7 +63,7 @@ public sealed class ModelMappingTests
             properties.Take(key.Properties.Count).SequenceEqual(key.Properties)));
     }
 
-    private static IEnumerable<IReadOnlyList<IProperty>> Lookups(IEntityType entity) =>
+    private static IEnumerable<IReadOnlyList<IPropertyBase>> Lookups(IEntityType entity) =>
         entity.GetIndexes().Select(index => index.Properties)
             .Concat(entity.GetKeys().Select(key => key.Properties));
 

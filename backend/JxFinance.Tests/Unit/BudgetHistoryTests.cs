@@ -27,9 +27,9 @@ public sealed class BudgetHistoryTests
     }
 
     [Theory]
-    [InlineData(312.01, 313)]
-    [InlineData(312.00, 312)]
-    [InlineData(0.40, 1)]
+    [InlineData("312.01", 313)]
+    [InlineData("312.00", 312)]
+    [InlineData("0.40", 1)]
     public void The_limit_is_the_median_rounded_up_to_a_whole_unit(decimal median, decimal limit)
     {
         Assert.Equal(limit, BudgetHistory.SuggestedLimit([median, median, median]));
@@ -61,8 +61,8 @@ public sealed class BudgetHistoryTests
     }
 
     [Theory]
-    [InlineData(16.86, true)]
-    [InlineData(16.87, false)]
+    [InlineData("16.86", true)]
+    [InlineData("16.87", false)]
     public void The_spread_may_reach_a_quarter_of_the_median_and_no_more(decimal deviation, bool steady)
     {
         Assert.Equal(steady, BudgetHistory.IsSteady([100m, 100m, 100m - deviation, 100m + deviation, 100m - deviation, 100m + deviation]));

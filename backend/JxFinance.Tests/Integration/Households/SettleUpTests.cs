@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 

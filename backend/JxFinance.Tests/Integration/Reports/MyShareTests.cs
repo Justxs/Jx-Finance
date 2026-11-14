@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;

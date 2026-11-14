@@ -6,7 +6,7 @@
 | Package manager | pnpm 12, driven through `vp install`, `vp add` and `vp update`; `pnpm-lock.yaml`, frozen installs in CI and Docker; the `vite`, `vitest` and `@vitest/coverage-v8` versions follow `vite-plus` through the catalog and overrides in `frontend/pnpm-workspace.yaml` |
 | Styling | Tailwind 4, shadcn/ui (base-nova style) on Base UI, react-day-picker, Lucide icons, Recharts, MapLibre GL with the PMTiles protocol for the map of spending by place (loaded only when the map is opened), self-hosted typefaces for the per-browser typeface choice: Source Serif 4, Source Sans 3, Inter, Newsreader, IBM Plex Sans, IBM Plex Serif and Atkinson Hyperlegible Next (woff2 in `src/assets/fonts`, OFL) |
 | Localization | react-i18next, EN/LT JSON dictionaries and Intl formatters |
-| API | .NET 10, FastEndpoints, FluentValidation, plain feature services |
+| API | .NET 11, FastEndpoints, FluentValidation, plain feature services |
 | Persistence | EF Core/Npgsql, PostgreSQL 16 |
 | Authentication | ASP.NET Core Identity users, FastEndpoints.Security JWTs in HttpOnly cookies, optional TOTP |
 | Contract | FastEndpoints OpenAPI and Orval-generated query hooks/models |

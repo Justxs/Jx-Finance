@@ -36,5 +36,5 @@ public static class AdvisoryLock
             .SingleAsync(cancellationToken);
 
     private static Task<int> LockAsync(DatabaseFacade database, long key, CancellationToken cancellationToken) =>
-        database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({key})", cancellationToken);
+        database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({key})", cancellationToken);
 }
