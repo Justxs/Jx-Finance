@@ -40,9 +40,9 @@ public static class SchemaRewriter
         }
     }
 
-    private static void RewriteContent(IDictionary<string, OpenApiMediaType>? content, Func<IOpenApiSchema, IOpenApiSchema> rewrite)
+    private static void RewriteContent(IDictionary<string, IOpenApiMediaType>? content, Func<IOpenApiSchema, IOpenApiSchema> rewrite)
     {
-        foreach (var media in content?.Values ?? [])
+        foreach (var media in content?.Values.OfType<OpenApiMediaType>() ?? [])
         {
             if (media.Schema is { } schema)
             {

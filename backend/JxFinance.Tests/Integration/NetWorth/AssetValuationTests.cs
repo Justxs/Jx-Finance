@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.BackgroundJobs;

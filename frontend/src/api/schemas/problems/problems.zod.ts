@@ -17,8 +17,8 @@ export const problemDetailsResponseErrorsItemReasonDefault = `Error reason`;
 
 export const ProblemDetailsResponse = zod
   .object({
-    type: zod.string().nullish().default(problemDetailsResponseTypeDefault),
-    title: zod.string().nullish().default(problemDetailsResponseTitleDefault),
+    type: zod.string().default(problemDetailsResponseTypeDefault),
+    title: zod.string().default(problemDetailsResponseTitleDefault),
     status: zod.int().default(problemDetailsResponseStatusDefault),
     instance: zod.string().default(problemDetailsResponseInstanceDefault),
     traceId: zod.string().default(problemDetailsResponseTraceIdDefault),

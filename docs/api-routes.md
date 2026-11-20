@@ -58,17 +58,6 @@ Generated from `frontend/openapi.json` by `just gen`, one table per tag; `just c
 | DELETE | `/api/auth/tokens/{id}` | Revoke a personal API token |
 | POST | `/api/auth/verify-email` | Confirm an email address |
 
-## Setup
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| POST | `/api/setup` | Provision the first administrator |
-| POST | `/api/setup/demo-data` | Load demo data |
-| DELETE | `/api/setup/demo-data` | Remove the demo data and start for real |
-| POST | `/api/setup/finish` | Finish the guided setup |
-| GET | `/api/setup/readiness` | Read what this server can run |
-| GET | `/api/setup/status` | Check whether first-run setup is needed |
-
 ## Backups
 
 | Method | Route | Summary |
@@ -157,6 +146,12 @@ Generated from `frontend/openapi.json` by `just gen`, one table per tag; `just c
 | PUT | `/api/users/me/dashboard-layout` | Save your dashboard layout |
 | DELETE | `/api/users/me/dashboard-layout` | Reset your dashboard layout |
 | GET | `/api/users/me/getting-started` | Get your getting started steps |
+
+## Diagnostics
+
+| Method | Route | Summary |
+| --- | --- | --- |
+| GET | `/api/ping` | Ping the API |
 
 ## Goals
 
@@ -290,12 +285,6 @@ Generated from `frontend/openapi.json` by `just gen`, one table per tag; `just c
 | PUT | `/api/payees` | Name a payee |
 | DELETE | `/api/payees/{id}` | Remove a payee name |
 
-## Diagnostics
-
-| Method | Route | Summary |
-| --- | --- | --- |
-| GET | `/api/ping` | Ping the API |
-
 ## Receipts
 
 | Method | Route | Summary |
@@ -351,6 +340,17 @@ Generated from `frontend/openapi.json` by `just gen`, one table per tag; `just c
 | GET | `/api/settings/telegram` | Read the installation's Telegram group |
 | PUT | `/api/settings/telegram` | Save the installation's Telegram group |
 | POST | `/api/settings/telegram/test` | Send a test message to the Telegram group |
+
+## Setup
+
+| Method | Route | Summary |
+| --- | --- | --- |
+| POST | `/api/setup` | Provision the first administrator |
+| POST | `/api/setup/demo-data` | Load demo data |
+| DELETE | `/api/setup/demo-data` | Remove the demo data and start for real |
+| POST | `/api/setup/finish` | Finish the guided setup |
+| GET | `/api/setup/readiness` | Read what this server can run |
+| GET | `/api/setup/status` | Check whether first-run setup is needed |
 
 ## Tags
 

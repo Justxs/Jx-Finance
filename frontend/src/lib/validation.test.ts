@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import type { z } from "zod";
+import { fakeTranslate } from "@/test/translate";
 import {
   isEmail,
   isIban,
@@ -117,9 +118,7 @@ function messages(schema: z.ZodType, value: unknown) {
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 }
 
-function t(key: string, options?: Record<string, unknown>) {
-  return options ? `${key}:${JSON.stringify(options)}` : key;
-}
+const t = fakeTranslate((key, options) => (options ? `${key}:${JSON.stringify(options)}` : key));
 
 describe("schema builders", () => {
   test("requiredValue rejects only the empty string", () => {

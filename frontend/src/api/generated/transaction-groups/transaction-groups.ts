@@ -35,6 +35,35 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (RequestInit["headers"] | Record<string, string | undefined>)[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -62,29 +91,10 @@ export const createTransactionGroup = async (
   createTransactionGroupRequest: CreateTransactionGroupRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransactionGroupResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TransactionGroupResponse>(getCreateTransactionGroupUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createTransactionGroupRequest),
   });
 };
@@ -135,6 +145,7 @@ export type CreateTransactionGroupMutationError = ErrorType<ProblemDetails>;
 export type CreateTransactionGroupMutationVariables = { data: CreateTransactionGroupRequest };
 
 /**
+ * Creates a group, such as "Trip to Riga", and puts the listed transactions in it, so that GET /api/transactions/ledger folds them into one item. Grouping changes only how the ledger reads: every member keeps its own date, category and amount in reports, budgets, balances, the month close and the exports, and the member's last-updated time is left as it was. A personal group holds only transactions you entered; a group shared with a household holds transactions on accounts shared with that household, whoever entered them. None may already be in another group; remove it from that group first. Names need not be unique. The ledger offers grouping for two or more selected rows, while a row's own actions start a group with that row alone. Only a browser session can group; a personal API token cannot.
  * @summary Group transactions
  */
 export const useCreateTransactionGroup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -209,6 +220,10 @@ export type TransactionGroupsSuspenseQueryResult = NonNullable<
 >;
 export type TransactionGroupsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.
+ * @summary List your transaction groups
+ */
 export function useTransactionGroupsSuspense<
   TData = Awaited<ReturnType<typeof transactionGroups>>,
   TError = ErrorType<ProblemDetails>,
@@ -221,18 +236,10 @@ export function useTransactionGroupsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransactionGroupsSuspense<
-  TData = Awaited<ReturnType<typeof transactionGroups>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionGroups>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.
+ * @summary List your transaction groups
+ */
 export function useTransactionGroupsSuspense<
   TData = Awaited<ReturnType<typeof transactionGroups>>,
   TError = ErrorType<ProblemDetails>,
@@ -246,9 +253,25 @@ export function useTransactionGroupsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.
  * @summary List your transaction groups
  */
-
+export function useTransactionGroupsSuspense<
+  TData = Awaited<ReturnType<typeof transactionGroups>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionGroups>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the transaction groups you can see, your own and those shared with your households, that still hold at least one live transaction you can see, the one with the newest member first, each with its member count and the dates of its first and last member. A personal group is never seen by a housemate.
+ * @summary List your transaction groups
+ */
 export function useTransactionGroupsSuspense<
   TData = Awaited<ReturnType<typeof transactionGroups>>,
   TError = ErrorType<ProblemDetails>,
@@ -284,29 +307,10 @@ export const renameTransactionGroup = async (
   renameTransactionGroupRequest: RenameTransactionGroupRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransactionGroupResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TransactionGroupResponse>(getRenameTransactionGroupUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(renameTransactionGroupRequest),
   });
 };
@@ -360,6 +364,7 @@ export type RenameTransactionGroupMutationVariables = {
 };
 
 /**
+ * Changes the name of a group you can see, and its owner can share it with a household or make it personal again. Any member of the household can rename a shared group. Sharing needs every member on an account shared with that household; making a shared group personal takes out the transactions other people entered.
  * @summary Rename or share a transaction group
  */
 export const useRenameTransactionGroup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -445,6 +450,7 @@ export type UngroupTransactionGroupMutationError = ErrorType<ProblemDetails>;
 export type UngroupTransactionGroupMutationVariables = { id: string };
 
 /**
+ * Removes a group you own and keeps every member as an ordinary transaction. The group goes to the trash with the members it held, and POST /api/trash/restore with kind transactionGroup puts back the name and the members that are still live and in no other group.
  * @summary Ungroup
  */
 export const useUngroupTransactionGroup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -479,29 +485,10 @@ export const addToTransactionGroup = async (
   addToTransactionGroupRequest: AddToTransactionGroupRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getAddToTransactionGroupUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(addToTransactionGroupRequest),
   });
 };
@@ -555,6 +542,7 @@ export type AddToTransactionGroupMutationVariables = {
 };
 
 /**
+ * Puts the listed transactions in a group you can see; split transactions are accepted. A personal group takes only transactions you entered, a shared group only transactions on accounts shared with its household, and none may be in another group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.
  * @summary Add transactions to a group
  */
 export const useAddToTransactionGroup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -656,6 +644,10 @@ export type TransactionGroupMembersSuspenseQueryResult = NonNullable<
 >;
 export type TransactionGroupMembersSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
+ * @summary List the members of a group
+ */
 export function useTransactionGroupMembersSuspense<
   TData = Awaited<ReturnType<typeof transactionGroupMembers>>,
   TError = ErrorType<ProblemDetails>,
@@ -670,20 +662,10 @@ export function useTransactionGroupMembersSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransactionGroupMembersSuspense<
-  TData = Awaited<ReturnType<typeof transactionGroupMembers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params?: TransactionGroupMembersParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionGroupMembers>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
+ * @summary List the members of a group
+ */
 export function useTransactionGroupMembersSuspense<
   TData = Awaited<ReturnType<typeof transactionGroupMembers>>,
   TError = ErrorType<ProblemDetails>,
@@ -699,9 +681,27 @@ export function useTransactionGroupMembersSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
  * @summary List the members of a group
  */
-
+export function useTransactionGroupMembersSuspense<
+  TData = Awaited<ReturnType<typeof transactionGroupMembers>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: TransactionGroupMembersParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionGroupMembers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the members of a group you can see that match the same filters as the ledger, newest first, so an expanded group row shows exactly the members that made it appear. The list is not paged: at most 200 members are returned, and truncated says whether more matched.
+ * @summary List the members of a group
+ */
 export function useTransactionGroupMembersSuspense<
   TData = Awaited<ReturnType<typeof transactionGroupMembers>>,
   TError = ErrorType<ProblemDetails>,
@@ -792,6 +792,7 @@ export type RemoveFromTransactionGroupMutationError = ErrorType<ProblemDetails>;
 export type RemoveFromTransactionGroupMutationVariables = { id: string; transactionId: string };
 
 /**
+ * Takes one transaction out of a group you can see, a shared one included, so the ledger shows it as an ordinary row again. The group stays, even with a single member left.
  * @summary Remove a transaction from a group
  */
 export const useRemoveFromTransactionGroup = <

@@ -10,6 +10,7 @@ import {
   settings,
   tags,
 } from "@/storybook/fixtures";
+import { fakeTranslate } from "@/test/translate";
 import {
   type CommandEntry,
   type CommandSources,
@@ -20,9 +21,7 @@ import {
 } from "./command-entries";
 import { filterCommandEntries, foldText, matchScore } from "./command-search";
 
-function t(key: string) {
-  return key;
-}
+const t = fakeTranslate((key) => key);
 
 const allFeatures = settings.features;
 const accountEntry = `account-${checkingAccount.id}`;
@@ -174,7 +173,7 @@ describe("buildCommandEntries", () => {
 
 function quickSources(overrides: Partial<QuickAddSources> = {}): QuickAddSources {
   return {
-    t: (key, options) => `${key} ${JSON.stringify(options ?? {})}`,
+    t: fakeTranslate((key, options) => `${key} ${JSON.stringify(options ?? {})}`),
     accounts,
     lastAccountId: savingsAccount.id,
     defaultAccountId: null,
@@ -223,7 +222,7 @@ describe("searchTransactionsEntry", () => {
   test("typed text opens the ledger searched for it", () => {
     const entry = searchTransactionsEntry(
       "  maxima ",
-      (key, options) => `${key} ${JSON.stringify(options ?? {})}`,
+      fakeTranslate((key, options) => `${key} ${JSON.stringify(options ?? {})}`),
     );
 
     expect(entry?.label).toBe('commandPalette.searchTransactions {"search":"maxima"}');

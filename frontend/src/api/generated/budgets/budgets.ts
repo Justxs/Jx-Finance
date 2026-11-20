@@ -35,6 +35,35 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (RequestInit["headers"] | Record<string, string | undefined>)[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -62,29 +91,10 @@ export const createBudget = async (
   createBudgetRequest: CreateBudgetRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<BudgetResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<BudgetResponse>(getCreateBudgetUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createBudgetRequest),
   });
 };
@@ -133,6 +143,7 @@ export type CreateBudgetMutationError = ErrorType<ProblemDetails>;
 export type CreateBudgetMutationVariables = { data: CreateBudgetRequest };
 
 /**
+ * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once. Send tagId instead of categoryId to limit what is spent on a tag, such as a trip: every expense carrying the tag counts in full, whatever its category, and a refund carrying it lowers the spend.
  * @summary Create a budget
  */
 export const useCreateBudget = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -217,6 +228,10 @@ export const getBudgetsSuspenseQueryOptions = <
 export type BudgetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof budgets>>>;
 export type BudgetsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
+ * @summary List budgets
+ */
 export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
@@ -228,17 +243,10 @@ export function useBudgetsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useBudgetsSuspense<
-  TData = Awaited<ReturnType<typeof budgets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: BudgetsParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
+ * @summary List budgets
+ */
 export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
@@ -251,9 +259,24 @@ export function useBudgetsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
  * @summary List budgets
  */
-
+export function useBudgetsSuspense<
+  TData = Awaited<ReturnType<typeof budgets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: BudgetsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call. With asOf, each budget shows the window that contains that date instead of today's, with its spending and carry-over computed for that window; the limit is the budget's limit today, because changes to a limit are not kept by date.
+ * @summary List budgets
+ */
 export function useBudgetsSuspense<
   TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
@@ -344,6 +367,10 @@ export type BudgetSuggestionsSuspenseQueryResult = NonNullable<
 >;
 export type BudgetSuggestionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
+ * @summary Suggest budget limits from past spending
+ */
 export function useBudgetSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof budgetSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -357,19 +384,10 @@ export function useBudgetSuggestionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useBudgetSuggestionsSuspense<
-  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: BudgetSuggestionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
+ * @summary Suggest budget limits from past spending
+ */
 export function useBudgetSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof budgetSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -384,9 +402,26 @@ export function useBudgetSuggestionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
  * @summary Suggest budget limits from past spending
  */
-
+export function useBudgetSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof budgetSuggestions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: BudgetSuggestionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgetSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * For every expense category you can see that had spending lately, returns what it cost in each of the last six complete windows of the period, oldest first. The window that holds today is left out because it is partial, and so is every window that ends before your earliest transaction. Spend is attributed as on the budgets page, split lines by their share. With at least three windows left the item carries their median, zero windows included, and a suggested limit: the median rounded up to a whole unit of the reporting currency, or null when the median is zero. isSteady is true when all six windows had spending, the median is at least 20 and the robust spread (median absolute deviation times 1.4826) is at most a quarter of the median. hasBudget tells whether you already have a budget of this period on the category. Nothing is written.
+ * @summary Suggest budget limits from past spending
+ */
 export function useBudgetSuggestionsSuspense<
   TData = Awaited<ReturnType<typeof budgetSuggestions>>,
   TError = ErrorType<ProblemDetails>,
@@ -472,6 +507,7 @@ export type DeleteBudgetMutationError = ErrorType<ProblemDetails>;
 export type DeleteBudgetMutationVariables = { id: string };
 
 /**
+ * Removes the spending limit. Transactions in the category are untouched.
  * @summary Delete a budget
  */
 export const useDeleteBudget = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -506,29 +542,10 @@ export const updateBudget = async (
   updateBudgetRequest: UpdateBudgetRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<BudgetResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<BudgetResponse>(getUpdateBudgetUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateBudgetRequest),
   });
 };
@@ -577,6 +594,7 @@ export type UpdateBudgetMutationError = ErrorType<ProblemDetails>;
 export type UpdateBudgetMutationVariables = { id: string; data: UpdateBudgetRequest };
 
 /**
+ * Changes the limit, the period or the rollover switch, or moves the budget to a different category. Spending already recorded is re-evaluated against the new window the next time the budget is read.
  * @summary Update a budget
  */
 export const useUpdateBudget = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

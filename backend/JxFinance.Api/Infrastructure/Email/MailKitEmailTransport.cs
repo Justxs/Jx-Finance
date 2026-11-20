@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
 using JxFinance.Infrastructure.Configuration;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -36,7 +37,7 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
             EmailHtml.MarkContentId;
         message.Body = body.ToMessageBody();
 
-        using var client = new SmtpClient
+        await using var client = new SmtpClient
         {
             Timeout = options.Value.Email.SendTimeoutSeconds * 1000,
         };

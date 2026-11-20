@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net.Http.Json;
 using JxFinance.Domain.Investments;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.MarketPrices;

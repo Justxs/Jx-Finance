@@ -1,3 +1,4 @@
+import { useFormatForDisplay } from "@tanstack/react-hotkeys";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog/dialog";
@@ -17,6 +18,7 @@ interface RowProps {
 
 export function ShortcutRow({ shortcut }: Readonly<RowProps>) {
   const { t } = useTranslation();
+  const formatForDisplay = useFormatForDisplay();
 
   return (
     <li className="flex items-center justify-between gap-3 border-b py-1.5">
@@ -28,7 +30,7 @@ export function ShortcutRow({ shortcut }: Readonly<RowProps>) {
               <span className="text-xs text-muted-foreground">{t("shortcuts.then")}</span>
             ) : null}
             <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm border bg-muted/40 px-1 font-mono text-xs">
-              {shortcutKeyLabel(key)}
+              {shortcutKeyLabel(key, formatForDisplay)}
             </kbd>
           </Fragment>
         ))}

@@ -7,18 +7,23 @@ namespace JxFinance.Tests.Unit;
 
 public sealed class PhotoLocationTests
 {
+    public static TheoryData<string, string, decimal, decimal> SignedReferences => new()
+    {
+        { "N", "E", 54.68694m, 25.28917m },
+        { "S", "E", -54.68694m, 25.28917m },
+        { "N", "W", 54.68694m, -25.28917m },
+        { "S", "W", -54.68694m, -25.28917m },
+    };
+
     [Theory]
-    [InlineData("N", "E", 54.68694, 25.28917)]
-    [InlineData("S", "E", -54.68694, 25.28917)]
-    [InlineData("N", "W", 54.68694, -25.28917)]
-    [InlineData("S", "W", -54.68694, -25.28917)]
-    public void The_references_sign_the_degrees_minutes_and_seconds(string latitudeRef, string longitudeRef, double latitude, double longitude)
+    [MemberData(nameof(SignedReferences))]
+    public void The_references_sign_the_degrees_minutes_and_seconds(string latitudeRef, string longitudeRef, decimal latitude, decimal longitude)
     {
         var photo = SamplePhoto.JpegAt((54, 41, 1300), latitudeRef, (25, 17, 2100), longitudeRef);
 
         var position = PhotoLocation.Read(photo, AttachmentContent.Jpeg);
 
-        Assert.Equal(new PhotoPosition((decimal)latitude, (decimal)longitude), position);
+        Assert.Equal(new PhotoPosition(latitude, longitude), position);
     }
 
     [Fact]

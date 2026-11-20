@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;

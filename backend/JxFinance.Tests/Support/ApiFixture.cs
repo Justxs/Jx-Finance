@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using FastEndpoints.Testing;
 using JxFinance.Common.Discord;
 using JxFinance.Common.Email;

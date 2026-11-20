@@ -43,6 +43,35 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (RequestInit["headers"] | Record<string, string | undefined>)[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -70,29 +99,10 @@ export const createUser = async (
   createUserRequest: CreateUserRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getCreateUserUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createUserRequest),
   });
 };
@@ -141,6 +151,7 @@ export type CreateUserMutationError = ErrorType<ProblemDetails>;
 export type CreateUserMutationVariables = { data: CreateUserRequest };
 
 /**
+ * Provisions a user account with an initial password. There is no self-service sign-up: accounts exist only because an administrator created them. Administrators only.
  * @summary Create a user
  */
 export const useCreateUser = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -225,6 +236,10 @@ export const getUsersSuspenseQueryOptions = <
 export type UsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof users>>>;
 export type UsersSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
+ * @summary List users
+ */
 export function useUsersSuspense<
   TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
@@ -236,17 +251,10 @@ export function useUsersSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useUsersSuspense<
-  TData = Awaited<ReturnType<typeof users>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: UsersParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
+ * @summary List users
+ */
 export function useUsersSuspense<
   TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
@@ -259,9 +267,24 @@ export function useUsersSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
  * @summary List users
  */
-
+export function useUsersSuspense<
+  TData = Awaited<ReturnType<typeof users>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: UsersParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
+ * @summary List users
+ */
 export function useUsersSuspense<
   TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
@@ -295,29 +318,10 @@ export const updateMyProfile = async (
   updateMyProfileRequest: UpdateMyProfileRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyProfileUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyProfileRequest),
   });
 };
@@ -368,6 +372,7 @@ export type UpdateMyProfileMutationError = ErrorType<ProblemDetails | void>;
 export type UpdateMyProfileMutationVariables = { data: UpdateMyProfileRequest };
 
 /**
+ * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. Any signed-in user may call it, not only administrators. Which notifications are emailed is saved separately, through PUT users/me/email-notifications.
  * @summary Update your own profile
  */
 export const useUpdateMyProfile = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -401,29 +406,10 @@ export const updateMyDigestScopes = async (
   updateMyDigestScopesRequest: UpdateMyDigestScopesRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyDigestScopesUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyDigestScopesRequest),
   });
 };
@@ -474,6 +460,7 @@ export type UpdateMyDigestScopesMutationError = ErrorType<ProblemDetails | void>
 export type UpdateMyDigestScopesMutationVariables = { data: UpdateMyDigestScopesRequest };
 
 /**
+ * Replaces the scopes your monthly digest covers, for email, Discord and Telegram alike: everything, the default, which is your own records and everything shared into any of your households, and each household listed, whose digest reads the month as the dashboard does with that household picked. Each chosen scope is its own message. The digest is still sent only when you tick it for email, Discord or Telegram, and nothing is sent when no scope is chosen.
  * @summary Choose which scopes get a monthly digest
  */
 export const useUpdateMyDigestScopes = <
@@ -510,29 +497,10 @@ export const updateMyDiscordNotifications = async (
   updateMyDiscordNotificationsRequest: UpdateMyDiscordNotificationsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyDiscordNotificationsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyDiscordNotificationsRequest),
   });
 };
@@ -586,6 +554,7 @@ export type UpdateMyDiscordNotificationsMutationVariables = {
 };
 
 /**
+ * Replaces the list of notification kinds of yours that are also posted to the installation's Discord channel, with your name in front. Every in-app notification of a chosen kind then queues one Discord message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Discord on and saved a webhook. The channel is shared: everyone who can read it sees what you tick. An empty list is allowed and posts nothing.
  * @summary Choose which notifications are posted to Discord
  */
 export const useUpdateMyDiscordNotifications = <
@@ -622,29 +591,10 @@ export const updateMyEmailNotifications = async (
   updateMyEmailNotificationsRequest: UpdateMyEmailNotificationsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyEmailNotificationsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyEmailNotificationsRequest),
   });
 };
@@ -698,6 +648,7 @@ export type UpdateMyEmailNotificationsMutationVariables = {
 };
 
 /**
+ * Replaces the list of notification kinds that are also sent to your email address. Every in-app notification of a chosen kind then queues one email, at most once per kind, subject and day. Nothing is sent while the installation has no working mail server or while your address is not confirmed. An empty list is allowed and sends no notification email; account mail such as password reset links does not depend on it.
  * @summary Choose which notifications you are emailed
  */
 export const useUpdateMyEmailNotifications = <
@@ -789,6 +740,10 @@ export const getExportMyDataSuspenseQueryOptions = <
 export type ExportMyDataSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof exportMyData>>>;
 export type ExportMyDataSuspenseQueryError = ErrorType<ProblemDetails | void>;
 
+/**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
+ * @summary Download your own data
+ */
 export function useExportMyDataSuspense<
   TData = Awaited<ReturnType<typeof exportMyData>>,
   TError = ErrorType<ProblemDetails | void>,
@@ -802,19 +757,10 @@ export function useExportMyDataSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportMyDataSuspense<
-  TData = Awaited<ReturnType<typeof exportMyData>>,
-  TError = ErrorType<ProblemDetails | void>,
->(
-  params?: ExportMyDataParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
+ * @summary Download your own data
+ */
 export function useExportMyDataSuspense<
   TData = Awaited<ReturnType<typeof exportMyData>>,
   TError = ErrorType<ProblemDetails | void>,
@@ -829,9 +775,26 @@ export function useExportMyDataSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
  * @summary Download your own data
  */
-
+export function useExportMyDataSuspense<
+  TData = Awaited<ReturnType<typeof exportMyData>>,
+  TError = ErrorType<ProblemDetails | void>,
+>(
+  params?: ExportMyDataParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportMyData>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Streams a zip archive named jx-finance-export-<date>.zip with every record you own: data.json in the backup's table format (format jx-finance-user-export, version 1, with your user id), accounts.csv, transactions.csv and transfers.csv for a spreadsheet, and ledger.beancount, a Beancount double-entry journal of your own accounts, assets and debts with a balance assertion for each. It holds your accounts, personal, shared and archived, with everything recorded on them by anyone, the transfers that touch them, your categories, tags, rules, budgets, goals, assets, debts, recurring entries, notifications, month closes and trash, and the categories, tags and securities your records point at. It never holds passwords, two-factor secrets, passkeys, API tokens, sessions, the broker token, households, memberships or the activity log, nor another member's accounts. The active household is ignored. Nothing is kept on the server, and the answer carries no Content-Length. POST /api/users/me/import loads the file into an empty member.
+ * @summary Download your own data
+ */
 export function useExportMyDataSuspense<
   TData = Awaited<ReturnType<typeof exportMyData>>,
   TError = ErrorType<ProblemDetails | void>,
@@ -923,6 +886,7 @@ export type ImportMyDataMutationError = ErrorType<ProblemDetails | void>;
 export type ImportMyDataMutationVariables = { data: ImportMyDataRequest };
 
 /**
+ * Loads the zip that GET /api/users/me/export wrote, from this or another installation, into the signed-in member, in one database transaction: either everything is imported or nothing changes. The member must have no accounts or tags yet (import.targetNotEmpty); the starter categories nothing uses are moved to the trash. Every record becomes the member's own and personal: household sharing, households, notifications, shared expenses, settlements, month closes, the trash, the broker connection and preferences are not imported. A security that already exists with the same id is reused, records that point at something the file does not hold are dropped or unlinked, and attached files are written back after their SHA-256 has been checked; an attachment without its file is dropped. An export taken on this version or an older one is accepted: columns added since get their defaults or the values the startup backfills give, and tables added since stay empty. One taken on a newer version answers import.newerVersion, and one whose database version this application does not know answers import.unknownVersion. Importing records that already exist here, such as the same file twice, answers import.alreadyPresent. Rate limited to 5 imports an hour per client.
  * @summary Import a download of your data
  */
 export const useImportMyData = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -956,29 +920,10 @@ export const updateMyLanguage = async (
   updateMyLanguageRequest: UpdateMyLanguageRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyLanguageUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyLanguageRequest),
   });
 };
@@ -1029,6 +974,7 @@ export type UpdateMyLanguageMutationError = ErrorType<ProblemDetails | void>;
 export type UpdateMyLanguageMutationVariables = { data: UpdateMyLanguageRequest };
 
 /**
+ * Saves the language you picked in the interface, en or lt, so that every email, Discord and Telegram message the server sends you is written in it. Until you save one, messages use the installation's default language. The interface itself keeps its language per browser.
  * @summary Save your language
  */
 export const useUpdateMyLanguage = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1062,29 +1008,10 @@ export const updateMyTelegramNotifications = async (
   updateMyTelegramNotificationsRequest: UpdateMyTelegramNotificationsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateMyTelegramNotificationsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMyTelegramNotificationsRequest),
   });
 };
@@ -1138,6 +1065,7 @@ export type UpdateMyTelegramNotificationsMutationVariables = {
 };
 
 /**
+ * Replaces the list of notification kinds of yours that are also posted to the installation's Telegram group, with your name in front. Every in-app notification of a chosen kind then queues one Telegram message, at most once per kind, subject and day. Nothing is posted while an administrator has not switched Telegram on and saved a bot token and a group. The group is shared: everyone in it sees what you tick. An empty list is allowed and posts nothing.
  * @summary Choose which notifications are posted to Telegram
  */
 export const useUpdateMyTelegramNotifications = <
@@ -1224,6 +1152,7 @@ export type DeactivateUserMutationError = ErrorType<ProblemDetails>;
 export type DeactivateUserMutationVariables = { id: string };
 
 /**
+ * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request and every personal API token of the user is deleted. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
  * @summary Deactivate a user
  */
 export const useDeactivateUser = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1307,6 +1236,7 @@ export type ReactivateUserMutationError = ErrorType<ProblemDetails>;
 export type ReactivateUserMutationVariables = { id: string };
 
 /**
+ * Lifts the deactivation set by the deactivate operation and clears the failed sign-in counter, so the user can sign in again with the password they had. Sessions from before the deactivation stay revoked. Calling it for a user who is already active changes nothing and still answers 204, so it is safe to repeat. Administrators only.
  * @summary Reactivate a deactivated user
  */
 export const useReactivateUser = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1341,29 +1271,10 @@ export const resetUserPassword = async (
   resetUserPasswordRequest: ResetUserPasswordRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getResetUserPasswordUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(resetUserPasswordRequest),
   });
 };
@@ -1414,6 +1325,7 @@ export type ResetUserPasswordMutationError = ErrorType<ProblemDetails | void>;
 export type ResetUserPasswordMutationVariables = { id: string; data: ResetUserPasswordRequest };
 
 /**
+ * Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session and personal API token of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off, the recovery codes are invalidated and every passkey is removed as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.
  * @summary Set a new password for another user
  */
 export const useResetUserPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1448,29 +1360,10 @@ export const updateUserRole = async (
   updateUserRoleRequest: UpdateUserRoleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getUpdateUserRoleUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateUserRoleRequest),
   });
 };
@@ -1519,6 +1412,7 @@ export type UpdateUserRoleMutationError = ErrorType<ProblemDetails>;
 export type UpdateUserRoleMutationVariables = { id: string; data: UpdateUserRoleRequest };
 
 /**
+ * Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last active administrator cannot be demoted, so an instance is never left without one. Role changes and deactivations are applied one at a time, so two administrators demoting each other at the same moment cannot both succeed. Administrators only.
  * @summary Change a user role
  */
 export const useUpdateUserRole = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

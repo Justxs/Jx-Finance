@@ -27,6 +27,35 @@ import type { CreateTagRequest, ProblemDetails, TagResponse, UpdateTagRequest } 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (RequestInit["headers"] | Record<string, string | undefined>)[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -54,29 +83,10 @@ export const createTag = async (
   createTagRequest: CreateTagRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TagResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TagResponse>(getCreateTagUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createTagRequest),
   });
 };
@@ -125,6 +135,7 @@ export type CreateTagMutationError = ErrorType<ProblemDetails>;
 export type CreateTagMutationVariables = { data: CreateTagRequest };
 
 /**
+ * Adds a tag that transactions can be marked with. A tag says what a payment was for across categories — a holiday, a renovation, something to be reimbursed — so it has no flow type and the same tag can sit on income and on an expense. Names are unique per owner, ignoring case.
  * @summary Create a tag
  */
 export const useCreateTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -193,6 +204,10 @@ export const getTagsSuspenseQueryOptions = <
 export type TagsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof tags>>>;
 export type TagsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -203,16 +218,10 @@ export function useTagsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTagsSuspense<
-  TData = Awaited<ReturnType<typeof tags>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof tags>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -224,9 +233,23 @@ export function useTagsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
  * @summary List tags
  */
-
+export function useTagsSuspense<
+  TData = Awaited<ReturnType<typeof tags>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof tags>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.
+ * @summary List tags
+ */
 export function useTagsSuspense<
   TData = Awaited<ReturnType<typeof tags>>,
   TError = ErrorType<ProblemDetails>,
@@ -309,6 +332,7 @@ export type DeleteTagMutationError = ErrorType<ProblemDetails>;
 export type DeleteTagMutationVariables = { id: string };
 
 /**
+ * Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag. The transactions it was on are recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the tag back on them.
  * @summary Delete a tag
  */
 export const useDeleteTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -343,29 +367,10 @@ export const updateTag = async (
   updateTagRequest: UpdateTagRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TagResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TagResponse>(getUpdateTagUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateTagRequest),
   });
 };
@@ -414,6 +419,7 @@ export type UpdateTagMutationError = ErrorType<ProblemDetails>;
 export type UpdateTagMutationVariables = { id: string; data: UpdateTagRequest };
 
 /**
+ * Renames a tag or moves it between personal and shared. A household member can rename a shared tag; only its owner can change the sharing or delete it. The transactions already marked with the tag keep it.
  * @summary Update a tag
  */
 export const useUpdateTag = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

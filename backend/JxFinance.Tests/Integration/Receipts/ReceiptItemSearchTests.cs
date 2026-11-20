@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Receipts;
 using JxFinance.Tests.Support;

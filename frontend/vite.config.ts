@@ -391,6 +391,12 @@ export default defineConfig({
         },
       },
       {
+        files: ["src/test/translate.ts"],
+        rules: {
+          "typescript/no-unsafe-type-assertion": "off",
+        },
+      },
+      {
         files: ["src/test/stories/story-session.ts"],
         rules: {
           "import/no-relative-parent-imports": "off",

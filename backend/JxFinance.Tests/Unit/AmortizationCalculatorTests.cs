@@ -8,13 +8,18 @@ public sealed class AmortizationCalculatorTests
 {
     private static readonly DateOnly First = new(2026, 1, 15);
 
+    public static TheoryData<decimal, decimal, int, decimal> AnnuityValues => new()
+    {
+        { 100000m, 5m, 360, 536.82m },
+        { 200000m, 6m, 360, 1199.10m },
+        { 10000m, 7m, 60, 198.01m },
+        { 150000m, 4.5m, 180, 1147.49m },
+        { 1200m, 0m, 12, 100.00m },
+        { 1000m, 12m, 1, 1010.00m },
+    };
+
     [Theory]
-    [InlineData(100000, 5, 360, 536.82)]
-    [InlineData(200000, 6, 360, 1199.10)]
-    [InlineData(10000, 7, 60, 198.01)]
-    [InlineData(150000, 4.5, 180, 1147.49)]
-    [InlineData(1200, 0, 12, 100.00)]
-    [InlineData(1000, 12, 1, 1010.00)]
+    [MemberData(nameof(AnnuityValues))]
     public void Level_payment_matches_the_known_annuity_values(decimal principal, decimal rate, int term, decimal expected) =>
         Assert.Equal(expected, AmortizationCalculator.LevelPayment(principal, rate, term));
 

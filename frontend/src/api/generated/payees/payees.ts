@@ -27,6 +27,35 @@ import type { PayeeNameResponse, ProblemDetails, SetPayeeNameRequest } from "../
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (RequestInit["headers"] | Record<string, string | undefined>)[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -91,6 +120,10 @@ export const getPayeeNamesSuspenseQueryOptions = <
 export type PayeeNamesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof payeeNames>>>;
 export type PayeeNamesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the display names you gave to payees, ordered by name. A payee is the normalized description every transaction stores as its payee key; a name is personal and shows in place of the bank's text wherever that key appears for you.
+ * @summary List your payee names
+ */
 export function usePayeeNamesSuspense<
   TData = Awaited<ReturnType<typeof payeeNames>>,
   TError = ErrorType<ProblemDetails>,
@@ -101,16 +134,10 @@ export function usePayeeNamesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePayeeNamesSuspense<
-  TData = Awaited<ReturnType<typeof payeeNames>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof payeeNames>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the display names you gave to payees, ordered by name. A payee is the normalized description every transaction stores as its payee key; a name is personal and shows in place of the bank's text wherever that key appears for you.
+ * @summary List your payee names
+ */
 export function usePayeeNamesSuspense<
   TData = Awaited<ReturnType<typeof payeeNames>>,
   TError = ErrorType<ProblemDetails>,
@@ -122,9 +149,23 @@ export function usePayeeNamesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the display names you gave to payees, ordered by name. A payee is the normalized description every transaction stores as its payee key; a name is personal and shows in place of the bank's text wherever that key appears for you.
  * @summary List your payee names
  */
-
+export function usePayeeNamesSuspense<
+  TData = Awaited<ReturnType<typeof payeeNames>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof payeeNames>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the display names you gave to payees, ordered by name. A payee is the normalized description every transaction stores as its payee key; a name is personal and shows in place of the bank's text wherever that key appears for you.
+ * @summary List your payee names
+ */
 export function usePayeeNamesSuspense<
   TData = Awaited<ReturnType<typeof payeeNames>>,
   TError = ErrorType<ProblemDetails>,
@@ -157,29 +198,10 @@ export const setPayeeName = async (
   setPayeeNameRequest: SetPayeeNameRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PayeeNameResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<PayeeNameResponse>(getSetPayeeNameUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(setPayeeNameRequest),
   });
 };
@@ -228,6 +250,7 @@ export type SetPayeeNameMutationError = ErrorType<ProblemDetails>;
 export type SetPayeeNameMutationVariables = { data: SetPayeeNameRequest };
 
 /**
+ * Gives a payee a display name, or renames it. The payee is normalized the way every transaction's payee key is, so a raw bank description such as "MAXIMA LT 1234 VILNIUS" and a payeeKey from the report name the same payee. The name is yours alone and changes no transaction.
  * @summary Name a payee
  */
 export const useSetPayeeName = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -313,6 +336,7 @@ export type DeletePayeeNameMutationError = ErrorType<ProblemDetails>;
 export type DeletePayeeNameMutationVariables = { id: string };
 
 /**
+ * Removes a display name, so the payee reads as the bank's description again. No transaction changes.
  * @summary Remove a payee name
  */
 export const useDeletePayeeName = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
