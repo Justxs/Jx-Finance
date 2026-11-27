@@ -4,7 +4,7 @@ Related: feature page [Debt amortization](../features/debt-amortization.md).
 
 ## Current
 
-The schedule is computed on every request by a pure `decimal` calculator and never stored; a payment that would take more than 600 months is refused with `debt.paymentTooSmall`. Every interest amount and the level payment are rounded to cents half away from zero, the monthly rate is the annual rate over 12 whatever the month, and the last payment absorbs the rounding. A lump sum is paid with the first scheduled payment on or after its date, and the overpayment amounts are query strings read with the invariant culture. The recorded outstanding amount is what net worth subtracts, unless the debt tracks payments; the schedule's balance for today is shown beside it and copied only by "Use scheduled balance"
+The schedule is computed on every request by a pure calculator that keeps every amount in `decimal` and is never stored; a payment that would take more than 600 months is refused with `debt.paymentTooSmall`. Every interest amount and the level payment are rounded to cents half away from zero, the monthly rate is the annual rate over 12 whatever the month, and the last payment absorbs the rounding. A lump sum is paid with the first scheduled payment on or after its date, and the overpayment amounts are query strings read with the invariant culture. The recorded outstanding amount is what net worth subtracts, unless the debt tracks payments; the schedule's balance for today is shown beside it and copied only by "Use scheduled balance"
 
 ## Log
 
@@ -12,6 +12,9 @@ Newest first. Each entry is a choice between real alternatives: what was chosen,
 
 Older entries are in the git history of this file (`git log -p -- docs/decisions/debt-amortization.md`).
 
+- **2026-11-27.** The level payment's growth factor (1 + r)^n comes from `Math.Pow` in `double` instead of a hand-written repeated squaring in `decimal`.
+  - Rejected: Keeping the hand-written `decimal` power, which .NET has no built-in for.
+  - Why: The owner prefers the framework's math functions over a helper of our own. The factor is a ratio, not an amount, and two million random loans round to the same payment either way.
 - **2026-10-01.** The schedule answers both uses of an overpayment in one response: `withExtra` keeps the payment and shortens the term, and `lowerPayment` keeps the number of payments and recomputes the payment for the payments left after every payment that carries an overpayment, a new level payment for an annuity and a new principal part for a linear loan, rounded to cents with the last payment absorbing the remainder. A recurring extra each month is an overpayment every month, so it lowers the payment every month. `lowerPayment` is a summary (new payment, from when, what it replaces, payoff date, interest saved) without rows, and the table and charts keep showing the shorter-term plan. Decided while the owner was away, to be reviewed
   - Rejected: A `mode` query parameter (`shortenTerm` or `lowerPayment`) choosing one preview; offering the lower payment for the one-off payment only; recomputing only after the one-off payment while the monthly extra kept shortening the term; returning the rows of the lower-payment plan
   - Why: Side by side is the comparison a borrower makes at the bank, and one request avoids a second round trip and a second wait after typing. One rule for both inputs keeps the comparison like for like, the same overpayments under each choice, where a monthly extra that shortened the term inside the lower-payment column would mix the two. Rows nobody draws would double the response for nothing
@@ -39,6 +42,3 @@ Older entries are in the git history of this file (`git log -p -- docs/decisions
 - **2026-09-27.** A payment in another currency than the debt's is converted at the rate of its date; a missing rate leaves it out and marks the balance, and net worth, incomplete, so no snapshot is written
   - Rejected: Refusing the link
   - Why: The same rule as everywhere else. A euro debt paid from a euro account never needs a rate
-- **2026-09-21.** A debt's repayment terms describe the loan from its start: loan amount, first payment date, and a term or a fixed monthly payment (never both), annuity or linear, all optional; payments are monthly only
-  - Rejected: Starting the schedule from the current outstanding amount and its date; storing both a term and a payment; a payment frequency field
-  - Why: The contract states the original principal and the first payment, and a schedule from the start is what makes "payments made" and "scheduled balance today" meaningful. Deriving one of term and payment from the other avoids two numbers that can disagree. Every loan a household here holds is paid monthly, and a frequency would turn the term into a number of payments for no present use

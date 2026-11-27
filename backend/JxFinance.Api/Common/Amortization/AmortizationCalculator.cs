@@ -20,7 +20,7 @@ public static class AmortizationCalculator
             return Money.Round(principal / termMonths);
         }
 
-        var growth = Power(1 + rate, termMonths);
+        var growth = (decimal)Math.Pow((double)(1 + rate), termMonths);
         return Money.Round(principal * (rate * growth / (growth - 1)));
     }
 
@@ -112,24 +112,4 @@ public static class AmortizationCalculator
 
     private static Result<AmortizationSchedule> PaymentTooSmall() =>
         Result<AmortizationSchedule>.Failure(ErrorCodes.DebtPaymentTooSmall, PaymentTooSmallMessage);
-
-    private static decimal Power(decimal value, int exponent)
-    {
-        var result = 1m;
-        while (exponent > 0)
-        {
-            if ((exponent & 1) == 1)
-            {
-                result *= value;
-            }
-
-            exponent >>= 1;
-            if (exponent > 0)
-            {
-                value *= value;
-            }
-        }
-
-        return result;
-    }
 }

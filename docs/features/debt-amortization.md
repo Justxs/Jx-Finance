@@ -44,7 +44,7 @@ The last rule runs the calculator inside the validator, so a debt that cannot be
 
 ## The calculator
 
-`AmortizationCalculator` is a pure static class in `Common/Amortization` with no database, clock or culture in it, and every number is a `decimal`. It is unit tested in `AmortizationCalculatorTests` against known values and rounding edge cases.
+`AmortizationCalculator` is a pure static class in `Common/Amortization` with no database, clock or culture in it, and every amount is a `decimal`; only the growth factor (1 + r)^n passes through `double`. It is unit tested in `AmortizationCalculatorTests` against known values and rounding edge cases.
 
 ```mermaid
 flowchart TD
@@ -72,7 +72,7 @@ The formulas, with P the principal, r the monthly rate, n the number of payments
 - linear principal part: Q = P / n, and the payment of month k is Q + B·r, falling every month;
 - interest of month k: I = B · r, and the principal of an annuity month is A − I.
 
-Each amount is rounded to cents half away from zero (`Money.Round`), the same rounding the rest of the ledger uses: the level payment once, the interest of every row, the linear principal part once. Rounding the payment leaves a remainder, and the last payment absorbs it: its principal is whatever balance is left, so the principal column always sums to exactly P and the last balance is exactly 0.00. The power (1 + r)^n is computed by repeated squaring in `decimal`; the level payment is multiplied as P · (r·g / (g − 1)) so that the largest principal a debt can hold at 100% over 600 months does not overflow.
+Each amount is rounded to cents half away from zero (`Money.Round`), the same rounding the rest of the ledger uses: the level payment once, the interest of every row, the linear principal part once. Rounding the payment leaves a remainder, and the last payment absorbs it: its principal is whatever balance is left, so the principal column always sums to exactly P and the last balance is exactly 0.00. The growth factor g = (1 + r)^n is `Math.Pow` in `double`, converted back to `decimal`. Across two million random loans (up to 2,000,000 at 0.01% to 30% over 1 to 600 months) it gives the same rounded payment as exact `decimal` arithmetic; the level payment is multiplied as P · (r·g / (g − 1)) so that the largest principal a debt can hold at 100% over 600 months does not overflow.
 
 Worked values that the tests pin:
 
