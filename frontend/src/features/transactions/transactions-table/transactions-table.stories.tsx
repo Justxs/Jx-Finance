@@ -118,7 +118,7 @@ export const HugeAmounts: Story = {
   play: async ({ canvas, canvasElement }) => {
     const columns = [...canvasElement.querySelectorAll("col")].map((column) => column.className);
     await expect(columns).toContain("w-38");
-    await expect(canvas.getByRole("table")).toHaveClass("min-w-202");
+    await expect(canvas.getByRole("table")).toHaveClass("min-w-211");
     await expect(canvas.getByText("−€1,234,567,890.12")).toHaveClass("whitespace-nowrap");
     await expect(canvas.getByText(/^−IDR\s2,000,000,000(?:\.00)?$/u)).toBeInTheDocument();
     await expect(canvas.getByText("+€1,250,000.00").parentElement).toHaveTextContent(
@@ -300,8 +300,15 @@ export const TagsAndAccountUnderTheDescription: Story = {
     const columns = [...canvas.getByRole("table").querySelectorAll("col")].map(
       (column) => column.className,
     );
-    await expect(columns).toEqual(["w-10", "w-27", "", "w-44", "w-30", "w-23 pointer-coarse:w-29"]);
-    await expect(canvas.getByRole("table")).toHaveClass("min-w-194");
+    await expect(columns).toEqual([
+      "w-10",
+      "w-27",
+      "",
+      "w-1/4 xl:w-3/16",
+      "w-30",
+      "w-23 pointer-coarse:w-29",
+    ]);
+    await expect(canvas.getByRole("table")).toHaveClass("min-w-200");
   },
 };
 
@@ -309,7 +316,7 @@ export const RangeSelection: Story = {
   play: async ({ canvas }) => {
     const boxes = canvas
       .getAllByRole("checkbox", { name: /^Select: / })
-      .filter((box) => box.getAttribute("aria-disabled") !== "true");
+      .filter((box) => box.getAttribute("aria-readonly") !== "true");
     const [start, , , end, after, , last] = boxes;
     if (!start || !end || !after || !last) {
       throw new Error("the story needs seven selectable rows");

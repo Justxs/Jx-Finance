@@ -101,7 +101,7 @@ export const UploadResultWithWarnings: Story = {
     await expect(await result.findByText("2 stock splits booked.")).toBeVisible();
     await expect(result.getByText("Check your holdings")).toBeVisible();
     await expect(result.getByText("Merger or takeover: 1")).toBeVisible();
-    await expect(result.getByRole("rowheader", { name: "NVDA" })).toBeVisible();
+    await expect(result.getByRole("cell", { name: "NVDA" })).toBeVisible();
   },
 };
 

@@ -82,7 +82,7 @@ const fallingItems = netWorthHistoryItems.map((item, index) => ({
 export const WithPace: Story = {
   args: { pace: true },
   play: async ({ canvas }) => {
-    await canvas.findByText("At this pace");
+    await expect(await canvas.findByText("At this pace", { selector: "li" })).toBeVisible();
   },
 };
 

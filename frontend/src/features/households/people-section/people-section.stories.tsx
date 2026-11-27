@@ -32,7 +32,9 @@ export const Default: Story = {
 
 export const RecordPayment: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(first(await canvas.findAllByRole("button", { name: "Record payment" })));
+    await userEvent.click(
+      first(await canvas.findAllByRole("button", { name: /^Record payment: /u })),
+    );
     const dialog = await openedDialog();
     await expect(within(dialog).getByText("Record payment with Jonas")).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }));
@@ -42,7 +44,7 @@ export const RecordPayment: Story = {
 
 export const ShowHistory: Story = {
   play: async ({ canvas }) => {
-    const toggle = first(await canvas.findAllByRole("button", { name: "Show history" }));
+    const toggle = first(await canvas.findAllByRole("button", { name: /^Show history: /u }));
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await expect(await canvas.findByText("Vakarienė Senamiestyje")).toBeVisible();

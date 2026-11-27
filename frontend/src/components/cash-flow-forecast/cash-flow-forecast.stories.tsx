@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getCashFlowForecastMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -27,8 +27,10 @@ export const TryingAPayment: Story = {
     await userEvent.click(await canvas.findByText("Try a payment"));
     await userEvent.type(canvas.getByRole("textbox", { name: "Amount" }), "1400");
     await userEvent.click(canvas.getByRole("button", { name: "Show in forecast" }));
-    await expect(await canvas.findByRole("status")).toHaveTextContent(
-      /Includes a payment of .*1,400\.00 from Swedbank einamoji/u,
+    await waitFor(() =>
+      expect(canvas.getByRole("status")).toHaveTextContent(
+        /Includes a payment of .*1,400\.00 from Swedbank einamoji/u,
+      ),
     );
     await userEvent.click(canvas.getByRole("button", { name: "Remove" }));
     await expect(await canvas.findByText("Try a payment")).toBeVisible();
@@ -41,7 +43,7 @@ export const AtRisk: Story = {
       await canvas.findByText(/Swedbank einamoji goes below zero on Oct 1, after Buto nuoma/u),
     ).toBeVisible();
     await expect(canvas.queryByText(/With usual spending, /u)).toBeNull();
-    const table = canvas.getByRole("table", { name: /Entries of Swedbank einamoji/u });
+    const table = canvas.getByRole("region", { name: /Entries of Swedbank einamoji/u });
     await expect(within(table).getByText("Overdue")).toBeVisible();
   },
 };
@@ -53,7 +55,7 @@ export const OnlyWithUsualSpending: Story = {
       await canvas.findByText(/With usual spending, .* may go below zero around Oct 1/u),
     ).toBeVisible();
     await expect(canvas.queryByText(/goes below zero on/u)).toBeNull();
-    await expect(await canvas.findByText("With usual spending")).toBeVisible();
+    await expect(await canvas.findByText("With usual spending", { selector: "li" })).toBeVisible();
   },
 };
 
@@ -68,7 +70,7 @@ export const NoneAtRisk: Story = {
 
 export const VariableEstimated: Story = {
   play: async ({ canvas }) => {
-    const table = await canvas.findByRole("table", { name: /Entries of Swedbank einamoji/u });
+    const table = await canvas.findByRole("region", { name: /Entries of Swedbank einamoji/u });
     const row = within(table).getAllByRole("row", { name: /Ignitis/u })[0];
     await expect(row).toHaveTextContent(/≈ Estimated −€61\.20/u);
   },
@@ -108,7 +110,7 @@ export const ChoosesAnAccount: Story = {
       "Taupomoji sąskaita",
     );
     await expect(
-      await canvas.findByRole("table", { name: /Entries of Taupomoji sąskaita/u }),
+      await canvas.findByRole("region", { name: /Entries of Taupomoji sąskaita/u }),
     ).toBeVisible();
   },
 };

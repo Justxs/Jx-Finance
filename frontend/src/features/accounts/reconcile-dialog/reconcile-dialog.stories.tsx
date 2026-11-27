@@ -114,7 +114,7 @@ export const SavePending: Story = {
     const dialog = await typeBalance("4598.17");
     const save = dialog.getByRole("button", { name: "Save reconciliation" });
     await userEvent.click(save);
-    await expect(save).toBeDisabled();
+    await expect(save).toHaveAttribute("aria-busy", "true");
   },
 };
 

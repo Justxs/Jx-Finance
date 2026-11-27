@@ -30,7 +30,7 @@ export const Default: Story = {
     await expect(list.getByText("swedbank-2026-09.xml")).toBeVisible();
     await expect(list.getByText(/^Swedbank einamoji · arrived /u)).toBeVisible();
     await expect(list.getByText(/^Taupomoji sąskaita · arrived /u)).toBeVisible();
-    await expect(list.getAllByRole("button", { name: "Review" })).toHaveLength(2);
+    await expect(list.getAllByRole("button", { name: /^Review: /u })).toHaveLength(2);
   },
 };
 
@@ -47,7 +47,7 @@ export const Reviewing: Story = {
     }),
   ),
   play: async ({ canvas, args }) => {
-    await userEvent.click(first(await canvas.findAllByRole("button", { name: "Review" })));
+    await userEvent.click(first(await canvas.findAllByRole("button", { name: /^Review: /u })));
     await waitFor(() => expect(args.onReview).toHaveBeenCalled());
     await expect(previewed).toHaveBeenCalledWith({
       accountId: swedbankFile.accountId,

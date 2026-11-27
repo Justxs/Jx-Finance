@@ -25,8 +25,8 @@ export const Default: Story = {
         name: "Portfolio market value and invested cost over time",
       }),
     ).toBeVisible();
-    await expect(canvas.getByText("Market value")).toBeVisible();
-    await expect(canvas.getByText("Invested")).toBeVisible();
+    await expect(canvas.getByText("Market value", { selector: "li" })).toBeVisible();
+    await expect(canvas.getByText("Invested", { selector: "li" })).toBeVisible();
   },
 };
 

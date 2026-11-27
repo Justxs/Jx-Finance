@@ -38,7 +38,7 @@ export const Empty: Story = {
 
 export const ReviewIsPrefilled: Story = {
   play: async ({ canvas }) => {
-    const reviews = await canvas.findAllByRole("button", { name: /^(review|peržiūrėti)$/i });
+    const reviews = await canvas.findAllByRole("button", { name: /^(review|peržiūrėti): /i });
     await userEvent.click(reviews[0]!);
     const dialog = await openedDialog();
     await expect(within(dialog).getByLabelText(/^(name|pavadinimas)$/i)).toHaveValue("LIDL");

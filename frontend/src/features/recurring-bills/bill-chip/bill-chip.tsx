@@ -77,8 +77,8 @@ function ChipName({
         onClick={() => (occurrence.isNextDue ? onConfirm(bill) : onEdit(bill))}
       >
         <span className="sr-only">
-          {occurrence.isNextDue ? t("recurringBills.confirm") : t("actions.edit")}:{" "}
-        </span>
+          {occurrence.isNextDue ? t("recurringBills.confirm") : t("actions.edit")}:
+        </span>{" "}
         <span>{occurrence.name}</span>
       </button>
     </Tooltip>

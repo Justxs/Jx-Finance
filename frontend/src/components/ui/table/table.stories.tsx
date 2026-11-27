@@ -161,7 +161,8 @@ export const WideScrolling: Story = {
   ),
   play: async ({ canvas }) => {
     const region = canvas.getByRole("region", { name: "Spending by month" });
-    await expect(region).toHaveAttribute("tabindex", "0");
+    const overflows = region.scrollWidth > region.clientWidth;
+    await expect(region.getAttribute("tabindex")).toBe(overflows ? "0" : null);
     await expect(region).toContainElement(canvas.getByRole("table"));
   },
 };

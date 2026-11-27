@@ -28,7 +28,7 @@ import { DashboardPage } from "./dashboard-page";
 const meta = {
   title: "Features/Dashboard/DashboardPage",
   component: DashboardPage,
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", route: "/dashboard" },
   decorators: [withPageFrame],
   beforeEach: () => {
     savePreferences({ monthClosePromptHidden: MONTH_CLOSE_MONTH });
@@ -157,7 +157,7 @@ export const StepsBetweenMonths: Story = {
       hidden: true,
     });
     const title = canvas.getByRole("heading", { level: 1 }).textContent;
-    await expect(next).toBeDisabled();
+    await expect(next).toHaveAttribute("aria-disabled", "true");
     await expect(thisMonth.parentElement).toHaveClass("invisible");
 
     await userEvent.click(previous);
@@ -165,7 +165,7 @@ export const StepsBetweenMonths: Story = {
     await waitFor(() =>
       expect(canvas.getByRole("heading", { level: 1 }).textContent).not.toBe(title),
     );
-    await expect(next).toBeEnabled();
+    await expect(next).toHaveAttribute("aria-disabled", "false");
     await expect(thisMonth.parentElement).not.toHaveClass("invisible");
     await userEvent.click(thisMonth);
 
@@ -175,7 +175,7 @@ export const StepsBetweenMonths: Story = {
 };
 
 export const EndedMonthLinksToTheMonthPage: Story = {
-  parameters: { route: "/?month=2026-08" },
+  parameters: { route: "/dashboard?month=2026-08" },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(/august 2026 has ended|mėnuo baigėsi/i)).toBeVisible();
     await expect(

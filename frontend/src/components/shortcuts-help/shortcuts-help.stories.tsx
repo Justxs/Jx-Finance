@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, screen, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { registerShortcuts } from "@/lib/shortcuts";
 import {
   isShortcutsHelpOpen,
@@ -10,7 +10,7 @@ import { openedDialog } from "@/storybook/interactions";
 import { ShortcutsHelp } from "./shortcuts-help";
 
 const storyRouter = {
-  state: { location: { pathname: "/" } },
+  state: { location: { pathname: "/dashboard" } },
   navigate: () => undefined,
 };
 
@@ -58,11 +58,11 @@ export const OpenedByQuestionMark: Story = {
     }),
   play: async () => {
     await expect(screen.queryByRole("dialog")).toBeNull();
-    await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
+    await userEvent.keyboard("{Shift>}?{/Shift}");
     await openedDialog();
-    await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
+    await userEvent.keyboard("{Shift>}?{/Shift}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
+    await userEvent.keyboard("{Shift>}?{/Shift}");
     await openedDialog();
   },
 };

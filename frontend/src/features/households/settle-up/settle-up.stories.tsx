@@ -35,13 +35,15 @@ export const Default: Story = {
     await expect(await canvas.findByText("You are owed €42.50")).toBeVisible();
     await expect(canvas.getByText(`${memberUser.displayName} owes €42.50`)).toBeVisible();
     await expect(canvas.getByText(/^You owe \S*12\.00$/u)).toBeVisible();
-    await expect(canvas.getAllByRole("button", { name: "Record payment" })).toHaveLength(2);
+    await expect(canvas.getAllByRole("button", { name: /^Record payment: /u })).toHaveLength(2);
   },
 };
 
 export const RecordPayment: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(first(await canvas.findAllByRole("button", { name: "Record payment" })));
+    await userEvent.click(
+      first(await canvas.findAllByRole("button", { name: /^Record payment: /u })),
+    );
     const dialog = await openedDialog();
     await userEvent.click(await within(dialog).findByRole("button", { name: "Record payment" }));
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
@@ -67,7 +69,7 @@ export const Even: Story = {
   parameters: withHandlers(getSettleUpMockHandler(evenSettleUp)),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText("Everyone is even.")).toBeVisible();
-    await expect(canvas.queryByRole("button", { name: "Record payment" })).toBeNull();
+    await expect(canvas.queryByRole("button", { name: /^Record payment/u })).toBeNull();
   },
 };
 

@@ -37,7 +37,7 @@ export const Default: Story = {
     );
     await expect(canvas.getByText("about €83.00 a month")).toBeVisible();
     await expect(
-      canvas.getByRole("button", { name: "Create €30.00 monthly budget" }),
+      canvas.getByRole("button", { name: /^Create €30\.00 monthly budget: /u }),
     ).toBeEnabled();
     await expect(canvas.queryByText("Maistas")).toBeNull();
     await expect(canvas.queryByText("Kavinės ir restoranai")).toBeNull();
@@ -55,7 +55,7 @@ export const Create: Story = {
   ),
   play: async ({ canvas }) => {
     await userEvent.click(
-      await canvas.findByRole("button", { name: "Create €83.00 monthly budget" }),
+      await canvas.findByRole("button", { name: /^Create €83\.00 monthly budget: /u }),
     );
     await waitFor(() =>
       expect(created).toHaveBeenCalledWith({

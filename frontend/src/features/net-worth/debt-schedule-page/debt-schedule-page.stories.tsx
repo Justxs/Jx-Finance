@@ -76,8 +76,9 @@ export const PayingExtra: Story = {
       await canvas.findByText(/payments? sooner|įmok\S* anksčiau/i, {}, { timeout: 5000 }),
     ).toBeInTheDocument();
     await expect(canvas.getByText(/^(lower payment|mažesnė įmoka)$/i)).toBeInTheDocument();
+    const payments = within(canvas.getByRole("region", { name: /^(payments|įmokos)$/i }));
     await expect(
-      canvas.getAllByRole("columnheader", { name: /overpayment|permoka/i }),
+      payments.getAllByRole("columnheader", { name: /overpayment|permoka/i }),
     ).toHaveLength(1);
   },
 };

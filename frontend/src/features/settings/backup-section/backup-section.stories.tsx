@@ -122,7 +122,10 @@ export const RestorePending: Story = {
   play: async ({ canvas }) => {
     const dialog = await confirmRestoreOfNewest(canvas);
     await waitFor(() => expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled());
-    await expect(dialog.getByRole("button", { name: /Replace all data/u })).toBeDisabled();
+    await expect(dialog.getByRole("button", { name: /Replace all data/u })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
   },
 };
 

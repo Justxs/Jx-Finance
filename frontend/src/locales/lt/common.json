@@ -1427,6 +1427,7 @@
       "description": "Visi pranešimai rodomi prie varpelio. Pažymėkite, kuriuos taip pat norite gauti už programos ribų.",
       "descriptionInAppOnly": "Visi pranešimai rodomi prie varpelio. Administratorius gali nustatyti el. paštą, Discord arba Telegram, kad jie būtų siunčiami ir už programos ribų.",
       "kind": "Pranešimas",
+      "channels": "Kur siunčiamas kiekvienas pranešimas",
       "inApp": "Programoje",
       "email": "El. paštas",
       "discord": "Discord",

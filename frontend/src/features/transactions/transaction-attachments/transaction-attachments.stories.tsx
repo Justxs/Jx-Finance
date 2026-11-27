@@ -108,7 +108,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText("Čekiai ir failai")).toBeVisible();
+    await expect(await canvas.findByText("Kvitai ir failai")).toBeVisible();
     await expect(
       canvas.getByRole("button", { name: "Pašalinti: maxima-kvitas.jpg" }),
     ).toBeVisible();

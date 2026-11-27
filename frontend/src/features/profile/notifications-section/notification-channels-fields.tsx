@@ -47,7 +47,7 @@ function NotificationChannelsGroup({ fields, channels, off }: Readonly<Props>) {
   return (
     <div className="mt-4 max-w-3xl">
       <Table
-        label={t("profile.notifications.title")}
+        label={t("profile.notifications.channels")}
         className={cn(
           "table-fixed",
           channels.length === 1 && "min-w-76",

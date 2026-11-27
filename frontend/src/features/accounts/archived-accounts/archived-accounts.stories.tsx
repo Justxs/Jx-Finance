@@ -58,7 +58,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
   play: async ({ canvas }) => {
-    await userEvent.click(await canvas.findByText("Archyvuotos sąskaitos (2)"));
+    await userEvent.click(await canvas.findByText("Rodyti 2 sąskaitas"));
     await expect(canvas.getByRole("button", { name: "Atkurti: Senoji SEB kortelė" })).toBeVisible();
   },
 };
@@ -94,7 +94,7 @@ export const RestorePending: Story = {
     const restore = canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" });
     await userEvent.click(restore);
 
-    await waitFor(() => expect(restore).toBeDisabled());
+    await waitFor(() => expect(restore).toHaveAttribute("aria-busy", "true"));
   },
 };
 

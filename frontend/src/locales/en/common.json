@@ -1368,6 +1368,7 @@
       "description": "Every notification appears under the bell. Tick the ones that should also reach you outside the app.",
       "descriptionInAppOnly": "Every notification appears under the bell. An administrator can set up email, Discord or Telegram to send them outside the app too.",
       "kind": "Notification",
+      "channels": "Where each notification goes",
       "inApp": "In app",
       "email": "Email",
       "discord": "Discord",

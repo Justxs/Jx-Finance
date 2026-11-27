@@ -225,7 +225,7 @@ export const ReviewFromTheInbox: Story = {
   play: async () => {
     const waiting = first(inboxFiles);
     const inbox = within(await screen.findByRole("region", { name: "Waiting in the inbox" }));
-    await userEvent.click(first(inbox.getAllByRole("button", { name: "Review" })));
+    await userEvent.click(first(inbox.getAllByRole("button", { name: /^Review: /u })));
 
     const dialog = within(await openedDialog());
     await expect(
@@ -253,7 +253,7 @@ export const InboxPreviewFails: Story = {
   play: async () => {
     const waiting = inboxFiles[1]!;
     const inbox = within(await screen.findByRole("region", { name: "Waiting in the inbox" }));
-    await userEvent.click(inbox.getAllByRole("button", { name: "Review" })[1]!);
+    await userEvent.click(inbox.getAllByRole("button", { name: /^Review: /u })[1]!);
 
     await expect(await screen.findByText(/The file has no column named/u)).toBeVisible();
     await expect(

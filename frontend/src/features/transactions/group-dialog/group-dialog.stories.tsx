@@ -151,7 +151,9 @@ export const Pending: Story = {
   play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByLabelText("Group name"), { target: { value: "Remontas" } });
     await userEvent.click(canvas.getByRole("button", { name: "Group" }));
-    await waitFor(() => expect(canvas.getByRole("button", { name: /Group/ })).toBeDisabled());
+    await waitFor(() =>
+      expect(canvas.getByRole("button", { name: /Group/ })).toHaveAttribute("aria-busy", "true"),
+    );
   },
 };
 

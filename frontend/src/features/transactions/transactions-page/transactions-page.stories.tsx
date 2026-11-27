@@ -354,7 +354,7 @@ export const DuplicatingASplitRow: Story = {
     await chooseMenuItem(first(actions), "Duplicate");
 
     const dialog = within(await openedDialog());
-    const amounts = await dialog.findAllByLabelText("Amount");
+    const amounts = await dialog.findAllByLabelText(/^Amount(?:, line \d+)?$/u);
     await expect(amounts[0]).toHaveValue("128.40");
     await expect(amounts).toHaveLength(4);
     await expect(dialog.getByRole("checkbox", { name: "Split into categories" })).toBeChecked();

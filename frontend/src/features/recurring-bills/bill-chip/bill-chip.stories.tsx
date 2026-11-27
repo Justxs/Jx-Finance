@@ -101,7 +101,7 @@ export const MarkingDone: Story = {
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole("button", { name: `Mark as done: ${unconfirmedOccurrence.name}` }),
-    ).toBeDisabled();
+    ).toHaveAttribute("aria-busy", "true");
   },
 };
 

@@ -29,8 +29,7 @@ export function ExternalLink({
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
-      {children}
-      <span className="sr-only"> ({t("landing.opensInNewTab")})</span>
+      {children} <span className="sr-only">({t("landing.opensInNewTab")})</span>
     </a>
   );
 }

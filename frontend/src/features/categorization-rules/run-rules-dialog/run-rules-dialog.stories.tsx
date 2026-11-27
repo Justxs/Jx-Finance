@@ -23,11 +23,13 @@ export const Default: Story = {};
 
 export const WithoutRules: Story = { args: { hasRules: false } };
 
+const visibleText = ":not([role=status])";
+
 export const PreviewShowsWhatEachRuleWouldTouch: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await expect(
-      await canvas.findByText(/27 transactions in total|iš viso 27/i),
+      await canvas.findByText(/27 transactions in total|iš viso 27/i, { selector: visibleText }),
     ).toBeInTheDocument();
     await expect(canvas.getByRole("button", { name: /apply to|pritaikyti/i })).toBeEnabled();
   },
@@ -38,7 +40,9 @@ export const PreviewFindsNothing: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await expect(
-      await canvas.findByText(/no transaction matches|nė viena operacija nesutampa/i),
+      await canvas.findByText(/no transaction matches|nė viena operacija nesutampa/i, {
+        selector: visibleText,
+      }),
     ).toBeInTheDocument();
   },
 };
@@ -57,7 +61,7 @@ export const RecategorizeChangesThePreview: Story = {
     });
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await expect(
-      await canvas.findByText(/27 transactions in total|iš viso 27/i),
+      await canvas.findByText(/27 transactions in total|iš viso 27/i, { selector: visibleText }),
     ).toBeInTheDocument();
     await userEvent.click(toggle);
     await expect(canvas.queryByText(/in total|iš viso/i)).toBeNull();

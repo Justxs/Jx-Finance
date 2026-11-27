@@ -63,7 +63,7 @@ export const MergerDisposal: Story = {
 export const ChoosesAccounts: Story = {
   play: async ({ canvas }) => {
     await canvas.findByText("Year 2026");
-    await userEvent.click(canvas.getByRole("button", { name: "Accounts" }));
+    await userEvent.click(canvas.getByRole("button", { name: /^Accounts: /u }));
     await userEvent.click(await screen.findByRole("checkbox", { name: "Taupomoji sąskaita" }));
 
     await expect(await canvas.findByText("Chosen: 1")).toBeVisible();
