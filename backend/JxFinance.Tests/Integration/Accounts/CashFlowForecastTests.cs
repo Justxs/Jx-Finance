@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Tests.Support;

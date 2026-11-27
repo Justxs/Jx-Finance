@@ -3,14 +3,14 @@
   "isRoot": true,
   "tools": {
     "microsoft.openapi.hidi": {
-      "version": "3.10.2",
+      "version": "3.11.1",
       "commands": [
         "hidi"
       ],
       "rollForward": false
     },
     "dotnet-ef": {
-      "version": "10.0.14",
+      "version": "11.0.0",
       "commands": [
         "dotnet-ef"
       ],

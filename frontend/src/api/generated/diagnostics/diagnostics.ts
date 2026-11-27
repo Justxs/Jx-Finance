@@ -84,6 +84,10 @@ export const getPingSuspenseQueryOptions = <
 export type PingSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof ping>>>;
 export type PingSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
+ * @summary Ping the API
+ */
 export function usePingSuspense<
   TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
@@ -94,16 +98,10 @@ export function usePingSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePingSuspense<
-  TData = Awaited<ReturnType<typeof ping>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
+ * @summary Ping the API
+ */
 export function usePingSuspense<
   TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
@@ -115,9 +113,23 @@ export function usePingSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
  * @summary Ping the API
  */
-
+export function usePingSuspense<
+  TData = Awaited<ReturnType<typeof ping>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
+ * @summary Ping the API
+ */
 export function usePingSuspense<
   TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,

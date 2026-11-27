@@ -40,6 +40,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -67,29 +102,10 @@ export const createCategorizationRule = async (
   createCategorizationRuleRequest: CreateCategorizationRuleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategorizationRuleResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CategorizationRuleResponse>(getCreateCategorizationRuleUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createCategorizationRuleRequest),
   });
 };
@@ -140,6 +156,7 @@ export type CreateCategorizationRuleMutationError = ErrorType<ProblemDetails>;
 export type CreateCategorizationRuleMutationVariables = { data: CreateCategorizationRuleRequest };
 
 /**
+ * Adds a rule that reads a transaction description and fills in a category, a set of tags, or both. The new rule goes last, so it only decides rows no earlier rule claimed; move it with the reorder operation. A rule never changes anything on its own: it suggests a category in the import preview, and it writes to the ledger only when you ask for a run.
  * @summary Create a categorization rule
  */
 export const useCreateCategorizationRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -214,6 +231,10 @@ export type CategorizationRulesSuspenseQueryResult = NonNullable<
 >;
 export type CategorizationRulesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your own rules in the order they are evaluated, lowest position first. Rules are personal: nobody else sees them, not even a member of a household you share an account with. The first rule whose condition matches a description decides what the row gets, so the order is the rule, not a detail of the list.
+ * @summary List categorization rules
+ */
 export function useCategorizationRulesSuspense<
   TData = Awaited<ReturnType<typeof categorizationRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -226,18 +247,10 @@ export function useCategorizationRulesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCategorizationRulesSuspense<
-  TData = Awaited<ReturnType<typeof categorizationRules>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categorizationRules>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your own rules in the order they are evaluated, lowest position first. Rules are personal: nobody else sees them, not even a member of a household you share an account with. The first rule whose condition matches a description decides what the row gets, so the order is the rule, not a detail of the list.
+ * @summary List categorization rules
+ */
 export function useCategorizationRulesSuspense<
   TData = Awaited<ReturnType<typeof categorizationRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -251,9 +264,25 @@ export function useCategorizationRulesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your own rules in the order they are evaluated, lowest position first. Rules are personal: nobody else sees them, not even a member of a household you share an account with. The first rule whose condition matches a description decides what the row gets, so the order is the rule, not a detail of the list.
  * @summary List categorization rules
  */
-
+export function useCategorizationRulesSuspense<
+  TData = Awaited<ReturnType<typeof categorizationRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categorizationRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your own rules in the order they are evaluated, lowest position first. Rules are personal: nobody else sees them, not even a member of a household you share an account with. The first rule whose condition matches a description decides what the row gets, so the order is the rule, not a detail of the list.
+ * @summary List categorization rules
+ */
 export function useCategorizationRulesSuspense<
   TData = Awaited<ReturnType<typeof categorizationRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -288,29 +317,10 @@ export const runCategorizationRules = async (
   runRulesRequest: RunRulesRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RunRulesResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<RunRulesResponse>(getRunCategorizationRulesUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(runRulesRequest),
   });
 };
@@ -361,6 +371,7 @@ export type RunCategorizationRulesMutationError = ErrorType<ProblemDetails>;
 export type RunCategorizationRulesMutationVariables = { data: RunRulesRequest };
 
 /**
+ * Applies the rules to the transactions the preview counted, in one database transaction: the first rule that claims a row sets its category and adds its tags, and no later rule touches that row again. Tags are added, never removed, so a tag somebody put on a row by hand survives. With recategorize false, the default, a row that already carries a category is not offered to any rule; with true, a matching row's category is replaced. Split transactions are never touched.
  * @summary Run the rules over the ledger
  */
 export const useRunCategorizationRules = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -394,29 +405,10 @@ export const previewCategorizationRun = async (
   runRulesRequest: RunRulesRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RunRulesResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<RunRulesResponse>(getPreviewCategorizationRunUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(runRulesRequest),
   });
 };
@@ -467,6 +459,7 @@ export type PreviewCategorizationRunMutationError = ErrorType<ProblemDetails>;
 export type PreviewCategorizationRunMutationVariables = { data: RunRulesRequest };
 
 /**
+ * Reads the ledger and answers how many rows each rule would fill in, without writing anything. The count is the one the run will use: rules are evaluated in order and a row belongs to the first rule that claims it, so the numbers never double-count a row. By default only rows with no category at all are considered; split transactions are left out, because their categories live on their lines. The matching happens in PostgreSQL, so the size of the ledger does not decide how much the server loads.
  * @summary Count what a run of the rules would touch
  */
 export const usePreviewCategorizationRun = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -557,6 +550,10 @@ export type SuggestedRulesSuspenseQueryResult = NonNullable<
 >;
 export type SuggestedRulesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
+ * @summary List suggested categorization rules
+ */
 export function useSuggestedRulesSuspense<
   TData = Awaited<ReturnType<typeof suggestedRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -570,19 +567,10 @@ export function useSuggestedRulesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSuggestedRulesSuspense<
-  TData = Awaited<ReturnType<typeof suggestedRules>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: SuggestedRulesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
+ * @summary List suggested categorization rules
+ */
 export function useSuggestedRulesSuspense<
   TData = Awaited<ReturnType<typeof suggestedRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -597,9 +585,26 @@ export function useSuggestedRulesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
  * @summary List suggested categorization rules
  */
-
+export function useSuggestedRulesSuspense<
+  TData = Awaited<ReturnType<typeof suggestedRules>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SuggestedRulesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof suggestedRules>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Offers a rule for a payee you keep categorizing by hand. Your own unsplit transactions of the last 12 months are grouped by their normalized description. A group becomes a suggestion when at least three of its rows carry the same category, none of your current rules matches them, and no row of the group carries another category of the same flow type. The pattern is the descriptions' common start, or else a word they all contain, and it never matches a row of another category. Dismissed suggestions and suggestions for a full rule list are left out. With transactionId the answer holds at most the one suggestion that row backs, and only when it has exactly three rows, so a client can offer it once, right after the save that made it; a row you cannot see answers an empty list. Nothing is written.
+ * @summary List suggested categorization rules
+ */
 export function useSuggestedRulesSuspense<
   TData = Awaited<ReturnType<typeof suggestedRules>>,
   TError = ErrorType<ProblemDetails>,
@@ -635,29 +640,10 @@ export const dismissSuggestedRule = async (
   dismissSuggestedRuleRequest: DismissSuggestedRuleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getDismissSuggestedRuleUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(dismissSuggestedRuleRequest),
   });
 };
@@ -708,6 +694,7 @@ export type DismissSuggestedRuleMutationError = ErrorType<ProblemDetails>;
 export type DismissSuggestedRuleMutationVariables = { data: DismissSuggestedRuleRequest };
 
 /**
+ * Stops offering one suggested rule to the signed-in user, on every device. The dismissal is stored against the normalized description key and the category, not against the transactions behind it, so later rows of the same payee do not bring the suggestion back. Dismissing the same pair twice changes nothing, except that two dismissals at the same moment answer the later one with 409. It is not a deletion and has no trash entry.
  * @summary Dismiss a suggested categorization rule
  */
 export const useDismissSuggestedRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -741,29 +728,10 @@ export const testCategorizationRule = async (
   testCategorizationRuleRequest: TestCategorizationRuleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TestCategorizationRuleResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TestCategorizationRuleResponse>(getTestCategorizationRuleUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(testCategorizationRuleRequest),
   });
 };
@@ -814,6 +782,7 @@ export type TestCategorizationRuleMutationError = ErrorType<ProblemDetails>;
 export type TestCategorizationRuleMutationVariables = { data: TestCategorizationRuleRequest };
 
 /**
+ * Answers whether a condition that has not been saved yet would match a sample description, and whether a sample amount falls inside the range. Nothing is read from the ledger and nothing is written, so the form can ask this on every keystroke. The answer separates the two halves of the condition, so a rule that fails only on the amount can say so. The action the rule would take is already in the form, which is why this call does not repeat it.
  * @summary Try a rule against a sample description
  */
 export const useTestCategorizationRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -899,6 +868,7 @@ export type DeleteCategorizationRuleMutationError = ErrorType<ProblemDetails>;
 export type DeleteCategorizationRuleMutationVariables = { id: string };
 
 /**
+ * Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole. The deletion is listed in the trash with the tags the rule had, and POST /api/trash/restore puts it back at its old position with those tags.
  * @summary Delete a categorization rule
  */
 export const useDeleteCategorizationRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -933,29 +903,10 @@ export const updateCategorizationRule = async (
   updateCategorizationRuleRequest: UpdateCategorizationRuleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategorizationRuleResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CategorizationRuleResponse>(getUpdateCategorizationRuleUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateCategorizationRuleRequest),
   });
 };
@@ -1009,6 +960,7 @@ export type UpdateCategorizationRuleMutationVariables = {
 };
 
 /**
+ * Replaces the condition, the narrowing and the action of a rule. The tag list is replaced whole, so an empty list clears the tags the rule would add. The position is not part of this body; reorder with the move operation. Transactions the rule already filled keep what they got: a rule is applied when it runs, never afterwards.
  * @summary Update a categorization rule
  */
 export const useUpdateCategorizationRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1043,29 +995,10 @@ export const moveCategorizationRule = async (
   moveCategorizationRuleRequest: MoveCategorizationRuleRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategorizationRuleResponse[]> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CategorizationRuleResponse[]>(getMoveCategorizationRuleUrl(id), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(moveCategorizationRuleRequest),
   });
 };
@@ -1119,6 +1052,7 @@ export type MoveCategorizationRuleMutationVariables = {
 };
 
 /**
+ * Swaps the rule with its neighbour and answers the whole list in its new order, so a client never has to guess what the positions became. Moving the first rule up or the last rule down changes nothing and still answers the list. Positions stay dense: every move renumbers them 0, 1, 2 in the order the list comes back.
  * @summary Move a rule one place up or down
  */
 export const useMoveCategorizationRule = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

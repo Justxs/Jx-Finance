@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Email;
 using JxFinance.Infrastructure.BackgroundJobs;

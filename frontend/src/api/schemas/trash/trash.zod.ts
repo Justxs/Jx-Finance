@@ -54,6 +54,7 @@ export const TrashResponse = zod.object({
  * Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken. An investment entry is replayed first in first out against the holding as it stands now, with the entry back in its place by date, and is refused when that replay would sell more than was held at any point. A category, a tag, a categorization rule or a household comes back with what its delete cleared, applied only where it is still sound: a transaction that got another category since keeps it, a budget whose slot is taken stays deleted, a tag link to a transaction that is no longer stored is skipped, a rule returns to its old position clamped to the end of the list, and a household re-shares only the rows that are still personal and owned by one of its members. Only an owner of the household can restore it.
  * @summary Restore a deleted record
  */
+export const restoreDeletedBodyEntityIdMin = 1;
 
 export const RestoreDeletedBody = zod.object({
   kind: zod
@@ -81,7 +82,10 @@ export const RestoreDeletedBody = zod.object({
       "contactPayment",
     ])
     .describe("Which kind of record to bring back, as listed by GET /api/trash."),
-  entityId: zod.uuid().min(1).describe("The id the record had before it was deleted."),
+  entityId: zod
+    .uuid()
+    .min(restoreDeletedBodyEntityIdMin)
+    .describe("The id the record had before it was deleted."),
 });
 
 export const RestoreDeletedResponse = zod.void();
@@ -90,11 +94,14 @@ export const RestoreDeletedResponse = zod.void();
  * The undo of POST /api/transactions/bulk-delete: brings back every listed transaction the signed-in user deleted, each through the same checks as POST /api/trash/restore with kind transaction, in one save. A transaction that cannot come back stays in the trash and is listed in refused with the code that single restore would answer: restore.referenceMissing when its account is archived or no longer visible or its category was deleted, restore.detailsLost when its split lines are gone, restore.expired when it was deleted more than 30 days ago, and resource.notFound when you deleted no such transaction. One that is already back counts as restored, which makes the call safe to repeat. Each one also stays restorable on its own from the trash. A read-and-write API token cannot call it.
  * @summary Restore several deleted transactions
  */
+export const restoreTransactionsBodyTransactionIdsItemMin = 1;
+
+export const restoreTransactionsBodyTransactionIdsMin = 1;
 
 export const RestoreTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid().min(1))
-    .min(1)
+    .array(zod.uuid().min(restoreTransactionsBodyTransactionIdsItemMin))
+    .min(restoreTransactionsBodyTransactionIdsMin)
     .describe("Between 1 and 200 ids of deleted transactions."),
 });
 

@@ -11,9 +11,12 @@ import { useSuggestedRuleToast } from "./use-suggested-rule-toast";
 const suggestion = suggestedRules[0]!;
 const question = 'Always categorize descriptions starting with "LIDL" as Maistas?';
 
-afterEach(() => {
+afterEach(async () => {
   act(() => {
     toast.dismiss();
+  });
+  await waitFor(() => {
+    expect(document.querySelector("[data-sonner-toast]")).toBeNull();
   });
 });
 

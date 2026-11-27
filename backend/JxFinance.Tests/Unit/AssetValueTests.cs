@@ -14,41 +14,56 @@ public sealed class AssetValueTests
     public void The_monthly_amount_is_the_loss_over_the_life_rounded_up_to_the_cent() =>
         Assert.Equal(88.55m, AssetValue.MonthlyAmount(Car));
 
-    [Theory]
-    [InlineData("2025-01-30", null)]
-    [InlineData("2025-01-31", 10000.0)]
-    [InlineData("2025-02-27", 10000.0)]
-    [InlineData("2025-02-28", 9911.45)]
-    [InlineData("2025-03-30", 9911.45)]
-    [InlineData("2025-03-31", 9822.90)]
-    [InlineData("2033-01-30", 1587.75)]
-    [InlineData("2033-01-31", 1500.0)]
-    [InlineData("2040-06-01", 1500.0)]
-    public void The_value_falls_in_monthly_steps_on_the_start_day_down_to_the_residual(string date, double? expected) =>
-        Assert.Equal((decimal?)expected, AssetValue.On(Day(date), Bought, Car));
+    public static TheoryData<string, decimal?> MonthlySteps => new()
+    {
+        { "2025-01-30", null },
+        { "2025-01-31", 10000m },
+        { "2025-02-27", 10000m },
+        { "2025-02-28", 9911.45m },
+        { "2025-03-30", 9911.45m },
+        { "2025-03-31", 9822.90m },
+        { "2033-01-30", 1587.75m },
+        { "2033-01-31", 1500m },
+        { "2040-06-01", 1500m },
+    };
+
+    public static TheoryData<string, decimal, string, decimal> Revaluations => new()
+    {
+        { "2026-02-15", 9500m, "2026-02-27", 9500m },
+        { "2026-02-15", 9500m, "2026-02-28", 9411.45m },
+        { "2026-01-31", 5000m, "2026-03-31", 4822.90m },
+        { "2026-01-31", 1000m, "2027-01-31", 1000m },
+    };
+
+    public static TheoryData<string, decimal> EarlyValuations => new()
+    {
+        { "2025-01-30", 12000m },
+        { "2025-01-31", 10000m },
+        { "2025-02-28", 9911.45m },
+    };
 
     [Theory]
-    [InlineData("2026-02-15", 9500, "2026-02-27", 9500)]
-    [InlineData("2026-02-15", 9500, "2026-02-28", 9411.45)]
-    [InlineData("2026-01-31", 5000, "2026-03-31", 4822.90)]
-    [InlineData("2026-01-31", 1000, "2027-01-31", 1000)]
+    [MemberData(nameof(MonthlySteps))]
+    public void The_value_falls_in_monthly_steps_on_the_start_day_down_to_the_residual(string date, decimal? expected) =>
+        Assert.Equal(expected, AssetValue.On(Day(date), Bought, Car));
+
+    [Theory]
+    [MemberData(nameof(Revaluations))]
     public void A_revaluation_restarts_the_decline_from_its_value_at_the_same_monthly_amount(
         string revalued,
-        double value,
+        decimal value,
         string date,
-        double expected)
+        decimal expected)
     {
-        AssetValuation[] valuations = [.. Bought, Valuation(revalued, (decimal)value)];
+        AssetValuation[] valuations = [.. Bought, Valuation(revalued, value)];
 
-        Assert.Equal((decimal)expected, AssetValue.On(Day(date), valuations, Car));
+        Assert.Equal(expected, AssetValue.On(Day(date), valuations, Car));
     }
 
     [Theory]
-    [InlineData("2025-01-30", 12000)]
-    [InlineData("2025-01-31", 10000.0)]
-    [InlineData("2025-02-28", 9911.45)]
-    public void A_valuation_before_the_start_date_counts_until_the_decline_starts(string date, double expected) =>
-        Assert.Equal((decimal)expected, AssetValue.On(Day(date), [Valuation("2024-06-01", 12000m)], Car));
+    [MemberData(nameof(EarlyValuations))]
+    public void A_valuation_before_the_start_date_counts_until_the_decline_starts(string date, decimal expected) =>
+        Assert.Equal(expected, AssetValue.On(Day(date), [Valuation("2024-06-01", 12000m)], Car));
 
     [Fact]
     public void Without_depreciation_the_value_is_the_latest_valuation_on_or_before_the_date()

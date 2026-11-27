@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. A row with existingTransactionId adds nothing: the bank entry is linked to that transaction, which keeps its date, category, tags and description and is then treated as imported, so the same entry is a duplicate next time. The audit entry names the format the rows came from, and for genericCsv the mapping. For a camt.053 file or a mapped CSV with a balance column, statement echoes the preview's closing date, balance and currency, and that balance is recorded as a reconciliation of the account in that currency after the rows are written, replacing one on the same date and currency, and returned with its difference from the ledger. An incoming row sent with asRefund is written as a refund: an expense with the negated amount in the expense category given, linked to refundOfTransactionId when that is set. A row written as a transaction may carry spreadMonths and spreadDirection, which spread it over months as on a transaction created by hand; a transfer or a linked row cannot be spread (value.mustBeEmpty). With group, every row written as a transaction and every linked row is put in one transaction group in the same database transaction: an existing group by id, under the rules of POST /api/transaction-groups/{id}/members, or a new group by name, shared with the household of the account when the account is shared and personal otherwise. Transfers and skipped duplicates are not grouped, and nothing is written when the group refuses a row.
  * @summary Commit previewed statement rows
  */
+export const importConfirmBodyAccountIdMin = 1;
 
 export const importConfirmBodyRowsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const importConfirmBodyRowsItemAsRefundDefault = false;
@@ -19,7 +20,10 @@ export const importConfirmBodyStatementTwoClosingBalanceRegExp = new RegExp(
 );
 
 export const ImportConfirmBody = zod.object({
-  accountId: zod.uuid().min(1).describe("The account the rows post to; must be the one previewed."),
+  accountId: zod
+    .uuid()
+    .min(importConfirmBodyAccountIdMin)
+    .describe("The account the rows post to; must be the one previewed."),
   rows: zod
     .array(
       zod.object({
@@ -222,7 +226,10 @@ export const ImportConfirmResponse = zod.object({
  * Saves how to read one bank's CSV export, so its next file goes straight to the preview with format genericCsv and this mapping's id. Columns are named by their header text, or by their position from 1 when noHeaderRow is true. The amount style decides which columns carry the money: signedNegativeIsExpense and signedPositiveIsExpense read one signed amount column (the second for card statements, where a positive amount is a purchase), debitCredit reads a debit and a credit column, and amountWithDirection reads an amount and a direction column whose value equals expenseValue, ignoring case, for money out. A mapping is personal: nobody else sees it.
  * @summary Save a CSV column mapping
  */
+export const createCsvMappingBodyNameMin = 1;
 export const createCsvMappingBodyNameMax = 60;
+
+export const createCsvMappingBodyDelimiterMin = 1;
 
 export const createCsvMappingBodySkipLinesMin = 0;
 export const createCsvMappingBodySkipLinesMax = 20;
@@ -232,7 +239,7 @@ export const createCsvMappingBodyNoHeaderRowDefault = false;
 export const CreateCsvMappingBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(createCsvMappingBodyNameMin)
     .max(createCsvMappingBodyNameMax)
     .describe("What the provider list calls the mapping, at most 60 characters."),
   encoding: zod
@@ -240,7 +247,10 @@ export const CreateCsvMappingBody = zod.object({
     .describe(
       "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
     ),
-  delimiter: zod.string().min(1).describe("A comma, a semicolon, a tab or a pipe."),
+  delimiter: zod
+    .string()
+    .min(createCsvMappingBodyDelimiterMin)
+    .describe("A comma, a semicolon, a tab or a pipe."),
   skipLines: zod
     .int()
     .min(createCsvMappingBodySkipLinesMin)
@@ -511,7 +521,10 @@ export const DeleteCsvMappingResponse = zod.void();
  * Replaces every setting of a saved mapping, the column names included. Rows already imported keep their references. Without a reference column a row's reference is a hash of its date, amount, currency, description, payee and balance cells, so changing the description, payee or balance column makes rows imported earlier look new.
  * @summary Update a CSV column mapping
  */
+export const updateCsvMappingBodyNameMin = 1;
 export const updateCsvMappingBodyNameMax = 60;
+
+export const updateCsvMappingBodyDelimiterMin = 1;
 
 export const updateCsvMappingBodySkipLinesMin = 0;
 export const updateCsvMappingBodySkipLinesMax = 20;
@@ -519,13 +532,13 @@ export const updateCsvMappingBodySkipLinesMax = 20;
 export const updateCsvMappingBodyNoHeaderRowDefault = false;
 
 export const UpdateCsvMappingBody = zod.object({
-  name: zod.string().min(1).max(updateCsvMappingBodyNameMax),
+  name: zod.string().min(updateCsvMappingBodyNameMin).max(updateCsvMappingBodyNameMax),
   encoding: zod
     .enum(["utf8", "windows1257", "windows1252"])
     .describe(
       "The encoding of a file without a byte-order mark: utf8, windows1257 or windows1252.",
     ),
-  delimiter: zod.string().min(1),
+  delimiter: zod.string().min(updateCsvMappingBodyDelimiterMin),
   skipLines: zod.int().min(updateCsvMappingBodySkipLinesMin).max(updateCsvMappingBodySkipLinesMax),
   amountStyle: zod
     .enum([

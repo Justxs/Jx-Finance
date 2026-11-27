@@ -11,10 +11,11 @@ import * as zod from "zod";
  * Creates a household and makes you its owner. A household is the unit that shared accounts, categories, and transactions belong to; adding members is what gives other people sight of that data.
  * @summary Create a household
  */
+export const createHouseholdBodyNameMin = 1;
 export const createHouseholdBodyNameMax = 100;
 
 export const CreateHouseholdBody = zod.object({
-  name: zod.string().min(1).max(createHouseholdBodyNameMax),
+  name: zod.string().min(createHouseholdBodyNameMin).max(createHouseholdBodyNameMax),
 });
 
 export const CreateHouseholdResponse = zod.object({
@@ -90,10 +91,11 @@ export const HouseholdResponse = zod.object({
  * Changes the household name. Only an owner may do this; a plain member gets 403 rather than 404, because membership already tells them the household exists.
  * @summary Rename a household
  */
+export const updateHouseholdBodyNameMin = 1;
 export const updateHouseholdBodyNameMax = 100;
 
 export const UpdateHouseholdBody = zod.object({
-  name: zod.string().min(1).max(updateHouseholdBodyNameMax),
+  name: zod.string().min(updateHouseholdBodyNameMin).max(updateHouseholdBodyNameMax),
 });
 
 export const UpdateHouseholdResponse = zod.object({
@@ -180,6 +182,7 @@ export const HouseholdAuditResponse = zod.object({
  * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
+export const addMemberBodyEmailMin = 1;
 export const addMemberBodyEmailMax = 256;
 
 export const addMemberBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
@@ -187,7 +190,7 @@ export const addMemberBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 export const AddMemberBody = zod.object({
   email: zod
     .email()
-    .min(1)
+    .min(addMemberBodyEmailMin)
     .max(addMemberBodyEmailMax)
     .regex(addMemberBodyEmailRegExp)
     .describe("Email address of an existing, active user."),
@@ -359,14 +362,17 @@ export const SettleUpResponse = zod.object({
  * Records a payment between two members, which settles that much of their balance in the payment's currency. You must be one of the two. Each must be a member of the household, or a former member who still has an open balance there. With transfer, the ordinary transfer from an account of the payer to an account of the payee is written in the same database transaction; both accounts must be visible to you, owned by the right member and held in the payment's currency. transferId links a transfer that already exists instead, under the same checks. Without either, only the payment is stored and no account changes.
  * @summary Record that one member paid another
  */
+export const createSettlementBodyFromUserIdMin = 1;
+
+export const createSettlementBodyToUserIdMin = 1;
 
 export const createSettlementBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createSettlementBodyNoteMin = 0;
 export const createSettlementBodyNoteMax = 200;
 
 export const CreateSettlementBody = zod.object({
-  fromUserId: zod.uuid().min(1),
-  toUserId: zod.uuid().min(1),
+  fromUserId: zod.uuid().min(createSettlementBodyFromUserIdMin),
+  toUserId: zod.uuid().min(createSettlementBodyToUserIdMin),
   amount: zod
     .stringFormat("decimal", createSettlementBodyAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
@@ -530,13 +536,14 @@ export const DeleteSettlementResponse = zod.void();
  * Splits an expense you paid from one of your own accounts between members of the household. The split keeps a copy of the transaction's date, description and amount, which is what the other members see, even when the account is personal and they cannot see the transaction itself. Each member's amount is computed once, now, and stored: Equal divides the amount evenly, Shares by whole weights from 1 to 100, and Exact takes the amounts given, which must add up to the expense. Cents left over by a division go to the largest remainders, ties in the order the members are listed, so the shares always add up to the amount. A transaction can be split once. Income, transfers, refunds and a housemate's payment on a shared account cannot be split.
  * @summary Split an expense with the household
  */
+export const createSharedExpenseBodyTransactionIdMin = 1;
 
 export const createSharedExpenseBodySharesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateSharedExpenseBody = zod.object({
   transactionId: zod
     .uuid()
-    .min(1)
+    .min(createSharedExpenseBodyTransactionIdMin)
     .describe("The expense to split. It must be on an account you own."),
   method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
   shares: zod

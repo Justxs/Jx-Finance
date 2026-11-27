@@ -34,6 +34,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -112,6 +147,10 @@ export const getTrashSuspenseQueryOptions = <
 export type TrashSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trash>>>;
 export type TrashSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of the records the signed-in user deleted in the last 30 days and has not restored, newest first. Each row names the kind of record, the words it was known by when it was deleted and the moment it went. Only the caller's own deletions are listed, even on a shared account: somebody else's delete is theirs to undo. A kind whose feature is switched off is left out. Nothing here is a promise that the record can still come back — a row whose account was archived afterwards is still listed and explains itself when restoring is attempted.
+ * @summary List what you deleted recently
+ */
 export function useTrashSuspense<
   TData = Awaited<ReturnType<typeof trash>>,
   TError = ErrorType<ProblemDetails>,
@@ -123,17 +162,10 @@ export function useTrashSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTrashSuspense<
-  TData = Awaited<ReturnType<typeof trash>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: TrashParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trash>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the records the signed-in user deleted in the last 30 days and has not restored, newest first. Each row names the kind of record, the words it was known by when it was deleted and the moment it went. Only the caller's own deletions are listed, even on a shared account: somebody else's delete is theirs to undo. A kind whose feature is switched off is left out. Nothing here is a promise that the record can still come back — a row whose account was archived afterwards is still listed and explains itself when restoring is attempted.
+ * @summary List what you deleted recently
+ */
 export function useTrashSuspense<
   TData = Awaited<ReturnType<typeof trash>>,
   TError = ErrorType<ProblemDetails>,
@@ -146,9 +178,24 @@ export function useTrashSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of the records the signed-in user deleted in the last 30 days and has not restored, newest first. Each row names the kind of record, the words it was known by when it was deleted and the moment it went. Only the caller's own deletions are listed, even on a shared account: somebody else's delete is theirs to undo. A kind whose feature is switched off is left out. Nothing here is a promise that the record can still come back — a row whose account was archived afterwards is still listed and explains itself when restoring is attempted.
  * @summary List what you deleted recently
  */
-
+export function useTrashSuspense<
+  TData = Awaited<ReturnType<typeof trash>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: TrashParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trash>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of the records the signed-in user deleted in the last 30 days and has not restored, newest first. Each row names the kind of record, the words it was known by when it was deleted and the moment it went. Only the caller's own deletions are listed, even on a shared account: somebody else's delete is theirs to undo. A kind whose feature is switched off is left out. Nothing here is a promise that the record can still come back — a row whose account was archived afterwards is still listed and explains itself when restoring is attempted.
+ * @summary List what you deleted recently
+ */
 export function useTrashSuspense<
   TData = Awaited<ReturnType<typeof trash>>,
   TError = ErrorType<ProblemDetails>,
@@ -182,29 +229,10 @@ export const restoreDeleted = async (
   restoreDeletedRequest: RestoreDeletedRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getRestoreDeletedUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(restoreDeletedRequest),
   });
 };
@@ -253,6 +281,7 @@ export type RestoreDeletedMutationError = ErrorType<ProblemDetails>;
 export type RestoreDeletedMutationVariables = { data: RestoreDeletedRequest };
 
 /**
+ * Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken. An investment entry is replayed first in first out against the holding as it stands now, with the entry back in its place by date, and is refused when that replay would sell more than was held at any point. A category, a tag, a categorization rule or a household comes back with what its delete cleared, applied only where it is still sound: a transaction that got another category since keeps it, a budget whose slot is taken stays deleted, a tag link to a transaction that is no longer stored is skipped, a rule returns to its old position clamped to the end of the list, and a household re-shares only the rows that are still personal and owned by one of its members. Only an owner of the household can restore it.
  * @summary Restore a deleted record
  */
 export const useRestoreDeleted = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -286,29 +315,10 @@ export const restoreTransactions = async (
   restoreTransactionsRequest: RestoreTransactionsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RestoreTransactionsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<RestoreTransactionsResponse>(getRestoreTransactionsUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(restoreTransactionsRequest),
   });
 };
@@ -359,6 +369,7 @@ export type RestoreTransactionsMutationError = ErrorType<ProblemDetails>;
 export type RestoreTransactionsMutationVariables = { data: RestoreTransactionsRequest };
 
 /**
+ * The undo of POST /api/transactions/bulk-delete: brings back every listed transaction the signed-in user deleted, each through the same checks as POST /api/trash/restore with kind transaction, in one save. A transaction that cannot come back stays in the trash and is listed in refused with the code that single restore would answer: restore.referenceMissing when its account is archived or no longer visible or its category was deleted, restore.detailsLost when its split lines are gone, restore.expired when it was deleted more than 30 days ago, and resource.notFound when you deleted no such transaction. One that is already back counts as restored, which makes the call safe to repeat. Each one also stays restorable on its own from the trash. A read-and-write API token cannot call it.
  * @summary Restore several deleted transactions
  */
 export const useRestoreTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

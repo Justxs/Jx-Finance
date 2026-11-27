@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Records an exchange of one currency for another inside a single account, such as selling euros for dollars at a broker. The sold balance drops, the bought balance rises, and neither side counts as income or expense. An optional fee is booked as an ordinary expense transaction on the same account so it shows in reports and budgets.
  * @summary Convert currency inside an account
  */
+export const createConversionBodyAccountIdMin = 1;
 
 export const createConversionBodyFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createConversionBodyToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -20,7 +21,7 @@ export const createConversionBodyDescriptionMax = 500;
 export const createConversionBodyFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateConversionBody = zod.object({
-  accountId: zod.uuid().min(1),
+  accountId: zod.uuid().min(createConversionBodyAccountIdMin),
   fromAmount: zod
     .stringFormat("decimal", createConversionBodyFromAmountRegExp)
     .describe("Amount sold, as a decimal string greater than zero."),

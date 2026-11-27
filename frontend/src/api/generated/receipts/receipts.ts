@@ -36,6 +36,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -122,6 +157,10 @@ export type ReceiptItemCategoriesSuspenseQueryResult = NonNullable<
 >;
 export type ReceiptItemCategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
+ * @summary List your remembered receipt item categories
+ */
 export function useReceiptItemCategoriesSuspense<
   TData = Awaited<ReturnType<typeof receiptItemCategories>>,
   TError = ErrorType<ProblemDetails>,
@@ -135,19 +174,10 @@ export function useReceiptItemCategoriesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useReceiptItemCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: ReceiptItemCategoriesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
+ * @summary List your remembered receipt item categories
+ */
 export function useReceiptItemCategoriesSuspense<
   TData = Awaited<ReturnType<typeof receiptItemCategories>>,
   TError = ErrorType<ProblemDetails>,
@@ -162,9 +192,26 @@ export function useReceiptItemCategoriesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
  * @summary List your remembered receipt item categories
  */
-
+export function useReceiptItemCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof receiptItemCategories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ReceiptItemCategoriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItemCategories>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Lists the categories receipt reading remembers for you per item name: each entry has the normalized item name it matches (lower case, without accents, digits or units), the category, which may since have been deleted or stopped being shared with you, and when you last filed an item of that name. Most recently used first, at most 100, with total counting every entry that matches. Not readable with a personal API token.
+ * @summary List your remembered receipt item categories
+ */
 export function useReceiptItemCategoriesSuspense<
   TData = Awaited<ReturnType<typeof receiptItemCategories>>,
   TError = ErrorType<ProblemDetails>,
@@ -252,6 +299,7 @@ export type ForgetReceiptItemCategoryMutationError = ErrorType<ProblemDetails>;
 export type ForgetReceiptItemCategoryMutationVariables = { id: string };
 
 /**
+ * Removes one remembered category for good, so the next receipt with an item of that name takes the category of your first matching categorization rule, or none. Readings already stored and transactions keep what they have.
  * @summary Forget a remembered receipt item category
  */
 export const useForgetReceiptItemCategory = <
@@ -343,6 +391,10 @@ export const getReceiptItemsSuspenseQueryOptions = <
 export type ReceiptItemsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof receiptItems>>>;
 export type ReceiptItemsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
+ * @summary Spending per receipt item
+ */
 export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
@@ -356,19 +408,10 @@ export function useReceiptItemsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useReceiptItemsSuspense<
-  TData = Awaited<ReturnType<typeof receiptItems>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ReceiptItemsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
+ * @summary Spending per receipt item
+ */
 export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
@@ -383,9 +426,26 @@ export function useReceiptItemsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
  * @summary Spending per receipt item
  */
-
+export function useReceiptItemsSuspense<
+  TData = Awaited<ReturnType<typeof receiptItems>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ReceiptItemsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof receiptItems>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Sums the items of your receipt readings for the attachments of visible transactions dated in the range: how much toothpaste cost this year. Items are grouped by their normalized name, the key remembered categories use, and by currency; each item counts what the split counts, its amount less its discount plus its deposit, never below zero. Only readings you made are counted, so a receipt someone else read counts once you read it too. At most 50 items, largest first.
+ * @summary Spending per receipt item
+ */
 export function useReceiptItemsSuspense<
   TData = Awaited<ReturnType<typeof receiptItems>>,
   TError = ErrorType<ProblemDetails>,
@@ -483,6 +543,7 @@ export type ReadReceiptMutationError = ErrorType<ProblemDetails | void>;
 export type ReadReceiptMutationVariables = { data: ReadReceiptRequest };
 
 /**
+ * Reads one receipt photo or PDF on this server and answers its merchant, date, total and items for review; nothing leaves the installation and nothing in the ledger changes. Send multipart/form-data with exactly one of attachmentId, a file already attached to a transaction the caller can see, or file, a new JPEG, PNG, WebP, HEIC or PDF of at most 10 MB that is read but never stored. file may also be a receipt e-mail saved as an HTML page (text/html, .html or .htm) or as a message (message/rfc822, .eml), whose visible text, or a message's HTML part and else its text part, is read in reading order; such a file cannot be attached. Photos are turned upright, stripped of their metadata and read with Tesseract (Lithuanian and English); a PDF is read from the text of its first 3 pages, and a PDF without text answers receipt.pdfWithoutText. Lines that look like part of the receipt but cannot be read as an item come back in unreadLines. Each item gets the category the caller chose for that name before (remembered), otherwise the category of the caller's first matching categorization rule, otherwise none. A reading is kept per user and file content: reading the same file again answers the stored reading with cached true, unless force is true. For an uploaded file, candidates lists up to three visible unsplit expenses with the receipt's total, within three days of its date. For a return receipt (result.isReturn) candidates is empty and refundOf names the purchase it probably returns: the most recent visible expense whose payee key is the merchant's or starts with it, of at least the returned total in the receipt's currency, dated up to 90 days before the receipt and without this file attached; otherwise refundOf is null. result.address is the shop's address line from the receipt's header, when one has a street number and a postcode or a known city. While the locations feature is on, an uploaded photo whose EXIF carries a GPS position answers it as photoLatitude and photoLongitude, read before the metadata is stripped and never stored with the reading; a PDF or an attached file answers null. Needs the ReceiptReading feature switch. Rate limited to 30 calls per five minutes per client.
  * @summary Read a receipt and propose its items by category
  */
 export const useReadReceipt = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -517,29 +578,10 @@ export const updateReceiptCategories = async (
   updateReceiptCategoriesRequest: UpdateReceiptCategoriesRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getUpdateReceiptCategoriesUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateReceiptCategoriesRequest),
   });
 };
@@ -593,6 +635,7 @@ export type UpdateReceiptCategoriesMutationVariables = {
 };
 
 /**
+ * Stores the category the caller chose for each listed item of one of their readings, and remembers it for that item's name, so the next receipt with the same item gets it before any categorization rule is tried. An item set to no category forgets its name. Names are compared after lowercasing and dropping diacritics, digits, units and punctuation. Nothing in the ledger changes: the split itself is saved with the transaction. Every category must be an expense category the caller can see.
  * @summary Keep the categories chosen for a receipt's items
  */
 export const useUpdateReceiptCategories = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

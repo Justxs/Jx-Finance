@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Schedules a recurring expense, a recurring income or a recurring transfer. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction or a transfer is only written once the occurrence is confirmed.
  * @summary Create a recurring entry
  */
+export const createRecurringBillBodyNameMin = 1;
 export const createRecurringBillBodyNameMax = 100;
 
 export const createRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -24,7 +25,7 @@ export const createRecurringBillBodySpreadMonthsMin = 2;
 export const createRecurringBillBodySpreadMonthsMax = 36;
 
 export const CreateRecurringBillBody = zod.object({
-  name: zod.string().min(1).max(createRecurringBillBodyNameMax),
+  name: zod.string().min(createRecurringBillBodyNameMin).max(createRecurringBillBodyNameMax),
   shape: zod
     .enum(["expense", "income", "transfer"])
     .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
@@ -283,12 +284,17 @@ export const SubscriptionCandidatesResponse = zod.array(SubscriptionCandidatesRe
  * Hides one suggested subscription for the signed-in user. The dismissal is stored against the account and the normalized description the suggestion was grouped by, not against the transactions behind it, so a new payment arriving in the same group does not bring the suggestion back. Dismissing the same group twice changes nothing. It is a personal choice: another member of the same household still sees the suggestion.
  * @summary Dismiss a subscription suggestion
  */
+export const dismissSubscriptionCandidateBodyAccountIdMin = 1;
 
+export const dismissSubscriptionCandidateBodyDescriptionMin = 1;
 export const dismissSubscriptionCandidateBodyDescriptionMax = 200;
 
 export const DismissSubscriptionCandidateBody = zod.object({
-  accountId: zod.uuid().min(1),
-  description: zod.string().min(1).max(dismissSubscriptionCandidateBodyDescriptionMax),
+  accountId: zod.uuid().min(dismissSubscriptionCandidateBodyAccountIdMin),
+  description: zod
+    .string()
+    .min(dismissSubscriptionCandidateBodyDescriptionMin)
+    .max(dismissSubscriptionCandidateBodyDescriptionMax),
 });
 
 export const DismissSubscriptionCandidateResponse = zod.void();
@@ -371,6 +377,7 @@ export const RecurringBillResponse = zod.object({
  * Changes the shape, the schedule, the expected amount, or the reminder lead time. A shape change must bring the fields the new shape needs: a Transfer needs both accounts and no category, an Expense or an Income needs no destination account. Setting isActive to false stops reminders without losing the schedule or the rows already posted from it.
  * @summary Update a recurring entry
  */
+export const updateRecurringBillBodyNameMin = 1;
 export const updateRecurringBillBodyNameMax = 100;
 
 export const updateRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -384,7 +391,7 @@ export const updateRecurringBillBodySpreadMonthsMin = 2;
 export const updateRecurringBillBodySpreadMonthsMax = 36;
 
 export const UpdateRecurringBillBody = zod.object({
-  name: zod.string().min(1).max(updateRecurringBillBodyNameMax),
+  name: zod.string().min(updateRecurringBillBodyNameMin).max(updateRecurringBillBodyNameMax),
   shape: zod
     .enum(["expense", "income", "transfer"])
     .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),

@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Opens a new account. A personal account belongs to you alone; a shared account must name a household you are a member of, and everyone in that household sees it and its transactions. The starting balance is the balance before any transaction is recorded.
  * @summary Create an account
  */
+export const createAccountBodyNameMin = 1;
 export const createAccountBodyNameMax = 100;
 
 export const createAccountBodyDescriptionMin = 0;
@@ -21,7 +22,7 @@ export const createAccountBodyStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d
 export const CreateAccountBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(createAccountBodyNameMin)
     .max(createAccountBodyNameMax)
     .describe("Display name, up to 100 characters."),
   description: zod
@@ -561,6 +562,7 @@ export const AccountResponse = zod.object({
  * Replaces the editable fields of an account. Moving an account from Personal to Shared hands its history to the household; moving it back makes it private again. Transactions already posted to the account keep their amounts.
  * @summary Update an account
  */
+export const updateAccountBodyNameMin = 1;
 export const updateAccountBodyNameMax = 100;
 
 export const updateAccountBodyDescriptionMin = 0;
@@ -569,7 +571,7 @@ export const updateAccountBodyDescriptionMax = 500;
 export const updateAccountBodyStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateAccountBody = zod.object({
-  name: zod.string().min(1).max(updateAccountBodyNameMax),
+  name: zod.string().min(updateAccountBodyNameMin).max(updateAccountBodyNameMax),
   description: zod
     .string()
     .min(updateAccountBodyDescriptionMin)

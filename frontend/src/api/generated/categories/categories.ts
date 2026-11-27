@@ -32,6 +32,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -59,29 +94,10 @@ export const createCategory = async (
   createCategoryRequest: CreateCategoryRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategoryResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CategoryResponse>(getCreateCategoryUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createCategoryRequest),
   });
 };
@@ -130,6 +146,7 @@ export type CreateCategoryMutationError = ErrorType<ProblemDetails>;
 export type CreateCategoryMutationVariables = { data: CreateCategoryRequest };
 
 /**
+ * Adds a category for transactions to be attributed to. The flow type is fixed at creation and cannot be changed afterwards, because moving a category between income and expense would silently rewrite the meaning of every transaction already filed under it.
  * @summary Create a category
  */
 export const useCreateCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -200,6 +217,10 @@ export const getCategoriesSuspenseQueryOptions = <
 export type CategoriesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof categories>>>;
 export type CategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -210,16 +231,10 @@ export function useCategoriesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof categories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -231,9 +246,23 @@ export function useCategoriesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
  * @summary List categories
  */
-
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
+ * @summary List categories
+ */
 export function useCategoriesSuspense<
   TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
@@ -316,6 +345,7 @@ export type DeleteCategoryMutationError = ErrorType<ProblemDetails>;
 export type DeleteCategoryMutationVariables = { id: string };
 
 /**
+ * Removes the category. Transactions, split lines and recurring entries filed under it are kept and become uncategorised, and the budgets on it are deleted with it. Which rows it cleared is recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the category back on the rows that are still uncategorised.
  * @summary Delete a category
  */
 export const useDeleteCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -350,29 +380,10 @@ export const updateCategory = async (
   updateCategoryRequest: UpdateCategoryRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategoryResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CategoryResponse>(getUpdateCategoryUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateCategoryRequest),
   });
 };
@@ -421,6 +432,7 @@ export type UpdateCategoryMutationError = ErrorType<ProblemDetails>;
 export type UpdateCategoryMutationVariables = { id: string; data: UpdateCategoryRequest };
 
 /**
+ * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.
  * @summary Update a category
  */
 export const useUpdateCategory = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

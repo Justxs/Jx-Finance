@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency. The value and date become its first valuation.
  * @summary Add an asset
  */
+export const createAssetBodyNameMin = 1;
 export const createAssetBodyNameMax = 100;
 
 export const createAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -20,7 +21,7 @@ export const createAssetBodyDepreciationTwoResidualValueRegExp = new RegExp(
 );
 
 export const CreateAssetBody = zod.object({
-  name: zod.string().min(1).max(createAssetBodyNameMax),
+  name: zod.string().min(createAssetBodyNameMin).max(createAssetBodyNameMax),
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
@@ -204,6 +205,7 @@ export const DeleteAssetResponse = zod.void();
  * Revalues, renames or sets the depreciation of an asset. A changed value or date records a valuation for that date instead of overwriting the history. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
  * @summary Update an asset
  */
+export const updateAssetBodyNameMin = 1;
 export const updateAssetBodyNameMax = 100;
 
 export const updateAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -213,7 +215,7 @@ export const updateAssetBodyDepreciationTwoResidualValueRegExp = new RegExp(
 );
 
 export const UpdateAssetBody = zod.object({
-  name: zod.string().min(1).max(updateAssetBodyNameMax),
+  name: zod.string().min(updateAssetBodyNameMin).max(updateAssetBodyNameMax),
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
@@ -481,6 +483,7 @@ export const AssetValueHistoryResponse = zod.object({
  * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add a debt
  */
+export const createDebtBodyNameMin = 1;
 export const createDebtBodyNameMax = 100;
 
 export const createDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -488,13 +491,14 @@ export const createDebtBodyInterestRateMin = 0;
 export const createDebtBodyInterestRateMax = 100;
 
 export const createDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtBodyTermMonthsMin = 1;
 export const createDebtBodyTermMonthsMax = 600;
 
 export const createDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createDebtBodyTracksPaymentsDefault = false;
 
 export const CreateDebtBody = zod.object({
-  name: zod.string().min(1).max(createDebtBodyNameMax),
+  name: zod.string().min(createDebtBodyNameMin).max(createDebtBodyNameMax),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
   outstandingAmount: zod
     .stringFormat("decimal", createDebtBodyOutstandingAmountRegExp)
@@ -520,7 +524,7 @@ export const CreateDebtBody = zod.object({
     ),
   termMonths: zod
     .int()
-    .min(1)
+    .min(createDebtBodyTermMonthsMin)
     .max(createDebtBodyTermMonthsMax)
     .nullish()
     .describe(
@@ -681,6 +685,7 @@ export const DeleteDebtResponse = zod.void();
  * Records a new outstanding balance, rate, name or repayment terms. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down. The request replaces the debt, so repayment terms left out are cleared.
  * @summary Update a debt
  */
+export const updateDebtBodyNameMin = 1;
 export const updateDebtBodyNameMax = 100;
 
 export const updateDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -688,13 +693,14 @@ export const updateDebtBodyInterestRateMin = 0;
 export const updateDebtBodyInterestRateMax = 100;
 
 export const updateDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtBodyTermMonthsMin = 1;
 export const updateDebtBodyTermMonthsMax = 600;
 
 export const updateDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateDebtBodyTracksPaymentsDefault = false;
 
 export const UpdateDebtBody = zod.object({
-  name: zod.string().min(1).max(updateDebtBodyNameMax),
+  name: zod.string().min(updateDebtBodyNameMin).max(updateDebtBodyNameMax),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
   outstandingAmount: zod.stringFormat("decimal", updateDebtBodyOutstandingAmountRegExp),
   interestRate: zod
@@ -715,7 +721,7 @@ export const UpdateDebtBody = zod.object({
     ),
   termMonths: zod
     .int()
-    .min(1)
+    .min(updateDebtBodyTermMonthsMin)
     .max(updateDebtBodyTermMonthsMax)
     .nullish()
     .describe(
@@ -1135,13 +1141,14 @@ export const DebtPaymentsResponse = zod.array(DebtPaymentsResponseItem);
  * Marks an expense transaction as a payment of a debt that tracks its payments, lowering the tracked balance by its principal. The transaction stays an ordinary expense in reports and budgets. A transaction pays at most one debt. The link is private to the owner of the debt, even on a shared account.
  * @summary Link a payment to a debt
  */
+export const linkDebtPaymentBodyTransactionIdMin = 1;
 
 export const linkDebtPaymentBodyPrincipalRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const LinkDebtPaymentBody = zod.object({
   transactionId: zod
     .uuid()
-    .min(1)
+    .min(linkDebtPaymentBodyTransactionIdMin)
     .describe("An expense transaction the signed-in user can see, not split."),
   kind: zod
     .union([

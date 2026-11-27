@@ -592,6 +592,7 @@ export const SmtpSettingsResponse = zod.object({
 export const updateSmtpSettingsBodyHostMin = 0;
 export const updateSmtpSettingsBodyHostMax = 255;
 
+export const updateSmtpSettingsBodyPortMin = 1;
 export const updateSmtpSettingsBodyPortMax = 65535;
 
 export const updateSmtpSettingsBodyUserNameMin = 0;
@@ -613,7 +614,7 @@ export const UpdateSmtpSettingsBody = zod.object({
     .min(updateSmtpSettingsBodyHostMin)
     .max(updateSmtpSettingsBodyHostMax)
     .nullable(),
-  port: zod.int().min(1).max(updateSmtpSettingsBodyPortMax),
+  port: zod.int().min(updateSmtpSettingsBodyPortMin).max(updateSmtpSettingsBodyPortMax),
   encryption: zod
     .enum(["startTls", "sslOnConnect", "none"])
     .describe(

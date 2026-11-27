@@ -11,6 +11,7 @@ import * as zod from "zod";
  * Adds a category for transactions to be attributed to. The flow type is fixed at creation and cannot be changed afterwards, because moving a category between income and expense would silently rewrite the meaning of every transaction already filed under it.
  * @summary Create a category
  */
+export const createCategoryBodyNameMin = 1;
 export const createCategoryBodyNameMax = 100;
 
 export const createCategoryBodyIconMin = 0;
@@ -19,7 +20,7 @@ export const createCategoryBodyIconMax = 50;
 export const CreateCategoryBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(createCategoryBodyNameMin)
     .max(createCategoryBodyNameMax)
     .describe("Display name, unique within its scope."),
   type: zod.enum(["income", "expense"]),
@@ -81,13 +82,14 @@ export const DeleteCategoryResponse = zod.void();
  * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation. The parent is replaced like every other field, so an update without parentId makes the category top-level again.
  * @summary Update a category
  */
+export const updateCategoryBodyNameMin = 1;
 export const updateCategoryBodyNameMax = 100;
 
 export const updateCategoryBodyIconMin = 0;
 export const updateCategoryBodyIconMax = 50;
 
 export const UpdateCategoryBody = zod.object({
-  name: zod.string().min(1).max(updateCategoryBodyNameMax),
+  name: zod.string().min(updateCategoryBodyNameMin).max(updateCategoryBodyNameMax),
   icon: zod.string().min(updateCategoryBodyIconMin).max(updateCategoryBodyIconMax).nullable(),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),

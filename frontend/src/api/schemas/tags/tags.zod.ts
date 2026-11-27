@@ -11,12 +11,13 @@ import * as zod from "zod";
  * Adds a tag that transactions can be marked with. A tag says what a payment was for across categories — a holiday, a renovation, something to be reimbursed — so it has no flow type and the same tag can sit on income and on an expense. Names are unique per owner, ignoring case.
  * @summary Create a tag
  */
+export const createTagBodyNameMin = 1;
 export const createTagBodyNameMax = 50;
 
 export const CreateTagBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(createTagBodyNameMin)
     .max(createTagBodyNameMax)
     .describe("Display name, unique among your own tags whatever the casing."),
   scope: zod.enum(["personal", "shared"]),
@@ -57,10 +58,11 @@ export const DeleteTagResponse = zod.void();
  * Renames a tag or moves it between personal and shared. A household member can rename a shared tag; only its owner can change the sharing or delete it. The transactions already marked with the tag keep it.
  * @summary Update a tag
  */
+export const updateTagBodyNameMin = 1;
 export const updateTagBodyNameMax = 50;
 
 export const UpdateTagBody = zod.object({
-  name: zod.string().min(1).max(updateTagBodyNameMax),
+  name: zod.string().min(updateTagBodyNameMin).max(updateTagBodyNameMax),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
 });

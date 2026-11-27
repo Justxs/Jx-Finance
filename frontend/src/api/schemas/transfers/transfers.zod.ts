@@ -11,6 +11,9 @@ import * as zod from "zod";
  * Moves money from one of your accounts to another. Both balances change and neither side counts as income or expense, so reports and budgets are left alone. The two accounts must differ and both must be visible to you.
  * @summary Create a transfer
  */
+export const createTransferBodyFromAccountIdMin = 1;
+
+export const createTransferBodyToAccountIdMin = 1;
 
 export const createTransferBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransferBodyDescriptionMin = 0;
@@ -19,8 +22,8 @@ export const createTransferBodyDescriptionMax = 500;
 export const createTransferBodyReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateTransferBody = zod.object({
-  fromAccountId: zod.uuid().min(1),
-  toAccountId: zod.uuid().min(1),
+  fromAccountId: zod.uuid().min(createTransferBodyFromAccountIdMin),
+  toAccountId: zod.uuid().min(createTransferBodyToAccountIdMin),
   amount: zod
     .stringFormat("decimal", createTransferBodyAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
@@ -288,6 +291,9 @@ export const DeleteTransferResponse = zod.void();
  * Replaces the date, amounts, description and both accounts of a transfer. The amount rules are those of creating one: between two currencies the received amount is required, within one currency it may be left out and must equal the sent amount when given. Send currency and receivedCurrency as the transfer has them; without them they default to the main currency of the chosen accounts. You need access to both accounts the transfer has now and to both accounts it should have afterwards. A transfer that was created or matched by a bank or broker import holds a receipt per imported account, flagged by fromAccountImported and toAccountImported: its date, that account's side of the transfer and the amount on that side are fixed and a change answers value.locked, while the description, the other account and, between currencies, the other amount stay editable.
  * @summary Update a transfer
  */
+export const updateTransferBodyFromAccountIdMin = 1;
+
+export const updateTransferBodyToAccountIdMin = 1;
 
 export const updateTransferBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransferBodyDescriptionMin = 0;
@@ -296,8 +302,8 @@ export const updateTransferBodyDescriptionMax = 500;
 export const updateTransferBodyReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateTransferBody = zod.object({
-  fromAccountId: zod.uuid().min(1),
-  toAccountId: zod.uuid().min(1),
+  fromAccountId: zod.uuid().min(updateTransferBodyFromAccountIdMin),
+  toAccountId: zod.uuid().min(updateTransferBodyToAccountIdMin),
   amount: zod
     .stringFormat("decimal", updateTransferBodyAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),

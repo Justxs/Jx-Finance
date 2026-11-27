@@ -8,7 +8,7 @@ React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16, shipped with D
 
 ## Local development (Windows)
 
-Install .NET 10 SDK (10.0.400 or newer), Node.js 24+, [Vite+](https://viteplus.dev/guide) (the `vp` CLI), Docker Desktop with Linux containers, and [just](https://just.systems).
+Install .NET 11 SDK (11.0.100 or newer), Node.js 26+, [Vite+](https://viteplus.dev/guide) (the `vp` CLI), Docker Desktop with Linux containers, and [just](https://just.systems).
 
 ```powershell
 irm https://vite.plus/ps1 | iex

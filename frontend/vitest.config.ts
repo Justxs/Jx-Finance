@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: { alias: srcAlias },
   test: {
     fsModuleCache: true,
+    execArgv: ["--no-webstorage"],
     projects: [
       {
         extends: true,

@@ -24,8 +24,8 @@ function Test-Tool([string]$Name, [string]$Command, [string]$Minimum, [string]$H
     Write-Host "[ok]      $Name $version"
 }
 
-Test-Tool ".NET SDK" "dotnet" "10.0.400" "https://dotnet.microsoft.com/download"
-Test-Tool "Node.js" "node" "24.0" "https://nodejs.org"
+Test-Tool ".NET SDK" "dotnet" "11.0.100" "https://dotnet.microsoft.com/download"
+Test-Tool "Node.js" "node" "26.0" "https://nodejs.org"
 Test-Tool "Vite+" "vp" "1.0" "irm https://vite.plus/ps1 | iex"
 Test-Tool "Docker" "docker" "24.0" "https://www.docker.com/products/docker-desktop"
 Test-Tool "just" "just" "1.27" "winget install Casey.Just"

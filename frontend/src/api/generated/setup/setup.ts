@@ -39,6 +39,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -66,29 +101,10 @@ export const setup = async (
   setupRequest: SetupRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<UserProfileResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<UserProfileResponse>(getSetupUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(setupRequest),
   });
 };
@@ -136,6 +152,7 @@ export type SetupMutationError = ErrorType<ProblemDetails | void>;
 export type SetupMutationVariables = { data: SetupRequest };
 
 /**
+ * Creates the administrator account on a fresh instance and signs this browser in with a session that is not remembered, then marks the guided setup as pending in the settings. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.
  * @summary Provision the first administrator
  */
 export const useSetup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -200,6 +217,7 @@ export type LoadDemoDataMutationResult = NonNullable<Awaited<ReturnType<typeof l
 export type LoadDemoDataMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Fills the administrator's empty ledger with six months of sample accounts, transactions, budgets, goals, recurring entries, net worth and a household, in the reporting currency, and sets demoData in the settings. Offered only during the guided setup, so it answers 409 setup.notPending once the setup is finished, and 409 setup.ledgerNotEmpty when the administrator already has an account.
  * @summary Load demo data
  */
 export const useLoadDemoData = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -256,6 +274,7 @@ export type RemoveDemoDataMutationResult = NonNullable<Awaited<ReturnType<typeof
 export type RemoveDemoDataMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Empties every ledger table, including anything entered since the demo data was loaded, gives the administrator the starter categories again and clears demoData. Users, sign-in data, sessions, settings and exchange rates stay. Allowed only while demoData is set and the administrator is the only user; otherwise it answers 409 setup.demoNotRemovable.
  * @summary Remove the demo data and start for real
  */
 export const useRemoveDemoData = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -315,6 +334,7 @@ export type FinishSetupMutationResult = NonNullable<Awaited<ReturnType<typeof fi
 export type FinishSetupMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Clears setupPending in the settings, so the client stops opening the guided setup for administrators. Skipping the setup calls this too. Calling it again changes nothing.
  * @summary Finish the guided setup
  */
 export const useFinishSetup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -371,6 +391,10 @@ export const getSetupReadinessQueryOptions = <
 export type SetupReadinessQueryResult = NonNullable<Awaited<ReturnType<typeof setupReadiness>>>;
 export type SetupReadinessQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadiness<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -389,6 +413,10 @@ export function useSetupReadiness<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadiness<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -407,6 +435,10 @@ export function useSetupReadiness<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadiness<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -418,9 +450,9 @@ export function useSetupReadiness<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
  * @summary Read what this server can run
  */
-
 export function useSetupReadiness<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -472,6 +504,10 @@ export type SetupReadinessSuspenseQueryResult = NonNullable<
 >;
 export type SetupReadinessSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadinessSuspense<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -484,18 +520,10 @@ export function useSetupReadinessSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSetupReadinessSuspense<
-  TData = Awaited<ReturnType<typeof setupReadiness>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadinessSuspense<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -509,9 +537,25 @@ export function useSetupReadinessSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
  * @summary Read what this server can run
  */
-
+export function useSetupReadinessSuspense<
+  TData = Awaited<ReturnType<typeof setupReadiness>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupReadiness>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Tells the guided setup which optional parts are installed where the API runs, whatever the feature switches say: receiptReaderInstalled is true when Tesseract is available for receipt reading.
+ * @summary Read what this server can run
+ */
 export function useSetupReadinessSuspense<
   TData = Awaited<ReturnType<typeof setupReadiness>>,
   TError = ErrorType<ProblemDetails>,
@@ -583,6 +627,10 @@ export const getSetupStatusSuspenseQueryOptions = <
 export type SetupStatusSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof setupStatus>>>;
 export type SetupStatusSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
+ * @summary Check whether first-run setup is needed
+ */
 export function useSetupStatusSuspense<
   TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
@@ -593,18 +641,10 @@ export function useSetupStatusSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSetupStatusSuspense<
-  TData = Awaited<ReturnType<typeof setupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
+ * @summary Check whether first-run setup is needed
+ */
 export function useSetupStatusSuspense<
   TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
@@ -618,9 +658,25 @@ export function useSetupStatusSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
  * @summary Check whether first-run setup is needed
  */
-
+export function useSetupStatusSuspense<
+  TData = Awaited<ReturnType<typeof setupStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
+ * @summary Check whether first-run setup is needed
+ */
 export function useSetupStatusSuspense<
   TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,

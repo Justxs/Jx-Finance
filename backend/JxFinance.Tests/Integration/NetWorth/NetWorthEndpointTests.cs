@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;

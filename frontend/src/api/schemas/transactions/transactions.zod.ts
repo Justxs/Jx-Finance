@@ -11,12 +11,14 @@ import * as zod from "zod";
  * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Record a transaction
  */
+export const createTransactionBodyAccountIdMin = 1;
 
 export const createTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransactionBodyDescriptionMin = 0;
 export const createTransactionBodyDescriptionMax = 500;
 
 export const createTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionBodyTagIdsItemMin = 1;
 
 export const createTransactionBodyNoteMin = 0;
 export const createTransactionBodyNoteMax = 1000;
@@ -28,7 +30,10 @@ export const createTransactionBodyPlaceMin = 0;
 export const createTransactionBodyPlaceMax = 120;
 
 export const CreateTransactionBody = zod.object({
-  accountId: zod.uuid().min(1).describe("The account the money moved on; must be visible to you."),
+  accountId: zod
+    .uuid()
+    .min(createTransactionBodyAccountIdMin)
+    .describe("The account the money moved on; must be visible to you."),
   categoryId: zod.uuid().nullable().describe("Optional category. Ignored when lines are supplied."),
   type: zod.enum(["income", "expense"]),
   amount: zod
@@ -52,7 +57,7 @@ export const CreateTransactionBody = zod.object({
     )
     .nullable()
     .describe("Optional split lines. Their amounts must sum to the transaction amount."),
-  tagIds: zod.array(zod.uuid().min(1)).nullish(),
+  tagIds: zod.array(zod.uuid().min(createTransactionBodyTagIdsItemMin)).nullish(),
   currency: zod
     .union([
       zod.null(),
@@ -538,15 +543,20 @@ export const TransactionsResponse = zod.object({
  * Puts every listed transaction on the account sent, as changing the account in the transaction form does: the amount, currency, date, category, split lines, tags, files, refund link, group and import reference stay, so the reporting amount needs no revaluation, and an imported row keeps guarding its new account against being imported twice. Rows already on that account are left alone and not counted. A row whose link would no longer hold stays where it is and is listed in refused with its code: the fee of a currency conversion (transaction.conversionFee), an expense split with a household when its payer does not own the account (settleUp.notPayer), and a payment of a shared debt when the account is not shared with the debt's household (household.referenceNotShared). Split rows and members of a transaction group move like any other row. An invisible id or account refuses the whole request. Repeated ids count once. A read-and-write API token cannot call it.
  * @summary Move several transactions to another account
  */
+export const bulkMoveTransactionsBodyTransactionIdsItemMin = 1;
+
+export const bulkMoveTransactionsBodyTransactionIdsMin = 1;
+
+export const bulkMoveTransactionsBodyAccountIdMin = 1;
 
 export const BulkMoveTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid().min(1))
-    .min(1)
+    .array(zod.uuid().min(bulkMoveTransactionsBodyTransactionIdsItemMin))
+    .min(bulkMoveTransactionsBodyTransactionIdsMin)
     .describe("Between 1 and 200 transaction ids."),
   accountId: zod
     .uuid()
-    .min(1)
+    .min(bulkMoveTransactionsBodyAccountIdMin)
     .describe("The account the transactions should be on, one you can see."),
 });
 
@@ -565,13 +575,16 @@ export const BulkMoveTransactionsResponse = zod.object({
  * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once. With onlyUncategorized, only the listed transactions that still have no category change, so a category somebody set after a review is kept, and the answer counts only those.
  * @summary Set the category of several transactions
  */
+export const bulkCategorizeTransactionsBodyTransactionIdsItemMin = 1;
+
+export const bulkCategorizeTransactionsBodyTransactionIdsMin = 1;
 
 export const bulkCategorizeTransactionsBodyOnlyUncategorizedDefault = false;
 
 export const BulkCategorizeTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid().min(1))
-    .min(1)
+    .array(zod.uuid().min(bulkCategorizeTransactionsBodyTransactionIdsItemMin))
+    .min(bulkCategorizeTransactionsBodyTransactionIdsMin)
     .describe("Between 1 and 200 transaction ids."),
   categoryId: zod
     .uuid()
@@ -593,11 +606,14 @@ export const BulkCategorizeTransactionsResponse = zod.object({
  * Deletes every listed transaction exactly as DELETE /api/transactions/{id} does, in one save: each keeps its split lines, tags and files, and each gets its own trash entry, so POST /api/trash/restore-transactions brings the whole selection back in one call and POST /api/trash/restore brings back any one of them. Split rows and members of a transaction group are accepted like any other row. The request is all-or-nothing: if any id is not visible to you, nothing is deleted. Repeated ids count once. A read-and-write API token cannot call it.
  * @summary Delete several transactions
  */
+export const bulkDeleteTransactionsBodyTransactionIdsItemMin = 1;
+
+export const bulkDeleteTransactionsBodyTransactionIdsMin = 1;
 
 export const BulkDeleteTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid().min(1))
-    .min(1)
+    .array(zod.uuid().min(bulkDeleteTransactionsBodyTransactionIdsItemMin))
+    .min(bulkDeleteTransactionsBodyTransactionIdsMin)
     .describe("Between 1 and 200 transaction ids."),
 });
 
@@ -609,14 +625,19 @@ export const BulkDeleteTransactionsResponse = zod.object({
  * Replaces the whole set of tags on every listed transaction with the tags sent, so an empty list clears them. Unlike the category operation this accepts split transactions, because a tag belongs to the payment and not to a split line. The request is all-or-nothing: if any id is not visible to you or any tag is not visible to you, nothing changes. Repeated ids count once, and the amounts, categories and split lines of the transactions are untouched.
  * @summary Set the tags of several transactions
  */
+export const bulkTagTransactionsBodyTransactionIdsItemMin = 1;
+
+export const bulkTagTransactionsBodyTransactionIdsMin = 1;
+
+export const bulkTagTransactionsBodyTagIdsItemMin = 1;
 
 export const BulkTagTransactionsBody = zod.object({
   transactionIds: zod
-    .array(zod.uuid().min(1))
-    .min(1)
+    .array(zod.uuid().min(bulkTagTransactionsBodyTransactionIdsItemMin))
+    .min(bulkTagTransactionsBodyTransactionIdsMin)
     .describe("Between 1 and 200 transaction ids."),
   tagIds: zod
-    .array(zod.uuid().min(1))
+    .array(zod.uuid().min(bulkTagTransactionsBodyTagIdsItemMin))
     .describe(
       "The tags the listed transactions should carry, at most ten; an empty list clears them.",
     ),
@@ -898,18 +919,22 @@ export const PlacesResponse = zod.array(PlacesResponseItem);
  * Sets the place of every transaction you entered whose place matches one of the listed places, ignoring case and surrounding spaces, to the new name, in one step. Renaming is one place in the list; merging is several. Rows a housemate entered on a shared account keep their place, the coordinates of every row stay as they are, and the rows' last-changed time is not moved, so a closed month does not drift. When rows on shared accounts change, the household's activity log gains one line that counts them. Needs the locations feature.
  * @summary Rename a place or merge several spellings into one
  */
+export const renamePlaceBodyPlacesItemMin = 1;
 export const renamePlaceBodyPlacesItemMax = 120;
 
+export const renamePlaceBodyPlacesMin = 1;
+
+export const renamePlaceBodyNameMin = 1;
 export const renamePlaceBodyNameMax = 120;
 
 export const RenamePlaceBody = zod.object({
   places: zod
-    .array(zod.string().min(1).max(renamePlaceBodyPlacesItemMax))
-    .min(1)
+    .array(zod.string().min(renamePlaceBodyPlacesItemMin).max(renamePlaceBodyPlacesItemMax))
+    .min(renamePlaceBodyPlacesMin)
     .describe("Between 1 and 50 places as the place list shows them, each at most 120 characters."),
   name: zod
     .string()
-    .min(1)
+    .min(renamePlaceBodyNameMin)
     .max(renamePlaceBodyNameMax)
     .describe("The place the rows should read, trimmed, at most 120 characters."),
 });
@@ -922,19 +947,24 @@ export const RenamePlaceResponse = zod.object({
  * Answers the category your first matching categorization rule sets, while the categorizationRules feature is on, and otherwise, while the learnedCategories feature is on, the category a naive Bayes model trained on the categorized transactions you can see guesses, when it is sure enough. The model is built for this request inside the API and thrown away with it; nothing is stored or sent anywhere. Every field of the answer is null when neither has an opinion. Only reads; nothing is set on any transaction. It is a POST so that the description never lands in a URL. With both features off every field is null.
  * @summary Suggest a category for a transaction being entered
  */
+export const suggestCategoryBodyAccountIdMin = 1;
 
 export const suggestCategoryBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const suggestCategoryBodyDescriptionMin = 1;
 export const suggestCategoryBodyDescriptionMax = 500;
 
 export const SuggestCategoryBody = zod.object({
-  accountId: zod.uuid().min(1).describe("The account the transaction is on."),
+  accountId: zod
+    .uuid()
+    .min(suggestCategoryBodyAccountIdMin)
+    .describe("The account the transaction is on."),
   type: zod.enum(["income", "expense"]),
   amount: zod
     .stringFormat("decimal", suggestCategoryBodyAmountRegExp)
     .describe("The amount, zero or more, with at most two decimal places."),
   description: zod
     .string()
-    .min(1)
+    .min(suggestCategoryBodyDescriptionMin)
     .max(suggestCategoryBodyDescriptionMax)
     .describe("The description as typed, at most 500 characters."),
 });
@@ -1369,12 +1399,14 @@ export const TransactionResponse = zod.object({
  * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. The note, spreadMonths and spreadDirection are replaced too, so leaving one out clears it. So are place, latitude and longitude while the locations feature is on; while it is off they are ignored and the stored values kept. Moving it to another account adjusts both balances. A refund is an expense with a negative amount: it lowers that category's spending and raises the balance. It takes an expense category, cannot be split, and may name the purchase it refunds in refundOfTransactionId, which must be an expense you can see and not itself a refund.
  * @summary Update a transaction
  */
+export const updateTransactionBodyAccountIdMin = 1;
 
 export const updateTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransactionBodyDescriptionMin = 0;
 export const updateTransactionBodyDescriptionMax = 500;
 
 export const updateTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionBodyTagIdsItemMin = 1;
 
 export const updateTransactionBodyNoteMin = 0;
 export const updateTransactionBodyNoteMax = 1000;
@@ -1386,7 +1418,7 @@ export const updateTransactionBodyPlaceMin = 0;
 export const updateTransactionBodyPlaceMax = 120;
 
 export const UpdateTransactionBody = zod.object({
-  accountId: zod.uuid().min(1),
+  accountId: zod.uuid().min(updateTransactionBodyAccountIdMin),
   categoryId: zod.uuid().nullable(),
   type: zod.enum(["income", "expense"]),
   amount: zod.stringFormat("decimal", updateTransactionBodyAmountRegExp),
@@ -1410,7 +1442,7 @@ export const UpdateTransactionBody = zod.object({
     .describe(
       "The version of the record you read. Any later change to the record gives it a new version.",
     ),
-  tagIds: zod.array(zod.uuid().min(1)).nullish(),
+  tagIds: zod.array(zod.uuid().min(updateTransactionBodyTagIdsItemMin)).nullish(),
   currency: zod
     .union([
       zod.null(),

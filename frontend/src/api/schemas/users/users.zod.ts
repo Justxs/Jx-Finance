@@ -11,17 +11,23 @@ import * as zod from "zod";
  * Provisions a user account with an initial password. There is no self-service sign-up: accounts exist only because an administrator created them. Administrators only.
  * @summary Create a user
  */
+export const createUserBodyEmailMin = 1;
 export const createUserBodyEmailMax = 256;
 
 export const createUserBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
+export const createUserBodyDisplayNameMin = 1;
 export const createUserBodyDisplayNameMax = 100;
 
 export const createUserBodyPasswordMin = 8;
 export const createUserBodyPasswordMax = 100;
 
 export const CreateUserBody = zod.object({
-  email: zod.email().min(1).max(createUserBodyEmailMax).regex(createUserBodyEmailRegExp),
-  displayName: zod.string().min(1).max(createUserBodyDisplayNameMax),
+  email: zod
+    .email()
+    .min(createUserBodyEmailMin)
+    .max(createUserBodyEmailMax)
+    .regex(createUserBodyEmailRegExp),
+  displayName: zod.string().min(createUserBodyDisplayNameMin).max(createUserBodyDisplayNameMax),
   role: zod.string().describe("Admin or Member."),
   password: zod
     .string()
@@ -155,13 +161,17 @@ export const UsersResponse = zod.array(UsersResponseItem);
  * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. Any signed-in user may call it, not only administrators. Which notifications are emailed is saved separately, through PUT users/me/email-notifications.
  * @summary Update your own profile
  */
+export const updateMyProfileBodyDisplayNameMin = 1;
 export const updateMyProfileBodyDisplayNameMax = 100;
 
 export const updateMyProfileBodyNewPasswordMin = 8;
 export const updateMyProfileBodyNewPasswordMax = 100;
 
 export const UpdateMyProfileBody = zod.object({
-  displayName: zod.string().min(1).max(updateMyProfileBodyDisplayNameMax),
+  displayName: zod
+    .string()
+    .min(updateMyProfileBodyDisplayNameMin)
+    .max(updateMyProfileBodyDisplayNameMax),
   currentPassword: zod.string().nullable().describe("Required only when newPassword is supplied."),
   newPassword: zod
     .string()
@@ -642,6 +652,7 @@ export const ReactivateUserResponse = zod.void();
 export const resetUserPasswordBodyNewPasswordMin = 8;
 export const resetUserPasswordBodyNewPasswordMax = 100;
 
+export const resetUserPasswordBodyCurrentPasswordMin = 1;
 export const resetUserPasswordBodyCurrentPasswordMax = 100;
 
 export const resetUserPasswordBodyResetTwoFactorDefault = false;
@@ -654,7 +665,7 @@ export const ResetUserPasswordBody = zod.object({
     .describe("The temporary password for the user, 8 to 100 characters."),
   currentPassword: zod
     .string()
-    .min(1)
+    .min(resetUserPasswordBodyCurrentPasswordMin)
     .max(resetUserPasswordBodyCurrentPasswordMax)
     .describe("The current password of the signed-in administrator."),
   resetTwoFactor: zod

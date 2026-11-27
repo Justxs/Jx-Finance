@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;

@@ -22,19 +22,21 @@ export const PayeeNamesResponse = zod.array(PayeeNamesResponseItem);
  * Gives a payee a display name, or renames it. The payee is normalized the way every transaction's payee key is, so a raw bank description such as "MAXIMA LT 1234 VILNIUS" and a payeeKey from the report name the same payee. The name is yours alone and changes no transaction.
  * @summary Name a payee
  */
+export const setPayeeNameBodyPayeeMin = 1;
 export const setPayeeNameBodyPayeeMax = 500;
 
+export const setPayeeNameBodyNameMin = 1;
 export const setPayeeNameBodyNameMax = 100;
 
 export const SetPayeeNameBody = zod.object({
   payee: zod
     .string()
-    .min(1)
+    .min(setPayeeNameBodyPayeeMin)
     .max(setPayeeNameBodyPayeeMax)
     .describe("A bank description or a payee key, at most 500 characters."),
   name: zod
     .string()
-    .min(1)
+    .min(setPayeeNameBodyNameMin)
     .max(setPayeeNameBodyNameMax)
     .describe("The display name, at most 100 characters."),
 });

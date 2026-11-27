@@ -14,13 +14,18 @@ import * as zod from "zod";
 export const createTransactionGroupBodyNameMin = 0;
 export const createTransactionGroupBodyNameMax = 120;
 
+export const createTransactionGroupBodyTransactionIdsMin = 1;
+
 export const CreateTransactionGroupBody = zod.object({
   name: zod
     .string()
     .min(createTransactionGroupBodyNameMin)
     .max(createTransactionGroupBodyNameMax)
     .describe("The group's name, 1 to 120 characters."),
-  transactionIds: zod.array(zod.uuid()).min(1).describe("The transactions to group, 1 to 200."),
+  transactionIds: zod
+    .array(zod.uuid())
+    .min(createTransactionGroupBodyTransactionIdsMin)
+    .describe("The transactions to group, 1 to 200."),
   scope: zod.enum(["personal", "shared"]).optional(),
   householdId: zod
     .uuid()
@@ -96,9 +101,13 @@ export const UngroupTransactionGroupResponse = zod.void();
  * Puts the listed transactions in a group you can see; split transactions are accepted. A personal group takes only transactions you entered, a shared group only transactions on accounts shared with its household, and none may be in another group; a transaction already in this group is left as it is. Nothing is written when one of them is refused.
  * @summary Add transactions to a group
  */
+export const addToTransactionGroupBodyTransactionIdsMin = 1;
 
 export const AddToTransactionGroupBody = zod.object({
-  transactionIds: zod.array(zod.uuid()).min(1).describe("The transactions to add, 1 to 200."),
+  transactionIds: zod
+    .array(zod.uuid())
+    .min(addToTransactionGroupBodyTransactionIdsMin)
+    .describe("The transactions to add, 1 to 200."),
 });
 
 export const AddToTransactionGroupResponse = zod.void();

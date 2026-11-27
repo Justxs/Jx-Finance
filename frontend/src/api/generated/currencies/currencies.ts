@@ -94,6 +94,10 @@ export const getCurrenciesQueryOptions = <
 export type CurrenciesQueryResult = NonNullable<Awaited<ReturnType<typeof currencies>>>;
 export type CurrenciesQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrencies<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -112,6 +116,10 @@ export function useCurrencies<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrencies<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -130,6 +138,10 @@ export function useCurrencies<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrencies<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -141,9 +153,9 @@ export function useCurrencies<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
  * @summary List supported currencies
  */
-
 export function useCurrencies<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -191,6 +203,10 @@ export const getCurrenciesSuspenseQueryOptions = <
 export type CurrenciesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof currencies>>>;
 export type CurrenciesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrenciesSuspense<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -201,16 +217,10 @@ export function useCurrenciesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useCurrenciesSuspense<
-  TData = Awaited<ReturnType<typeof currencies>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrenciesSuspense<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -222,9 +232,23 @@ export function useCurrenciesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
  * @summary List supported currencies
  */
-
+export function useCurrenciesSuspense<
+  TData = Awaited<ReturnType<typeof currencies>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
 export function useCurrenciesSuspense<
   TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
@@ -306,6 +330,10 @@ export const getExchangeRateQueryOptions = <
 export type ExchangeRateQueryResult = NonNullable<Awaited<ReturnType<typeof exchangeRate>>>;
 export type ExchangeRateQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRate<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -325,6 +353,10 @@ export function useExchangeRate<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRate<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -344,6 +376,10 @@ export function useExchangeRate<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRate<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -356,9 +392,9 @@ export function useExchangeRate<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
  * @summary Look up an exchange rate
  */
-
 export function useExchangeRate<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -412,6 +448,10 @@ export const getExchangeRateSuspenseQueryOptions = <
 export type ExchangeRateSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof exchangeRate>>>;
 export type ExchangeRateSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRateSuspense<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -425,19 +465,10 @@ export function useExchangeRateSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExchangeRateSuspense<
-  TData = Awaited<ReturnType<typeof exchangeRate>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExchangeRateParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRateSuspense<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
@@ -452,9 +483,26 @@ export function useExchangeRateSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
  * @summary Look up an exchange rate
  */
-
+export function useExchangeRateSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
 export function useExchangeRateSuspense<
   TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,

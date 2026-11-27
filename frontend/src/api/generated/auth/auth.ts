@@ -54,6 +54,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -81,29 +116,10 @@ export const disableTwoFactor = async (
   reauthenticateRequest: ReauthenticateRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getDisableTwoFactorUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(reauthenticateRequest),
   });
 };
@@ -154,6 +170,7 @@ export type DisableTwoFactorMutationError = ErrorType<ProblemDetails | void>;
 export type DisableTwoFactorMutationVariables = { data: ReauthenticateRequest };
 
 /**
+ * Removes the authenticator secret and the remaining recovery codes after re-authenticating with the account password. Rate limited to five attempts per five minutes.
  * @summary Turn two-factor authentication off
  */
 export const useDisableTwoFactor = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -187,29 +204,10 @@ export const enableTwoFactor = async (
   enableTwoFactorRequest: EnableTwoFactorRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<EnableTwoFactorResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<EnableTwoFactorResponse>(getEnableTwoFactorUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(enableTwoFactorRequest),
   });
 };
@@ -260,6 +258,7 @@ export type EnableTwoFactorMutationError = ErrorType<ProblemDetails | void>;
 export type EnableTwoFactorMutationVariables = { data: EnableTwoFactorRequest };
 
 /**
+ * Verifies the first code produced by the authenticator and turns two-factor authentication on. The response carries the one-time recovery codes; they are shown once and never again, so the client must make the user save them before moving on.
  * @summary Finish two-factor enrolment
  */
 export const useEnableTwoFactor = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -293,29 +292,10 @@ export const setupTwoFactor = async (
   reauthenticateRequest: ReauthenticateRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TwoFactorSetupResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TwoFactorSetupResponse>(getSetupTwoFactorUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(reauthenticateRequest),
   });
 };
@@ -364,6 +344,7 @@ export type SetupTwoFactorMutationError = ErrorType<ProblemDetails | void>;
 export type SetupTwoFactorMutationVariables = { data: ReauthenticateRequest };
 
 /**
+ * Generates a fresh authenticator secret and returns it as both a shared key and an otpauth URI for a QR code. Nothing is enabled yet: enrolment only completes once the code from the authenticator is posted to the enable endpoint. Re-authentication with the account password is required, and the call is rate limited to five attempts per five minutes.
  * @summary Begin two-factor enrolment
  */
 export const useSetupTwoFactor = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -397,29 +378,10 @@ export const forgotPassword = async (
   forgotPasswordRequest: ForgotPasswordRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getForgotPasswordUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(forgotPasswordRequest),
   });
 };
@@ -468,6 +430,7 @@ export type ForgotPasswordMutationError = ErrorType<ProblemDetails | void>;
 export type ForgotPasswordMutationVariables = { data: ForgotPasswordRequest };
 
 /**
+ * Queues an email with a single-use reset link when the address belongs to an active user of this installation, the mail server is configured and App:SiteUrl names the address the link points at. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
  * @summary Ask for a password reset link
  */
 export const useForgotPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -501,29 +464,10 @@ export const login = async (
   loginRequest: LoginRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<LoginResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<LoginResponse>(getLoginUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(loginRequest),
   });
 };
@@ -571,6 +515,7 @@ export type LoginMutationError = ErrorType<ProblemDetails | void>;
 export type LoginMutationVariables = { data: LoginRequest };
 
 /**
+ * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.
  * @summary Sign in
  */
 export const useLogin = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -635,6 +580,7 @@ export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>
 export type LogoutMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Ends the session and clears its cookies. Safe to call when already signed out.
  * @summary Sign out
  */
 export const useLogout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -691,6 +637,10 @@ export const getMeQueryOptions = <
 export type MeQueryResult = NonNullable<Awaited<ReturnType<typeof me>>>;
 export type MeQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType<ProblemDetails>>(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>> &
@@ -706,6 +656,10 @@ export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType<ProblemDetails>>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>> &
@@ -721,6 +675,10 @@ export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType<ProblemDetails>>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>>;
@@ -729,9 +687,9 @@ export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
  * @summary Get the signed-in profile
  */
-
 export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = ErrorType<ProblemDetails>>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>>;
@@ -776,6 +734,10 @@ export const getMeSuspenseQueryOptions = <
 export type MeSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof me>>>;
 export type MeSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMeSuspense<
   TData = Awaited<ReturnType<typeof me>>,
   TError = ErrorType<ProblemDetails>,
@@ -786,16 +748,10 @@ export function useMeSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useMeSuspense<
-  TData = Awaited<ReturnType<typeof me>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMeSuspense<
   TData = Awaited<ReturnType<typeof me>>,
   TError = ErrorType<ProblemDetails>,
@@ -807,9 +763,23 @@ export function useMeSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
  * @summary Get the signed-in profile
  */
-
+export function useMeSuspense<
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.
+ * @summary Get the signed-in profile
+ */
 export function useMeSuspense<
   TData = Awaited<ReturnType<typeof me>>,
   TError = ErrorType<ProblemDetails>,
@@ -842,29 +812,10 @@ export const addPasskey = async (
   addPasskeyRequest: AddPasskeyRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PasskeyResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<PasskeyResponse>(getAddPasskeyUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(addPasskeyRequest),
   });
 };
@@ -913,6 +864,7 @@ export type AddPasskeyMutationError = ErrorType<ProblemDetails>;
 export type AddPasskeyMutationVariables = { data: AddPasskeyRequest };
 
 /**
+ * Verifies the credential the browser created from the registration options and stores it under the given name. The state cookie of the registration is read and deleted; it must belong to the signed-in user and to this session and be less than five minutes old. User verification (a PIN or biometric) is required and no attestation is checked.
  * @summary Finish adding a passkey
  */
 export const useAddPasskey = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -983,6 +935,10 @@ export const getPasskeysSuspenseQueryOptions = <
 export type PasskeysSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof passkeys>>>;
 export type PasskeysSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.
+ * @summary List your passkeys
+ */
 export function usePasskeysSuspense<
   TData = Awaited<ReturnType<typeof passkeys>>,
   TError = ErrorType<ProblemDetails>,
@@ -993,16 +949,10 @@ export function usePasskeysSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePasskeysSuspense<
-  TData = Awaited<ReturnType<typeof passkeys>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof passkeys>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.
+ * @summary List your passkeys
+ */
 export function usePasskeysSuspense<
   TData = Awaited<ReturnType<typeof passkeys>>,
   TError = ErrorType<ProblemDetails>,
@@ -1014,9 +964,23 @@ export function usePasskeysSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.
  * @summary List your passkeys
  */
-
+export function usePasskeysSuspense<
+  TData = Awaited<ReturnType<typeof passkeys>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof passkeys>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the signed-in user's passkeys, oldest first: the base64url credential id, the name, when it was added and whether it is synced between devices (backup eligible) or tied to one authenticator. Public keys and sign counts are never returned.
+ * @summary List your passkeys
+ */
 export function usePasskeysSuspense<
   TData = Awaited<ReturnType<typeof passkeys>>,
   TError = ErrorType<ProblemDetails>,
@@ -1049,29 +1013,10 @@ export const beginPasskeyRegistration = async (
   reauthenticateRequest: ReauthenticateRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PasskeyOptionsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<PasskeyOptionsResponse>(getBeginPasskeyRegistrationUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(reauthenticateRequest),
   });
 };
@@ -1122,6 +1067,7 @@ export type BeginPasskeyRegistrationMutationError = ErrorType<ProblemDetails | v
 export type BeginPasskeyRegistrationMutationVariables = { data: ReauthenticateRequest };
 
 /**
+ * Confirms the account password and returns the WebAuthn creation options as JSON text, ready for PublicKeyCredential.parseCreationOptionsFromJSON. The ceremony state travels in a protected, five-minute, single-use cookie bound to this user and this session; post the credential to POST /api/auth/passkeys to finish. The password counts toward the account lockout. Rate limited to five attempts per five minutes.
  * @summary Begin adding a passkey
  */
 export const useBeginPasskeyRegistration = <
@@ -1158,29 +1104,10 @@ export const passkeySignIn = async (
   passkeySignInRequest: PasskeySignInRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<LoginResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<LoginResponse>(getPasskeySignInUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(passkeySignInRequest),
   });
 };
@@ -1229,6 +1156,7 @@ export type PasskeySignInMutationError = ErrorType<ProblemDetails | void>;
 export type PasskeySignInMutationVariables = { data: PasskeySignInRequest };
 
 /**
+ * Anonymous. Verifies the assertion the browser made from the sign-in options and signs the owner of the passkey in exactly as a password sign-in does: a session row and the jx_access and jx_refresh cookies. A user-verified passkey is a whole sign-in, so no email, password or authenticator code is asked. A failed assertion never counts toward the account lockout, and a temporarily locked-out account may still sign in this way; a completed sign-in resets the failed-attempt counter. Rate limited to 10 attempts per five minutes per client.
  * @summary Sign in with a passkey
  */
 export const usePasskeySignIn = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1302,6 +1230,7 @@ export type BeginPasskeySignInMutationResult = NonNullable<
 export type BeginPasskeySignInMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Anonymous. Returns WebAuthn request options as JSON text, ready for PublicKeyCredential.parseRequestOptionsFromJSON, with no allowed credentials, so the authenticator offers the passkeys it holds for this site. The challenge travels in a protected, five-minute, single-use cookie; post the assertion to POST /api/auth/passkeys/sign-in. Rate limited to 10 calls per five minutes per client.
  * @summary Begin signing in with a passkey
  */
 export const useBeginPasskeySignIn = <
@@ -1383,6 +1312,7 @@ export type RemovePasskeyMutationError = ErrorType<ProblemDetails>;
 export type RemovePasskeyMutationVariables = { id: string };
 
 /**
+ * Deletes one of your passkeys, so it can no longer sign in. Sessions that are already open stay open; sign out everywhere else to end them.
  * @summary Remove a passkey
  */
 export const useRemovePasskey = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1417,29 +1347,10 @@ export const renamePasskey = async (
   renamePasskeyRequest: RenamePasskeyRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PasskeyResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<PasskeyResponse>(getRenamePasskeyUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(renamePasskeyRequest),
   });
 };
@@ -1488,6 +1399,7 @@ export type RenamePasskeyMutationError = ErrorType<ProblemDetails>;
 export type RenamePasskeyMutationVariables = { id: string; data: RenamePasskeyRequest };
 
 /**
+ * Changes the name the list shows for one of your passkeys. Nothing else about the passkey changes.
  * @summary Rename a passkey
  */
 export const useRenamePasskey = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1552,6 +1464,7 @@ export type RefreshMutationResult = NonNullable<Awaited<ReturnType<typeof refres
 export type RefreshMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Exchanges the refresh cookie for a new access token cookie and a rotated refresh cookie. Call it when a request answers 401, then retry that request once. The session keeps its original absolute expiry; renewing never extends it. A session whose user was deactivated, locked out, or had their role or password changed elsewhere is rejected.
  * @summary Renew the access token
  */
 export const useRefresh = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1575,29 +1488,10 @@ export const resetPassword = async (
   resetPasswordRequest: ResetPasswordRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getResetPasswordUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(resetPasswordRequest),
   });
 };
@@ -1646,6 +1540,7 @@ export type ResetPasswordMutationError = ErrorType<ProblemDetails | void>;
 export type ResetPasswordMutationVariables = { data: ResetPasswordRequest };
 
 /**
+ * Consumes the token from the emailed link and stores the new password. The token is ASP.NET Identity's own password-reset token: it carries the user's security stamp, so the completed reset invalidates it and a second attempt with the same link answers 400 passwordReset.tokenInvalid. An unknown address, a deactivated user, an expired token and a tampered token all answer with that same code, so nothing is learned from the difference. A password the validators refuse answers password.tooWeak. A successful reset clears the failed-attempt counter and a temporary lockout, changes the security stamp and therefore ends every open session of that user; a deactivation stays in place. A rejected token does not count toward the lockout. Rate limited to 10 calls per five minutes per client.
  * @summary Set a new password from a reset link
  */
 export const useResetPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1727,6 +1622,7 @@ export type SendVerificationEmailMutationResult = NonNullable<
 export type SendVerificationEmailMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server or no site address (App:SiteUrl) for the link yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.
  * @summary Send the confirmation email again
  */
 export const useSendVerificationEmail = <
@@ -1795,6 +1691,10 @@ export const getSessionsSuspenseQueryOptions = <
 export type SessionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof sessions>>>;
 export type SessionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
+ * @summary List signed-in browsers
+ */
 export function useSessionsSuspense<
   TData = Awaited<ReturnType<typeof sessions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1805,16 +1705,10 @@ export function useSessionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSessionsSuspense<
-  TData = Awaited<ReturnType<typeof sessions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
+ * @summary List signed-in browsers
+ */
 export function useSessionsSuspense<
   TData = Awaited<ReturnType<typeof sessions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1826,9 +1720,23 @@ export function useSessionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
  * @summary List signed-in browsers
  */
-
+export function useSessionsSuspense<
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
+ * @summary List signed-in browsers
+ */
 export function useSessionsSuspense<
   TData = Awaited<ReturnType<typeof sessions>>,
   TError = ErrorType<ProblemDetails>,
@@ -1904,6 +1812,7 @@ export type RevokeOtherSessionsMutationResult = NonNullable<
 export type RevokeOtherSessionsMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Deletes every session of the caller except the one that makes the request, including expired and stale rows. Safe to call when no other session exists.
  * @summary Sign out everywhere else
  */
 export const useRevokeOtherSessions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1982,6 +1891,7 @@ export type RevokeSessionMutationError = ErrorType<ProblemDetails>;
 export type RevokeSessionMutationVariables = { id: string };
 
 /**
+ * Deletes one of the caller's other sessions. That browser is refused on its next request, because every request checks that its session still exists, and it cannot refresh. The session that makes the request is refused with session.current; it ends through sign out.
  * @summary Sign another browser out
  */
 export const useRevokeSession = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2015,29 +1925,10 @@ export const createPersonalApiToken = async (
   createPersonalApiTokenRequest: CreatePersonalApiTokenRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CreatedPersonalApiTokenResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<CreatedPersonalApiTokenResponse>(getCreatePersonalApiTokenUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createPersonalApiTokenRequest),
   });
 };
@@ -2088,6 +1979,7 @@ export type CreatePersonalApiTokenMutationError = ErrorType<ProblemDetails | voi
 export type CreatePersonalApiTokenMutationVariables = { data: CreatePersonalApiTokenRequest };
 
 /**
+ * Confirms the account password and creates a token for scripts, spreadsheets and home automation. The token is returned once, in this response, and never again: only its public prefix and a hash of its secret are kept. Send it as Authorization: Bearer jxp_... to read what you read in the browser. A read-and-write token can also record, change and delete transactions and transfers, set their category or tags in bulk and confirm recurring entries; it lives at most 90 days. No token reaches administration, sessions, tokens, settings, backups or attachments. The password counts toward the account lockout. Needs the ApiTokens feature switch. Rate limited to five attempts per five minutes.
  * @summary Create a personal API token
  */
 export const useCreatePersonalApiToken = <
@@ -2165,6 +2057,10 @@ export type PersonalApiTokensSuspenseQueryResult = NonNullable<
 >;
 export type PersonalApiTokensSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
+ * @summary List your personal API tokens
+ */
 export function usePersonalApiTokensSuspense<
   TData = Awaited<ReturnType<typeof personalApiTokens>>,
   TError = ErrorType<ProblemDetails>,
@@ -2177,18 +2073,10 @@ export function usePersonalApiTokensSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePersonalApiTokensSuspense<
-  TData = Awaited<ReturnType<typeof personalApiTokens>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
+ * @summary List your personal API tokens
+ */
 export function usePersonalApiTokensSuspense<
   TData = Awaited<ReturnType<typeof personalApiTokens>>,
   TError = ErrorType<ProblemDetails>,
@@ -2202,9 +2090,25 @@ export function usePersonalApiTokensSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
  * @summary List your personal API tokens
  */
-
+export function usePersonalApiTokensSuspense<
+  TData = Awaited<ReturnType<typeof personalApiTokens>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof personalApiTokens>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the signed-in user's tokens, newest first: the name, the public prefix, when each was created, when it expires and when it was last used, to the minute. Expired tokens stay listed, marked as expired, until they are removed 30 days after expiry. The secret is never returned. Needs the ApiTokens feature switch.
+ * @summary List your personal API tokens
+ */
 export function usePersonalApiTokensSuspense<
   TData = Awaited<ReturnType<typeof personalApiTokens>>,
   TError = ErrorType<ProblemDetails>,
@@ -2291,6 +2195,7 @@ export type RevokePersonalApiTokenMutationError = ErrorType<ProblemDetails>;
 export type RevokePersonalApiTokenMutationVariables = { id: string };
 
 /**
+ * Deletes one of your tokens, so the next request that carries it answers 401 token.invalid. Needs the ApiTokens feature switch.
  * @summary Revoke a personal API token
  */
 export const useRevokePersonalApiToken = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2324,29 +2229,10 @@ export const verifyEmail = async (
   verifyEmailRequest: VerifyEmailRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<void>(getVerifyEmailUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(verifyEmailRequest),
   });
 };
@@ -2395,6 +2281,7 @@ export type VerifyEmailMutationError = ErrorType<ProblemDetails | void>;
 export type VerifyEmailMutationVariables = { data: VerifyEmailRequest };
 
 /**
+ * Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.
  * @summary Confirm an email address
  */
 export const useVerifyEmail = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(

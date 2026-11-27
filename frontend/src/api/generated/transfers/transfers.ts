@@ -40,6 +40,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -67,29 +102,10 @@ export const createTransfer = async (
   createTransferRequest: CreateTransferRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransferResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TransferResponse>(getCreateTransferUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createTransferRequest),
   });
 };
@@ -138,6 +154,7 @@ export type CreateTransferMutationError = ErrorType<ProblemDetails>;
 export type CreateTransferMutationVariables = { data: CreateTransferRequest };
 
 /**
+ * Moves money from one of your accounts to another. Both balances change and neither side counts as income or expense, so reports and budgets are left alone. The two accounts must differ and both must be visible to you.
  * @summary Create a transfer
  */
 export const useCreateTransfer = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -218,6 +235,10 @@ export const getTransfersQueryOptions = <
 export type TransfersQueryResult = NonNullable<Awaited<ReturnType<typeof transfers>>>;
 export type TransfersQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfers<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -237,6 +258,10 @@ export function useTransfers<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfers<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -256,6 +281,10 @@ export function useTransfers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfers<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -268,9 +297,9 @@ export function useTransfers<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
  * @summary List transfers
  */
-
 export function useTransfers<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -322,6 +351,10 @@ export const getTransfersSuspenseQueryOptions = <
 export type TransfersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transfers>>>;
 export type TransfersSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfersSuspense<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -333,17 +366,10 @@ export function useTransfersSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTransfersSuspense<
-  TData = Awaited<ReturnType<typeof transfers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: TransfersParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfersSuspense<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -356,9 +382,24 @@ export function useTransfersSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
  * @summary List transfers
  */
-
+export function useTransfersSuspense<
+  TData = Awaited<ReturnType<typeof transfers>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: TransfersParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
+ * @summary List transfers
+ */
 export function useTransfersSuspense<
   TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
@@ -442,6 +483,7 @@ export type DeleteTransferMutationError = ErrorType<ProblemDetails>;
 export type DeleteTransferMutationVariables = { id: string };
 
 /**
+ * Reverses the transfer: both account balances go back to what they were before it.
  * @summary Delete a transfer
  */
 export const useDeleteTransfer = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -476,29 +518,10 @@ export const updateTransfer = async (
   updateTransferRequest: UpdateTransferRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransferResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TransferResponse>(getUpdateTransferUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateTransferRequest),
   });
 };
@@ -547,6 +570,7 @@ export type UpdateTransferMutationError = ErrorType<ProblemDetails>;
 export type UpdateTransferMutationVariables = { id: string; data: UpdateTransferRequest };
 
 /**
+ * Replaces the date, amounts, description and both accounts of a transfer. The amount rules are those of creating one: between two currencies the received amount is required, within one currency it may be left out and must equal the sent amount when given. Send currency and receivedCurrency as the transfer has them; without them they default to the main currency of the chosen accounts. You need access to both accounts the transfer has now and to both accounts it should have afterwards. A transfer that was created or matched by a bank or broker import holds a receipt per imported account, flagged by fromAccountImported and toAccountImported: its date, that account's side of the transfer and the amount on that side are fixed and a change answers value.locked, while the description, the other account and, between currencies, the other amount stay editable.
  * @summary Update a transfer
  */
 export const useUpdateTransfer = <TError = ErrorType<ProblemDetails>, TContext = unknown>(

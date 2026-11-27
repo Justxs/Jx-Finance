@@ -63,6 +63,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -131,6 +166,10 @@ export type AllocationTargetsSuspenseQueryResult = NonNullable<
 >;
 export type AllocationTargetsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
+ * @summary Get your target allocation
+ */
 export function useAllocationTargetsSuspense<
   TData = Awaited<ReturnType<typeof allocationTargets>>,
   TError = ErrorType<ProblemDetails>,
@@ -143,18 +182,10 @@ export function useAllocationTargetsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useAllocationTargetsSuspense<
-  TData = Awaited<ReturnType<typeof allocationTargets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
+ * @summary Get your target allocation
+ */
 export function useAllocationTargetsSuspense<
   TData = Awaited<ReturnType<typeof allocationTargets>>,
   TError = ErrorType<ProblemDetails>,
@@ -168,9 +199,25 @@ export function useAllocationTargetsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
  * @summary Get your target allocation
  */
-
+export function useAllocationTargetsSuspense<
+  TData = Awaited<ReturnType<typeof allocationTargets>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof allocationTargets>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the target shares you set for your investments, in percent, and the one dimension they are set by: security type (keys such as etf or stock), the security's currency (eur, usd) or the security itself (its id, answered with its symbol). Targets belong to the signed-in member alone and are the same whichever account or household is chosen. Without targets, dimension is null and targets is empty. Compare them with byType, byCurrency or the holdings of GET /api/investments/portfolio.
+ * @summary Get your target allocation
+ */
 export function useAllocationTargetsSuspense<
   TData = Awaited<ReturnType<typeof allocationTargets>>,
   TError = ErrorType<ProblemDetails>,
@@ -205,29 +252,10 @@ export const saveAllocationTargets = async (
   saveAllocationTargetsRequest: SaveAllocationTargetsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<AllocationTargetsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<AllocationTargetsResponse>(getSaveAllocationTargetsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(saveAllocationTargetsRequest),
   });
 };
@@ -278,6 +306,7 @@ export type SaveAllocationTargetsMutationError = ErrorType<ProblemDetails>;
 export type SaveAllocationTargetsMutationVariables = { data: SaveAllocationTargetsRequest };
 
 /**
+ * Replaces every target you had with the ones sent, all in one dimension, so targets of another dimension are dropped; an empty list removes your targets. Shares are percentages with at most two decimals and add up to exactly 100. A bucket you hold without a target counts as a target of 0.
  * @summary Replace your target allocation
  */
 export const useSaveAllocationTargets = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -352,6 +381,10 @@ export type BrokerConnectionsSuspenseQueryResult = NonNullable<
 >;
 export type BrokerConnectionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * One connection per account. The Flex token is write-only and never returned.
+ * @summary List your Interactive Brokers connections
+ */
 export function useBrokerConnectionsSuspense<
   TData = Awaited<ReturnType<typeof brokerConnections>>,
   TError = ErrorType<ProblemDetails>,
@@ -364,18 +397,10 @@ export function useBrokerConnectionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useBrokerConnectionsSuspense<
-  TData = Awaited<ReturnType<typeof brokerConnections>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof brokerConnections>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * One connection per account. The Flex token is write-only and never returned.
+ * @summary List your Interactive Brokers connections
+ */
 export function useBrokerConnectionsSuspense<
   TData = Awaited<ReturnType<typeof brokerConnections>>,
   TError = ErrorType<ProblemDetails>,
@@ -389,9 +414,25 @@ export function useBrokerConnectionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * One connection per account. The Flex token is write-only and never returned.
  * @summary List your Interactive Brokers connections
  */
-
+export function useBrokerConnectionsSuspense<
+  TData = Awaited<ReturnType<typeof brokerConnections>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof brokerConnections>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * One connection per account. The Flex token is write-only and never returned.
+ * @summary List your Interactive Brokers connections
+ */
 export function useBrokerConnectionsSuspense<
   TData = Awaited<ReturnType<typeof brokerConnections>>,
   TError = ErrorType<ProblemDetails>,
@@ -478,6 +519,7 @@ export type DeleteBrokerConnectionMutationError = ErrorType<ProblemDetails>;
 export type DeleteBrokerConnectionMutationVariables = { accountId: string };
 
 /**
+ * Forgets the token and stops automatic sync. Imported entries stay.
  * @summary Remove an Interactive Brokers connection
  */
 export const useDeleteBrokerConnection = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -512,29 +554,10 @@ export const saveBrokerConnection = async (
   saveBrokerConnectionRequest: SaveBrokerConnectionRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<BrokerConnectionResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<BrokerConnectionResponse>(getSaveBrokerConnectionUrl(accountId), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(saveBrokerConnectionRequest),
   });
 };
@@ -588,6 +611,7 @@ export type SaveBrokerConnectionMutationVariables = {
 };
 
 /**
+ * Stores the Flex Query id and token so the server can download the report once a day and on demand. The token is encrypted at rest. Leave Token empty to keep the stored one.
  * @summary Connect an account to the Interactive Brokers Flex Web Service
  */
 export const useSaveBrokerConnection = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -673,6 +697,7 @@ export type SyncBrokerConnectionMutationError = ErrorType<ProblemDetails>;
 export type SyncBrokerConnectionMutationVariables = { accountId: string };
 
 /**
+ * Asks Interactive Brokers to run the stored Flex Query, waits for it, and imports it the same way as an uploaded file. Can take up to a minute.
  * @summary Download and import the Flex Query report now
  */
 export const useSyncBrokerConnection = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -773,6 +798,7 @@ export type ImportBrokerReportMutationError = ErrorType<ProblemDetails>;
 export type ImportBrokerReportMutationVariables = { data: ImportBrokerReportRequest };
 
 /**
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; an issue change (IC) to another symbol becomes a symbol change that carries the holding to the new security, and a merger (TC) a merger entry with the cash proceeds and the shares received, both counted in corporateActions; a merger paid in shares and cash takes its cost share from the value of the shares received and, without one, lists the received security in costSharesMissing; a spin-off (SO) whose parent the description names by ISIN becomes a spin-off entry with the new shares at no cost, also listed in costSharesMissing, because the report carries no cost allocation; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (stock dividends, rights issues, tender offers, delistings) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const useImportBrokerReport = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -865,6 +891,7 @@ export type ImportTradeCsvMutationError = ErrorType<ProblemDetails>;
 export type ImportTradeCsvMutationVariables = { data: ImportTradeCsvRequest };
 
 /**
+ * Reads a CSV with a header row: Date (YYYY-MM-DD), Type (buy, sell, dividend, withholdingTax, interest or fee) and Currency are required; Symbol, Quantity and Price are required for a buy or sell and Amount for the other types; Fee, Name, Isin, SecurityType (stock, etf or fund), Description and Id are optional. The delimiter is detected, and a number may use a decimal point or a decimal comma. Buys and sells become trades whose fee is part of the cost, the other types become cash entries, and a security is matched by ISIN or by symbol and currency, or created. Every row is matched by its Id or, without one, by a hash of the row, so importing the same file twice never duplicates. The import is all or nothing and refuses a sale of more than was held. Rows that cannot be read are counted in skipped.
  * @summary Import trades from any broker as CSV
  */
 export const useImportTradeCsv = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -951,6 +978,10 @@ export const getPortfolioSuspenseQueryOptions = <
 export type PortfolioSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof portfolio>>>;
 export type PortfolioSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
+ * @summary Get the investment portfolio
+ */
 export function usePortfolioSuspense<
   TData = Awaited<ReturnType<typeof portfolio>>,
   TError = ErrorType<ProblemDetails>,
@@ -962,17 +993,10 @@ export function usePortfolioSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePortfolioSuspense<
-  TData = Awaited<ReturnType<typeof portfolio>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: PortfolioParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof portfolio>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
+ * @summary Get the investment portfolio
+ */
 export function usePortfolioSuspense<
   TData = Awaited<ReturnType<typeof portfolio>>,
   TError = ErrorType<ProblemDetails>,
@@ -985,9 +1009,24 @@ export function usePortfolioSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
  * @summary Get the investment portfolio
  */
-
+export function usePortfolioSuspense<
+  TData = Awaited<ReturnType<typeof portfolio>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: PortfolioParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof portfolio>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
+ * @summary Get the investment portfolio
+ */
 export function usePortfolioSuspense<
   TData = Awaited<ReturnType<typeof portfolio>>,
   TError = ErrorType<ProblemDetails>,
@@ -1070,6 +1109,10 @@ export const getSecuritiesQueryOptions = <
 export type SecuritiesQueryResult = NonNullable<Awaited<ReturnType<typeof securities>>>;
 export type SecuritiesQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecurities<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1089,6 +1132,10 @@ export function useSecurities<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecurities<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1108,6 +1155,10 @@ export function useSecurities<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecurities<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1120,9 +1171,9 @@ export function useSecurities<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
  * @summary List securities
  */
-
 export function useSecurities<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1174,6 +1225,10 @@ export const getSecuritiesSuspenseQueryOptions = <
 export type SecuritiesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof securities>>>;
 export type SecuritiesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecuritiesSuspense<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1185,17 +1240,10 @@ export function useSecuritiesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSecuritiesSuspense<
-  TData = Awaited<ReturnType<typeof securities>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: SecuritiesParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof securities>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecuritiesSuspense<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1208,9 +1256,24 @@ export function useSecuritiesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
  * @summary List securities
  */
-
+export function useSecuritiesSuspense<
+  TData = Awaited<ReturnType<typeof securities>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: SecuritiesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof securities>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
 export function useSecuritiesSuspense<
   TData = Awaited<ReturnType<typeof securities>>,
   TError = ErrorType<ProblemDetails>,
@@ -1244,29 +1307,10 @@ export const createSecurity = async (
   saveSecurityRequest: SaveSecurityRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SecurityResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<SecurityResponse>(getCreateSecurityUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(saveSecurityRequest),
   });
 };
@@ -1315,6 +1359,7 @@ export type CreateSecurityMutationError = ErrorType<ProblemDetails>;
 export type CreateSecurityMutationVariables = { data: SaveSecurityRequest };
 
 /**
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.
  * @summary Add a security
  */
 export const useCreateSecurity = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1349,29 +1394,10 @@ export const updateSecurity = async (
   saveSecurityRequest: SaveSecurityRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SecurityResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<SecurityResponse>(getUpdateSecurityUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(saveSecurityRequest),
   });
 };
@@ -1420,6 +1446,7 @@ export type UpdateSecurityMutationError = ErrorType<ProblemDetails>;
 export type UpdateSecurityMutationVariables = { id: string; data: SaveSecurityRequest };
 
 /**
+ * Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.
  * @summary Update the details of a security
  */
 export const useUpdateSecurity = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1454,29 +1481,10 @@ export const setSecurityPrice = async (
   setSecurityPriceRequest: SetSecurityPriceRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SecurityResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<SecurityResponse>(getSetSecurityPriceUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(setSecurityPriceRequest),
   });
 };
@@ -1527,6 +1535,7 @@ export type SetSecurityPriceMutationError = ErrorType<ProblemDetails>;
 export type SetSecurityPriceMutationVariables = { id: string; data: SetSecurityPriceRequest };
 
 /**
+ * Records the price for one date by hand, replacing a price already recorded for that date. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security follows the newest date: a price for an earlier date adds a history point and leaves the last known price alone. A broker import records the mark price of its report date the same way.
  * @summary Record a price of a security
  */
 export const useSetSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1612,6 +1621,7 @@ export type FindPriceSymbolMutationError = ErrorType<ProblemDetails>;
 export type FindPriceSymbolMutationVariables = { id: string };
 
 /**
+ * Asks EODHD's search for the security's ISIN and answers the listings it knows, each with the symbol to use as the price symbol, the exchange, the name and the currency it is quoted in. Saves nothing. Each lookup is one of the day's EODHD calls. Administrators only.
  * @summary Look up the EODHD symbols of a security
  */
 export const useFindPriceSymbol = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1704,6 +1714,10 @@ export type SecurityPricesSuspenseQueryResult = NonNullable<
 >;
 export type SecurityPricesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
+ * @summary List the price history of a security
+ */
 export function useSecurityPricesSuspense<
   TData = Awaited<ReturnType<typeof securityPrices>>,
   TError = ErrorType<ProblemDetails>,
@@ -1718,20 +1732,10 @@ export function useSecurityPricesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSecurityPricesSuspense<
-  TData = Awaited<ReturnType<typeof securityPrices>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  params?: SecurityPricesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
+ * @summary List the price history of a security
+ */
 export function useSecurityPricesSuspense<
   TData = Awaited<ReturnType<typeof securityPrices>>,
   TError = ErrorType<ProblemDetails>,
@@ -1747,9 +1751,27 @@ export function useSecurityPricesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
  * @summary List the price history of a security
  */
-
+export function useSecurityPricesSuspense<
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: SecurityPricesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
+ * @summary List the price history of a security
+ */
 export function useSecurityPricesSuspense<
   TData = Awaited<ReturnType<typeof securityPrices>>,
   TError = ErrorType<ProblemDetails>,
@@ -1848,6 +1870,7 @@ export type ImportSecurityPricesMutationVariables = {
 };
 
 /**
+ * Reads a CSV of at most 5 MB with a header row holding date and price columns. Dates are YYYY-MM-DD, YYYY.MM.DD or DD.MM.YYYY, a price may use a decimal point or a decimal comma, and the delimiter is detected. Each price is recorded in the price history as imported from a file: it replaces a fetched price of the same date and is never replaced by one. Makes no outside request and works whether or not daily price fetching is on. Allowed for an administrator or someone who holds the security, as for setting a price.
  * @summary Import the price history of one security from a CSV
  */
 export const useImportSecurityPrices = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1934,6 +1957,7 @@ export type DeleteSecurityPriceMutationError = ErrorType<ProblemDetails>;
 export type DeleteSecurityPriceMutationVariables = { id: string; date: string };
 
 /**
+ * Removes the price recorded for one date. The same rule as setting a price applies: open to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security becomes the newest remaining point, or empty when none is left.
  * @summary Delete a point of a security's price history
  */
 export const useDeleteSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -2020,6 +2044,10 @@ export const getTaxSummarySuspenseQueryOptions = <
 export type TaxSummarySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof taxSummary>>>;
 export type TaxSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * @summary Get the yearly investment tax summary
+ */
 export function useTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof taxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2031,17 +2059,10 @@ export function useTaxSummarySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTaxSummarySuspense<
-  TData = Awaited<ReturnType<typeof taxSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: TaxSummaryParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * @summary Get the yearly investment tax summary
+ */
 export function useTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof taxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2054,9 +2075,24 @@ export function useTaxSummarySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
  * @summary Get the yearly investment tax summary
  */
-
+export function useTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TaxSummaryParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal, a sale or the cash part of a merger, with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * @summary Get the yearly investment tax summary
+ */
 export function useTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof taxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2147,6 +2183,10 @@ export type ExportTaxSummarySuspenseQueryResult = NonNullable<
 >;
 export type ExportTaxSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
+ * @summary Export the yearly investment tax summary as CSV
+ */
 export function useExportTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof exportTaxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2160,19 +2200,10 @@ export function useExportTaxSummarySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTaxSummarySuspense<
-  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: ExportTaxSummaryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
+ * @summary Export the yearly investment tax summary as CSV
+ */
 export function useExportTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof exportTaxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2187,9 +2218,26 @@ export function useExportTaxSummarySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
  * @summary Export the yearly investment tax summary as CSV
  */
-
+export function useExportTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ExportTaxSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named jx-finance-investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
+ * @summary Export the yearly investment tax summary as CSV
+ */
 export function useExportTaxSummarySuspense<
   TData = Awaited<ReturnType<typeof exportTaxSummary>>,
   TError = ErrorType<ProblemDetails>,
@@ -2225,29 +2273,10 @@ export const createInvestmentTransaction = async (
   createInvestmentTransactionRequest: CreateInvestmentTransactionRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<InvestmentTransactionResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<InvestmentTransactionResponse>(getCreateInvestmentTransactionUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(createInvestmentTransactionRequest),
   });
 };
@@ -2301,6 +2330,7 @@ export type CreateInvestmentTransactionMutationVariables = {
 };
 
 /**
+ * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. A spin-off needs the parent security, the new security in RelatedSecurityId and its shares in RelatedQuantity; CostShare, the percentage of the parent's cost basis that moves to the new security, may be left out and set later, and counts as 0 until then. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
  * @summary Record an investment transaction
  */
 export const useCreateInvestmentTransaction = <
@@ -2399,6 +2429,10 @@ export type InvestmentTransactionsSuspenseQueryResult = NonNullable<
 >;
 export type InvestmentTransactionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Pages through trades, dividends, withholding tax, interest, fees, splits and corporate actions on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account. A corporate action that moves a holding names the security it moves to in RelatedSecurityId.
+ * @summary List investment transactions
+ */
 export function useInvestmentTransactionsSuspense<
   TData = Awaited<ReturnType<typeof investmentTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -2412,19 +2446,10 @@ export function useInvestmentTransactionsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useInvestmentTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof investmentTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: InvestmentTransactionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof investmentTransactions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Pages through trades, dividends, withholding tax, interest, fees, splits and corporate actions on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account. A corporate action that moves a holding names the security it moves to in RelatedSecurityId.
+ * @summary List investment transactions
+ */
 export function useInvestmentTransactionsSuspense<
   TData = Awaited<ReturnType<typeof investmentTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -2439,9 +2464,26 @@ export function useInvestmentTransactionsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Pages through trades, dividends, withholding tax, interest, fees, splits and corporate actions on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account. A corporate action that moves a holding names the security it moves to in RelatedSecurityId.
  * @summary List investment transactions
  */
-
+export function useInvestmentTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof investmentTransactions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: InvestmentTransactionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof investmentTransactions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Pages through trades, dividends, withholding tax, interest, fees, splits and corporate actions on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account. A corporate action that moves a holding names the security it moves to in RelatedSecurityId.
+ * @summary List investment transactions
+ */
 export function useInvestmentTransactionsSuspense<
   TData = Awaited<ReturnType<typeof investmentTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -2530,6 +2572,7 @@ export type DeleteInvestmentTransactionMutationError = ErrorType<ProblemDetails>
 export type DeleteInvestmentTransactionMutationVariables = { id: string };
 
 /**
+ * Removes the entry and its cash effect and records it in the trash, so POST /api/trash/restore can bring it back for 30 days. A later broker import will not bring a deleted imported entry back. A buy or split that later sales depend on is refused.
  * @summary Delete an investment transaction
  */
 export const useDeleteInvestmentTransaction = <
@@ -2567,29 +2610,10 @@ export const updateInvestmentTransaction = async (
   updateInvestmentTransactionRequest: UpdateInvestmentTransactionRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<InvestmentTransactionResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<InvestmentTransactionResponse>(getUpdateInvestmentTransactionUrl(id), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateInvestmentTransactionRequest),
   });
 };
@@ -2644,6 +2668,7 @@ export type UpdateInvestmentTransactionMutationVariables = {
 };
 
 /**
+ * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported spin-off or merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.
  * @summary Correct an investment transaction
  */
 export const useUpdateInvestmentTransaction = <
@@ -2735,6 +2760,10 @@ export const getValueHistorySuspenseQueryOptions = <
 export type ValueHistorySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof valueHistory>>>;
 export type ValueHistorySuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
+ * @summary Get the portfolio value over time
+ */
 export function useValueHistorySuspense<
   TData = Awaited<ReturnType<typeof valueHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -2748,19 +2777,10 @@ export function useValueHistorySuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useValueHistorySuspense<
-  TData = Awaited<ReturnType<typeof valueHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: ValueHistoryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
+ * @summary Get the portfolio value over time
+ */
 export function useValueHistorySuspense<
   TData = Awaited<ReturnType<typeof valueHistory>>,
   TError = ErrorType<ProblemDetails>,
@@ -2775,9 +2795,26 @@ export function useValueHistorySuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
  * @summary Get the portfolio value over time
  */
-
+export function useValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
+ * @summary Get the portfolio value over time
+ */
 export function useValueHistorySuspense<
   TData = Awaited<ReturnType<typeof valueHistory>>,
   TError = ErrorType<ProblemDetails>,

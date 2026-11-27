@@ -53,6 +53,41 @@ import type {
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+const getHeaders = (
+  ...sources: (
+    | RequestInit["headers"]
+    | Record<string, string | number | boolean | bigint | readonly string[] | undefined>
+  )[]
+) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries =
+      source instanceof Headers
+        ? source.entries()
+        : Symbol.iterator in source
+          ? Array.from(
+              source as Iterable<Iterable<string>>,
+              (entry) => Array.from(entry) as [string, string],
+            )
+          : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(
+              source,
+            );
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase()))
+        layer.push([name, typeof value === "object" ? value : String(value)]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<
+    RequestInit["headers"],
+    Record<string, unknown>
+  >;
+};
+
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
@@ -113,6 +148,10 @@ export const getSettingsQueryOptions = <
 export type SettingsQueryResult = NonNullable<Awaited<ReturnType<typeof settings>>>;
 export type SettingsQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettings<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -131,6 +170,10 @@ export function useSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettings<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -149,6 +192,10 @@ export function useSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettings<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -160,9 +207,9 @@ export function useSettings<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
  * @summary Read installation settings
  */
-
 export function useSettings<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -210,6 +257,10 @@ export const getSettingsSuspenseQueryOptions = <
 export type SettingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settings>>>;
 export type SettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettingsSuspense<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -220,16 +271,10 @@ export function useSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSettingsSuspense<
-  TData = Awaited<ReturnType<typeof settings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettingsSuspense<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -241,9 +286,23 @@ export function useSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
  * @summary Read installation settings
  */
-
+export function useSettingsSuspense<
+  TData = Awaited<ReturnType<typeof settings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
 export function useSettingsSuspense<
   TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
@@ -276,29 +335,10 @@ export const updateSettings = async (
   updateSettingsRequest: UpdateSettingsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SettingsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<SettingsResponse>(getUpdateSettingsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateSettingsRequest),
   });
 };
@@ -347,6 +387,7 @@ export type UpdateSettingsMutationError = ErrorType<ProblemDetails>;
 export type UpdateSettingsMutationVariables = { data: UpdateSettingsRequest };
 
 /**
+ * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature.disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
  * @summary Update installation settings
  */
 export const useUpdateSettings = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -421,6 +462,10 @@ export type DiscordSettingsSuspenseQueryResult = NonNullable<
 >;
 export type DiscordSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Discord channel
+ */
 export function useDiscordSettingsSuspense<
   TData = Awaited<ReturnType<typeof discordSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -433,18 +478,10 @@ export function useDiscordSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useDiscordSettingsSuspense<
-  TData = Awaited<ReturnType<typeof discordSettings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof discordSettings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Discord channel
+ */
 export function useDiscordSettingsSuspense<
   TData = Awaited<ReturnType<typeof discordSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -458,9 +495,25 @@ export function useDiscordSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
  * @summary Read the installation's Discord channel
  */
-
+export function useDiscordSettingsSuspense<
+  TData = Awaited<ReturnType<typeof discordSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof discordSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether Discord is switched on, whether a webhook is saved, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Discord channel
+ */
 export function useDiscordSettingsSuspense<
   TData = Awaited<ReturnType<typeof discordSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -495,29 +548,10 @@ export const updateDiscordSettings = async (
   updateDiscordSettingsRequest: UpdateDiscordSettingsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<DiscordSettingsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<DiscordSettingsResponse>(getUpdateDiscordSettingsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateDiscordSettingsRequest),
   });
 };
@@ -568,6 +602,7 @@ export type UpdateDiscordSettingsMutationError = ErrorType<ProblemDetails | void
 export type UpdateDiscordSettingsMutationVariables = { data: UpdateDiscordSettingsRequest };
 
 /**
+ * Stores the webhook of the one Discord channel this installation posts to and switches outbound Discord traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook, as does switching Discord on before a webhook is saved. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. While Discord is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.
  * @summary Save the installation's Discord channel
  */
 export const useUpdateDiscordSettings = <
@@ -644,6 +679,7 @@ export type SendTestDiscordMutationResult = NonNullable<
 export type SendTestDiscordMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Posts one short message to the saved webhook right away and waits for Discord's answer, even while Discord is switched off, so the channel can be checked before members use it. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it), discord.rateLimited, discord.rejected or discord.sendFailed. discord.webhookUnreadable means the stored URL cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.
  * @summary Send a test message to the Discord channel
  */
 export const useSendTestDiscord = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -729,6 +765,10 @@ export type ExchangeRateEntriesSuspenseQueryResult = NonNullable<
 >;
 export type ExchangeRateEntriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
+ * @summary List the stored exchange rates of a currency
+ */
 export function useExchangeRateEntriesSuspense<
   TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -742,19 +782,10 @@ export function useExchangeRateEntriesSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExchangeRateEntriesSuspense<
-  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExchangeRateEntriesParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
+ * @summary List the stored exchange rates of a currency
+ */
 export function useExchangeRateEntriesSuspense<
   TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -769,9 +800,26 @@ export function useExchangeRateEntriesSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
  * @summary List the stored exchange rates of a currency
  */
-
+export function useExchangeRateEntriesSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ExchangeRateEntriesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRateEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Administrators only. Returns the rates of one currency in units per euro, newest first: every rate synced from the ECB in the last 30 days and every rate an administrator entered by hand, whatever its date. A date with both shows the hand-entered rate, which wins, with the synced one beside it.
+ * @summary List the stored exchange rates of a currency
+ */
 export function useExchangeRateEntriesSuspense<
   TData = Awaited<ReturnType<typeof exchangeRateEntries>>,
   TError = ErrorType<ProblemDetails>,
@@ -847,6 +895,7 @@ export type SyncExchangeRatesMutationResult = NonNullable<
 export type SyncExchangeRatesMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Administrators only. Fetches reference rates published since the newest stored date. It works even when automatic sync is turned off.
  * @summary Fetch exchange rates now
  */
 export const useSyncExchangeRates = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -928,6 +977,7 @@ export type DeleteExchangeRateMutationError = ErrorType<ProblemDetails>;
 export type DeleteExchangeRateMutationVariables = { currency: Currency; date: string };
 
 /**
+ * Administrators only. Removes the rate entered by hand for a currency and date, so the synced ECB rate of that date, or else the newest stored rate before it, applies again. The rows that depended on it are valued again in the same way as when the rate was entered; when one of them would be left without a rate nothing is deleted. Synced rates cannot be deleted.
  * @summary Delete an exchange rate entered by hand
  */
 export const useDeleteExchangeRate = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -963,29 +1013,10 @@ export const setExchangeRate = async (
   setExchangeRateRequest: SetExchangeRateRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<ExchangeRateEntryResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<ExchangeRateEntryResponse>(getSetExchangeRateUrl(currency, date), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(setExchangeRateRequest),
   });
 };
@@ -1040,6 +1071,7 @@ export type SetExchangeRateMutationVariables = {
 };
 
 /**
+ * Administrators only. Stores the rate of a currency for one date, in units per euro, replacing one entered for the same date before. A rate entered by hand wins over the synced ECB rate of the same date and, like any rate, applies until the next stored rate of that currency. In the same database transaction every transaction and investment entry dated from that date up to the day before the next stored rate, and not after today, whose reporting value depends on the currency is valued again; when one of them cannot be valued nothing is saved.
  * @summary Enter an exchange rate by hand
  */
 export const useSetExchangeRate = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1114,6 +1146,10 @@ export type MarketPriceSettingsSuspenseQueryResult = NonNullable<
 >;
 export type MarketPriceSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
+ * @summary Read the market price settings of this installation
+ */
 export function useMarketPriceSettingsSuspense<
   TData = Awaited<ReturnType<typeof marketPriceSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1126,18 +1162,10 @@ export function useMarketPriceSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useMarketPriceSettingsSuspense<
-  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
+ * @summary Read the market price settings of this installation
+ */
 export function useMarketPriceSettingsSuspense<
   TData = Awaited<ReturnType<typeof marketPriceSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1151,9 +1179,25 @@ export function useMarketPriceSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
  * @summary Read the market price settings of this installation
  */
-
+export function useMarketPriceSettingsSuspense<
+  TData = Awaited<ReturnType<typeof marketPriceSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof marketPriceSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether closing prices are fetched daily, whether an EODHD API key is saved (never the key itself), when the last fetch ran, how many EODHD calls are left today, and the securities whose last fetch failed with the reason. Administrators only.
+ * @summary Read the market price settings of this installation
+ */
 export function useMarketPriceSettingsSuspense<
   TData = Awaited<ReturnType<typeof marketPriceSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1188,29 +1232,10 @@ export const updateMarketPriceSettings = async (
   updateMarketPriceSettingsRequest: UpdateMarketPriceSettingsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<MarketPriceSettingsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<MarketPriceSettingsResponse>(getUpdateMarketPriceSettingsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateMarketPriceSettingsRequest),
   });
 };
@@ -1261,6 +1286,7 @@ export type UpdateMarketPriceSettingsMutationError = ErrorType<ProblemDetails>;
 export type UpdateMarketPriceSettingsMutationVariables = { data: UpdateMarketPriceSettingsRequest };
 
 /**
+ * Switches the daily fetch of closing prices on or off and saves, keeps or removes the EODHD API key. The key is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasKey instead. While the switch is off the server makes no request to a price provider on its own. Administrators only.
  * @summary Save the market price settings of this installation
  */
 export const useUpdateMarketPriceSettings = <
@@ -1337,6 +1363,7 @@ export type SyncMarketPricesMutationResult = NonNullable<
 export type SyncMarketPricesMutationError = ErrorType<ProblemDetails>;
 
 /**
+ * Fetches the missing closing prices of every held security that has a price source, as the daily run does, including securities whose last fetch failed less than a day ago. Works whether or not the daily fetch is switched on. EODHD calls count against the daily limit. Administrators only.
  * @summary Fetch closing prices now
  */
 export const useSyncMarketPrices = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1398,6 +1425,10 @@ export const getPublicSettingsQueryOptions = <
 export type PublicSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof publicSettings>>>;
 export type PublicSettingsQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettings<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1416,6 +1447,10 @@ export function usePublicSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettings<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1434,6 +1469,10 @@ export function usePublicSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettings<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1445,9 +1484,9 @@ export function usePublicSettings<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
-
 export function usePublicSettings<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1499,6 +1538,10 @@ export type PublicSettingsSuspenseQueryResult = NonNullable<
 >;
 export type PublicSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettingsSuspense<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1511,18 +1554,10 @@ export function usePublicSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function usePublicSettingsSuspense<
-  TData = Awaited<ReturnType<typeof publicSettings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettingsSuspense<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1536,9 +1571,25 @@ export function usePublicSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
-
+export function usePublicSettingsSuspense<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether the installation's Discord channel and Telegram group are set up, which decide the profile's notification columns, and whether passkeys can work here, which is false when the configured site address is plain HTTP or an IP address, and whether the administrator shows the Ko-fi support link, which the signed-out landing page follows. No host name, no address and no credential is part of the answer.
+ * @summary Read the settings the sign-in page needs
+ */
 export function usePublicSettingsSuspense<
   TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1610,6 +1661,10 @@ export const getSmtpSettingsSuspenseQueryOptions = <
 export type SmtpSettingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof smtpSettings>>>;
 export type SmtpSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
+ * @summary Read the mail server of this installation
+ */
 export function useSmtpSettingsSuspense<
   TData = Awaited<ReturnType<typeof smtpSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1622,18 +1677,10 @@ export function useSmtpSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useSmtpSettingsSuspense<
-  TData = Awaited<ReturnType<typeof smtpSettings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
+ * @summary Read the mail server of this installation
+ */
 export function useSmtpSettingsSuspense<
   TData = Awaited<ReturnType<typeof smtpSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1647,9 +1694,25 @@ export function useSmtpSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
  * @summary Read the mail server of this installation
  */
-
+export function useSmtpSettingsSuspense<
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
+ * @summary Read the mail server of this installation
+ */
 export function useSmtpSettingsSuspense<
   TData = Awaited<ReturnType<typeof smtpSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1684,29 +1747,10 @@ export const updateSmtpSettings = async (
   updateSmtpSettingsRequest: UpdateSmtpSettingsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SmtpSettingsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<SmtpSettingsResponse>(getUpdateSmtpSettingsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateSmtpSettingsRequest),
   });
 };
@@ -1757,6 +1801,7 @@ export type UpdateSmtpSettingsMutationError = ErrorType<ProblemDetails>;
 export type UpdateSmtpSettingsMutationVariables = { data: UpdateSmtpSettingsRequest };
 
 /**
+ * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one, but only while the host and the user name stay the same: changing either without a new password answers 400 email.passwordRequired, so a saved password is never sent to another server or account. Clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. A user name needs startTls or sslOnConnect: none with a user name answers 400 email.insecureConnection, because credentials are never sent in plain text. Switching enabled on needs a host and a sender address. Administrators only.
  * @summary Save the mail server of this installation
  */
 export const useUpdateSmtpSettings = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
@@ -1823,6 +1868,7 @@ export type SendTestEmailMutationResult = NonNullable<Awaited<ReturnType<typeof 
 export type SendTestEmailMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Sends one short message to the calling administrator's own address with the settings that are stored right now, and waits for the mail server to accept it. Nothing is written: the message does not go through the outbox and leaves no row behind, so a failed attempt is not retried. Success answers the address the message went to; a refusal answers 400 with email.sendFailed and the mail server's own words, email.notConfigured when the settings are incomplete or switched off, or email.passwordUnreadable when the stored password cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind. The attempt gives up after the configured send timeout, so a dead server cannot hold the request open. Save the settings before testing them. Rate limited to 10 calls per five minutes per client.
  * @summary Send a test message
  */
 export const useSendTestEmail = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
@@ -1892,6 +1938,10 @@ export type TelegramSettingsSuspenseQueryResult = NonNullable<
 >;
 export type TelegramSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
+/**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Telegram group
+ */
 export function useTelegramSettingsSuspense<
   TData = Awaited<ReturnType<typeof telegramSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1904,18 +1954,10 @@ export function useTelegramSettingsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useTelegramSettingsSuspense<
-  TData = Awaited<ReturnType<typeof telegramSettings>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Telegram group
+ */
 export function useTelegramSettingsSuspense<
   TData = Awaited<ReturnType<typeof telegramSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1929,9 +1971,25 @@ export function useTelegramSettingsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
  * @summary Read the installation's Telegram group
  */
-
+export function useTelegramSettingsSuspense<
+  TData = Awaited<ReturnType<typeof telegramSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof telegramSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * Answers whether Telegram is switched on, whether a bot token is saved, the group's chat id, when a message last reached it and the last error. The bot token is never part of the answer, because anyone holding it controls the bot. disabledByTelegram is true after Telegram answered that the bot was removed from the group or its token was revoked; unreadable is true when the stored token cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Administrators only.
+ * @summary Read the installation's Telegram group
+ */
 export function useTelegramSettingsSuspense<
   TData = Awaited<ReturnType<typeof telegramSettings>>,
   TError = ErrorType<ProblemDetails>,
@@ -1966,29 +2024,10 @@ export const updateTelegramSettings = async (
   updateTelegramSettingsRequest: UpdateTelegramSettingsRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TelegramSettingsResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return customFetch<TelegramSettingsResponse>(getUpdateTelegramSettingsUrl(), {
     ...options,
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(updateTelegramSettingsRequest),
   });
 };
@@ -2039,6 +2078,7 @@ export type UpdateTelegramSettingsMutationError = ErrorType<ProblemDetails | voi
 export type UpdateTelegramSettingsMutationVariables = { data: UpdateTelegramSettingsRequest };
 
 /**
+ * Stores the bot token and the id of the one Telegram group this installation posts to, and switches outbound Telegram traffic on or off for everyone. Members then choose on their profile which of their notifications are posted there, with their name in front. The token must be the one @BotFather gave, of the form 123456789:AAE…, or the answer is 400 telegram.invalidToken; the chat id is a whole number, negative for a group, and 0 answers telegram.invalidChat. Switching Telegram on without a saved token answers telegram.invalidToken and without a chat id telegram.invalidChat. The token is encrypted before it is stored and never returned. Leaving botToken empty keeps the stored one; a new token or a new chat id clears the mark Telegram left on a bot it refused. While Telegram is off nothing is queued or sent; messages that were already queued are not sent late but pruned after seven days. Administrators only.
  * @summary Save the installation's Telegram group
  */
 export const useUpdateTelegramSettings = <
@@ -2115,6 +2155,7 @@ export type SendTestTelegramMutationResult = NonNullable<
 export type SendTestTelegramMutationError = ErrorType<ProblemDetails | void>;
 
 /**
+ * Posts one short message to the saved group right away and waits for Telegram's answer, even while Telegram is switched off, so the group can be checked before members use it. Nothing is queued, so a failure is not retried. When Telegram says the group became a supergroup with a new id, the new id is saved and the message sent again. A refusal answers 400 with Telegram's own words: telegram.botRemoved when the bot was removed from the group or its token revoked (which also marks it), telegram.rateLimited, telegram.rejected or telegram.sendFailed. telegram.tokenUnreadable means the stored token cannot be decrypted any more. Rate limited to 10 calls per five minutes per client. Administrators only.
  * @summary Send a test message to the Telegram group
  */
 export const useSendTestTelegram = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(

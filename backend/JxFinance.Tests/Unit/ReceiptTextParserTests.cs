@@ -334,11 +334,16 @@ public sealed class ReceiptTextParserTests
         Assert.Equal(10.50m, Assert.Single(result.Adjustments).Amount);
     }
 
+    public static TheoryData<string, decimal> SeparatedAmounts => new()
+    {
+        { "1 299,99", 1299.99m },
+        { "1.299,99", 1299.99m },
+        { "1,299.99", 1299.99m },
+        { "12 345 678,90", 12345678.90m },
+    };
+
     [Theory]
-    [InlineData("1 299,99", 1299.99)]
-    [InlineData("1.299,99", 1299.99)]
-    [InlineData("1,299.99", 1299.99)]
-    [InlineData("12 345 678,90", 12345678.90)]
+    [MemberData(nameof(SeparatedAmounts))]
     public void An_amount_with_thousands_separators_is_read_whole(string printed, decimal amount)
     {
         var result = ReceiptTextParser.Parse($"""

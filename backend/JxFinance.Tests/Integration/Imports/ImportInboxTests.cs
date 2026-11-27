@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Imports;

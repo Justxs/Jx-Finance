@@ -89,12 +89,16 @@ export const DeleteBrokerConnectionResponse = zod.void();
  * Stores the Flex Query id and token so the server can download the report once a day and on demand. The token is encrypted at rest. Leave Token empty to keep the stored one.
  * @summary Connect an account to the Interactive Brokers Flex Web Service
  */
+export const saveBrokerConnectionBodyQueryIdMin = 1;
 
 export const saveBrokerConnectionBodyQueryIdRegExp = new RegExp("^[0-9]{1,20}$");
 export const saveBrokerConnectionBodyIsEnabledDefault = true;
 
 export const SaveBrokerConnectionBody = zod.object({
-  queryId: zod.string().min(1).regex(saveBrokerConnectionBodyQueryIdRegExp),
+  queryId: zod
+    .string()
+    .min(saveBrokerConnectionBodyQueryIdMin)
+    .regex(saveBrokerConnectionBodyQueryIdRegExp),
   token: zod.string().nullish().describe("Required the first time; optional afterwards."),
   fundingAccountId: zod.uuid().nullish(),
   isEnabled: zod.boolean().default(saveBrokerConnectionBodyIsEnabledDefault),
@@ -505,8 +509,10 @@ export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
  * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security. Only an administrator may set a price source; anyone else leaves it at none.
  * @summary Add a security
  */
+export const createSecurityBodySymbolMin = 1;
 export const createSecurityBodySymbolMax = 32;
 
+export const createSecurityBodyNameMin = 1;
 export const createSecurityBodyNameMax = 200;
 
 export const createSecurityBodyExchangeMin = 0;
@@ -517,8 +523,8 @@ export const createSecurityBodyPriceSymbolMin = 0;
 export const createSecurityBodyPriceSymbolMax = 32;
 
 export const CreateSecurityBody = zod.object({
-  symbol: zod.string().min(1).max(createSecurityBodySymbolMax),
-  name: zod.string().min(1).max(createSecurityBodyNameMax),
+  symbol: zod.string().min(createSecurityBodySymbolMin).max(createSecurityBodySymbolMax),
+  name: zod.string().min(createSecurityBodyNameMin).max(createSecurityBodyNameMax),
   type: zod.enum(["stock", "etf", "fund", "bond", "crypto", "other"]),
   currency: zod.enum([
     "eur",
@@ -637,8 +643,10 @@ export const CreateSecurityResponse = zod.object({
  * Changes symbol, name, ISIN, exchange, type, currency or price source, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions. Changing the price source or symbol clears the last fetch result, and the next fetch fills the history from the first trade.
  * @summary Update the details of a security
  */
+export const updateSecurityBodySymbolMin = 1;
 export const updateSecurityBodySymbolMax = 32;
 
+export const updateSecurityBodyNameMin = 1;
 export const updateSecurityBodyNameMax = 200;
 
 export const updateSecurityBodyExchangeMin = 0;
@@ -649,8 +657,8 @@ export const updateSecurityBodyPriceSymbolMin = 0;
 export const updateSecurityBodyPriceSymbolMax = 32;
 
 export const UpdateSecurityBody = zod.object({
-  symbol: zod.string().min(1).max(updateSecurityBodySymbolMax),
-  name: zod.string().min(1).max(updateSecurityBodyNameMax),
+  symbol: zod.string().min(updateSecurityBodySymbolMin).max(updateSecurityBodySymbolMax),
+  name: zod.string().min(updateSecurityBodyNameMin).max(updateSecurityBodyNameMax),
   type: zod.enum(["stock", "etf", "fund", "bond", "crypto", "other"]),
   currency: zod.enum([
     "eur",
@@ -1123,6 +1131,7 @@ export const ExportTaxSummaryResponse = zod.unknown();
  * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. A symbol change needs the security the holding leaves, the one it moves to in RelatedSecurityId, in the same currency, and the shares moved in Quantity; the oldest lots move with their cost and acquisition dates and no cash moves. A merger needs the security taken over and the shares given up in Quantity, and either the cash received in Amount, the security received in RelatedSecurityId with its shares in RelatedQuantity, or both; with both, CostShare is the percentage of the cost basis carried into the new shares and the rest is set against the cash as a disposal. A spin-off needs the parent security, the new security in RelatedSecurityId and its shares in RelatedQuantity; CostShare, the percentage of the parent's cost basis that moves to the new security, may be left out and set later, and counts as 0 until then. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
  * @summary Record an investment transaction
  */
+export const createInvestmentTransactionBodyAccountIdMin = 1;
 
 export const createInvestmentTransactionBodyQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createInvestmentTransactionBodyPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -1137,7 +1146,7 @@ export const createInvestmentTransactionBodyRelatedQuantityRegExp = new RegExp(
 export const createInvestmentTransactionBodyCostShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateInvestmentTransactionBody = zod.object({
-  accountId: zod.uuid().min(1),
+  accountId: zod.uuid().min(createInvestmentTransactionBodyAccountIdMin),
   type: zod.enum([
     "buy",
     "sell",
@@ -1423,6 +1432,7 @@ export const DeleteInvestmentTransactionResponse = zod.void();
  * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again, except that the CostShare of an imported spin-off or merger paid in shares and cash can be set here; the rest of the body is then ignored. A correction that would leave a later sale without enough shares is refused.
  * @summary Correct an investment transaction
  */
+export const updateInvestmentTransactionBodyAccountIdMin = 1;
 
 export const updateInvestmentTransactionBodyQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateInvestmentTransactionBodyPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -1437,7 +1447,7 @@ export const updateInvestmentTransactionBodyRelatedQuantityRegExp = new RegExp(
 export const updateInvestmentTransactionBodyCostShareRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateInvestmentTransactionBody = zod.object({
-  accountId: zod.uuid().min(1),
+  accountId: zod.uuid().min(updateInvestmentTransactionBodyAccountIdMin),
   type: zod.enum([
     "buy",
     "sell",

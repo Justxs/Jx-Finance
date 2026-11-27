@@ -11,12 +11,13 @@ import * as zod from "zod";
  * Adds a person outside the household, such as a friend you lend money to or share a dinner with. The person has no login and is visible only to you. Two people may have the same name.
  * @summary Add a person
  */
+export const createContactBodyNameMin = 1;
 export const createContactBodyNameMax = 100;
 
 export const CreateContactBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(createContactBodyNameMin)
     .max(createContactBodyNameMax)
     .describe("The name, 1 to 100 characters."),
 });
@@ -124,6 +125,7 @@ export const DeleteContactPaymentResponse = zod.void();
  * Splits an expense you paid from one of your own accounts with people outside the household, the way a household split divides it between members: Equal, Shares by whole weights from 1 to 100, or Exact amounts that add up to the expense, cents left over going to the largest remainders in the order listed with you first. own is your part, or null when you take no part, which records the whole amount as owed, for example money you lent with an ordinary bank payment. The split keeps a copy of the transaction's date, description and amount. A transaction is split once, with a household or with people.
  * @summary Split an expense with people
  */
+export const createContactSplitBodyTransactionIdMin = 1;
 
 export const createContactSplitBodyOwnTwoAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createContactSplitBodySharesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -131,7 +133,7 @@ export const createContactSplitBodySharesItemAmountRegExp = new RegExp("^-?\\d+(
 export const CreateContactSplitBody = zod.object({
   transactionId: zod
     .uuid()
-    .min(1)
+    .min(createContactSplitBodyTransactionIdMin)
     .describe("The expense to split. It must be on an account you own."),
   method: zod.enum(["equal", "shares", "exact"]).describe("Equal, Shares or Exact."),
   own: zod
@@ -235,12 +237,13 @@ export const DeleteContactResponse = zod.void();
  * Changes the name of one of your people. Their splits, payments and balances stay.
  * @summary Rename a person
  */
+export const updateContactBodyNameMin = 1;
 export const updateContactBodyNameMax = 100;
 
 export const UpdateContactBody = zod.object({
   name: zod
     .string()
-    .min(1)
+    .min(updateContactBodyNameMin)
     .max(updateContactBodyNameMax)
     .describe("The new name, 1 to 100 characters."),
 });

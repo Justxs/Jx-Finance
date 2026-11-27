@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using System.Net;
-using System.Net.Http.Json;
 using JxFinance.Endpoints.Users.Services;
 using JxFinance.Tests.Support;
 
